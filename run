@@ -1,0 +1,14 @@
+#!/bin/bash
+
+export Y2DIR=src
+
+case x"$1" in
+    xc )
+        shift
+        yast2 --ncurses hana_updater "$@"
+        ;;
+    * )
+        shift
+        yast2 hana_updater "$@"
+        ;;
+esac

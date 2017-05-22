@@ -1,0 +1,29 @@
+<html>
+<head>
+</head>
+<body>
+    <h2>Update HANA on site <%= site_name %> using the preferred update method.</h2>
+
+    Note: The contents of the NFS share have been copied locally to <code><%= nfs_share_local %></code>.
+
+    <h3>1. Using a full update medium:</h3>
+    <ul>
+        <li>Log in to <%= host_name %>:</li>
+        <code>ssh root@<%= host_name %></code>
+        <li>Navigate to the HDB LCM directory:</li>
+        <code>cd <%= nfs_share_local %>HDB_LCM_LINUX_X86_64</code> <!-- TODO: check architecture -->
+        <li>Execute <code>hdblcm</code>:</li>
+        <code>./hdblcm --action=update</code>
+        <li>Follow the on-screen update instructions.</li>
+    </ul>
+
+    <h3>2. Using the SAP HANA HDBLCM Web User Interface:</h3>
+    <ul>
+        <li>Open <a href="hdblcm_web"><%= hdblcm_link %></a></li>
+        <li>Follow the procedure as described in <i>SAP HANA Server Installation and Update Guide</i>.</li>
+    </ul>
+
+
+    <span>Click "Next" when site <%= site_name %> is updated.</span>
+</body>
+</html>

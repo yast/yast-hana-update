@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=HANA Updater
+GenericName=SUSE HANA Cluster Update
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-High_Availability;
+Icon=yast-high_availability
+Exec=/sbin/yast2 hana_updater
+X-SuSE-YaST-Call=hana_updater
+X-SuSE-YaST-Group=High_Availability
+X-SuSE-YaST-RootOnly=yes
+StartupNotify=true

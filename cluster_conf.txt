@@ -1,0 +1,43 @@
+configure rsc_default \
+    resource-stickiness="1000" \
+    migration-threshold="5000"
+
+configure op_defaults \
+    timeout="600"
+
+configure primitive rsc_ip_XXX_HDB00 ocf:heartbeat:IPaddr2 \
+    params \
+    ip="192.168.100.100" cidr_netmask="24" \
+    op start timeout="20" op stop timeout="20" \
+    op monitor interval="10" timeout="20"
+
+configure primitive rsc_SAPHanaTopology_XXX_HDB00 ocf:suse:SAPHanaTopology \
+    params \
+    SID="XXX" \
+    InstanceNumber="00" \
+    op monitor interval="10" timeout="600" \
+    op start interval="0" timeout="600" \
+    op stop interval="0" timeout="300" \
+
+configure primitive rsc_SAPHana_XXX_HDB00 ocf:suse:SAPHana \
+    params \
+    SID="XXX" \
+    InstanceNumber="00" \
+    PREFER_SITE_TAKEOVER="yes" \
+    AUTOMATED_REGISTER="no" \
+    DUPLICATE_PRIMARY_TIMEOUT="7200" \
+    op start interval="0" timeout="3600" \
+    op stop interval="0" timeout="3600" \
+    op promote interval="0" timeout="3600" \
+    op monitor interval="60" role="Master" timeout="700" \
+    op monitor interval="61" role="Slave" timeout="700"
+
+configure ms msl_SAPHana_XXX_HDB00 rsc_SAPHana_XXX_HDB00 \
+    meta clone-max="2" clone-node-max="1" interleave="true"
+
+configure clone cln_SAPHanaTopology_XXX_HDB00 rsc_SAPHanaTopology_XXX_HDB00 \
+    meta is-managed="true" clone-node-max="1" interleave="true"
+
+configure colocation col_saphana_ip_XXX_HDB00 2000: rsc_ip_XXX_HDB00:Started msl_SAPHana_XXX_HDB00:Master
+
+configure order ord_SAPHana_XXX_HDB00 Optional: cln_SAPHanaTopology_XXX_HDB00 msl_SAPHana_XXX_HDB00

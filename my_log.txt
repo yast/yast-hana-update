@@ -1,0 +1,69 @@
+[hana01] 2016-10-28 13:22:55   INFO: Starting setup process on node hana01
+[hana01] 2016-10-28 13:22:55   INFO: Appying NTP Configuration
+[hana01] 2016-10-28 13:22:55   INFO: Appying Watchdog Configuration
+[hana01] 2016-10-28 13:22:55   INFO: Installed watchdog module softdog
+[hana01] 2016-10-28 13:22:55   INFO: Loaded watchdog module softdog
+[hana01] 2016-10-28 13:22:55   INFO: Configured requested watchdog devices
+[hana01] 2016-10-28 13:22:55   INFO: Appying Fencing Configuration
+[hana01] 2016-10-28 13:22:55   INFO: Wrote SBD system configuration
+[hana01] 2016-10-28 13:22:57   INFO: Successfully initialized the SBD device /dev/vdb
+[hana01] 2016-10-28 13:22:57   INFO: Applying Cluster Configuration
+[hana01] 2016-10-28 13:23:02   INFO: Wrote cluster settings
+[hana01] 2016-10-28 13:23:03   INFO: Changed password for user hacluster
+[hana01] 2016-10-28 13:23:03   INFO: Exported configuration for yast2-cluster
+[hana01] 2016-10-28 13:23:03   INFO: Enabled service sbd
+[hana01] 2016-10-28 13:23:03   INFO: Enabled socket csync2
+[hana01] 2016-10-28 13:23:03   INFO: Enabled service pacemaker
+[hana01] 2016-10-28 13:23:07   INFO: Started service pacemaker
+[hana01] 2016-10-28 13:23:07   INFO: Enabled service hawk
+[hana01] 2016-10-28 13:23:07   INFO: Started service hawk
+[hana01] 2016-10-28 13:23:07   INFO: Enabled and started cluster-required systemd units
+[hana01] 2016-10-28 13:23:08   INFO: Cluster maintenance mode turned on
+[hana01] 2016-10-28 13:23:08   INFO: Added a primitive to the cluster: stonith-sbd
+[hana01] 2016-10-28 13:23:08   INFO: Opened necessary communication ports
+[hana01] 2016-10-28 13:23:08   INFO: Appying HANA Configuration
+[hana01] 2016-10-28 13:23:08  ERROR: Could not start HANA XXX, will retry.
+[hana01] 2016-10-28 13:23:08 OUTPUT: su: user xxxadm does not exist
+[hana01] 2016-10-28 13:23:08  ERROR: Could not start HANA XXX, bailing out.
+[hana01] 2016-10-28 13:23:08 OUTPUT: su: user xxxadm does not exist
+[hana01] 2016-10-28 13:23:08  ERROR: Could not enable HANA (XXX) System Replication on the primary site WALLDORF
+[hana01] 2016-10-28 13:23:08 OUTPUT: su: user xxxadm does not exist
+[hana01] 2016-10-28 13:23:09   INFO: Configured necessary cluster resources for HANA System Replication
+[hana01] 2016-10-28 13:23:09   INFO: Finished setup process on node hana01
+[hana02] 2016-10-28 13:23:10   INFO: Starting setup process on node hana02
+[hana02] 2016-10-28 13:23:10   INFO: Appying NTP Configuration
+[hana02] 2016-10-28 13:23:11   INFO: Wrote NTP configuration
+[hana02] 2016-10-28 13:23:15   INFO: Appying Watchdog Configuration
+[hana02] 2016-10-28 13:23:15   INFO: Installed watchdog module softdog
+[hana02] 2016-10-28 13:23:15   INFO: Loaded watchdog module softdog
+[hana02] 2016-10-28 13:23:15   INFO: Configured requested watchdog devices
+[hana02] 2016-10-28 13:23:15   INFO: Appying Fencing Configuration
+[hana02] 2016-10-28 13:23:15   INFO: Wrote SBD system configuration
+[hana02] 2016-10-28 13:23:15   INFO: Applying Cluster Configuration
+[hana02] 2016-10-28 13:23:21   INFO: Wrote cluster settings
+[hana02] 2016-10-28 13:23:21   INFO: Changed password for user hacluster
+[hana02] 2016-10-28 13:23:21   INFO: Exported configuration for yast2-cluster
+[hana02] 2016-10-28 13:23:21   INFO: Enabled service sbd
+[hana02] 2016-10-28 13:23:21   INFO: Enabled socket csync2
+[hana02] 2016-10-28 13:23:21   INFO: Enabled service pacemaker
+[hana02] 2016-10-28 13:23:25   INFO: Started service pacemaker
+[hana02] 2016-10-28 13:23:25   INFO: Enabled service hawk
+[hana02] 2016-10-28 13:23:25   INFO: Started service hawk
+[hana02] 2016-10-28 13:23:25   INFO: Enabled and started cluster-required systemd units
+[hana02] 2016-10-28 13:23:25   INFO: Opened necessary communication ports
+[hana02] 2016-10-28 13:23:26   INFO: Appying HANA Configuration
+[hana02] 2016-10-28 13:23:26  ERROR: Could not stop HANA XXX, will retry.
+[hana02] 2016-10-28 13:23:26 OUTPUT: su: user xxxadm does not exist
+[hana02] 2016-10-28 13:23:26  ERROR: Could not stop HANA XXX, bailing out.
+[hana02] 2016-10-28 13:23:26 OUTPUT: su: user xxxadm does not exist
+[hana02] 2016-10-28 13:23:26  ERROR: Could not retrieve HANA version, assuming legacy version
+[hana02] 2016-10-28 13:23:26 OUTPUT: su: user xxxadm does not exist
+[hana02] 2016-10-28 13:23:26  ERROR: Could not enable HANA (XXX) System Replication on the secondary host
+[hana02] 2016-10-28 13:23:26 OUTPUT: su: user xxxadm does not exist
+[hana02] 2016-10-28 13:23:26  ERROR: Could not start HANA XXX, will retry.
+[hana02] 2016-10-28 13:23:26 OUTPUT: su: user xxxadm does not exist
+[hana02] 2016-10-28 13:23:26  ERROR: Could not start HANA XXX, bailing out.
+[hana02] 2016-10-28 13:23:26 OUTPUT: su: user xxxadm does not exist
+[hana02] 2016-10-28 13:23:26   INFO: Finished setup process on node hana02
+[hana01] 2016-10-28 13:23:26   INFO: Cluster maintenance mode turned off
+[hana01] 2016-10-28 13:23:26  ERROR: Overall status: RED. There were errors during the setup.

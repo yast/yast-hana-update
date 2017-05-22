@@ -1,0 +1,3 @@
+#!/bin/sh
+limit.descriptors=1048576
+LD_LIBRARY_PATH=/usr/sap/DEV/HDB00/exe:$LD_LIBRARY_PATH;export LD_LIBRARY_PATH;/usr/sap/DEV/HDB00/exe/sapstartsrv pf=/usr/sap/DEV/SYS/profile/DEV_HDB00_hana02 -D -u devadm

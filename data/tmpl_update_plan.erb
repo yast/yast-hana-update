@@ -1,0 +1,14 @@
+<html>
+<head>
+</head>
+<body>
+    <span>The following plan was generated for the <%- if part ==1 -%>local<% else %>remote<% end %> node:</span>
+    <br/>
+    <ol>
+        <li>Put resources <b>msl</b>, <b>clone</b> and <b>ip</b> into maintenance mode;</li>
+        <li>Break system replication between sites <b>primary</b> and <b>secondary</b>;</li>
+        <li>Mount update medium <b><%= @configuration.nfs_share %></b> on <b>local_node</b>;</li>
+        <li>Update HANA on site <b>local_site</b> (host <b>local_node</b>) manually using the preferred update method;</li>
+    </ol>
+    <span>Refer to the on-screen instructions on the next screen and to the <i>SAP HANA Master Update Guide</i> and <i>HANA Server Installation and Update Guide</i>.</span> </body>
+</html>

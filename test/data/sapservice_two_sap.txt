@@ -1,0 +1,5 @@
+#!/bin/sh
+LD_LIBRARY_PATH=/usr/sap/QNH/HDB00/exe:$LD_LIBRARY_PATH;export LD_LIBRARY_PATH;/usr/sap/QNH/HDB00/exe/sapstartsrv pf=/usr/sap/QNH/SYS/profile/QNH_HDB00_ix64sap001 -D -u qnhadm
+limit.descriptors=1048576
+ 
+/usr/sap/waitfortrex /usr/sap/QTR/TRX02/TREX && /usr/sap/QTR/TRX02/TREX boot #TRX02 /usr/sap/QTR/TRX02/exe/sapstartsrv pf=/usr/sap/QTR/SYS/profile/QTR_TRX02_ix64sap001 -D -u qtradm

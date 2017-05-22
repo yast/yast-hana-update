@@ -1,0 +1,26 @@
+# High-level algorithm
+
+Here `ClusterState` should read the state of the cluster, extracting the information about the following:
+
+1. If cluster is set up (crm_mon/cibadmin return valid XML output)
+2. Cluster state (all nodes, their status (maintenance))
+3. HANA resource agent (its ID, nodes that it runs on, status, additional configuration attributes)
+4. IP resource agent (ditto)
+
+```ruby
+cluster = ClusterState.new
+begin
+    cluster.discover
+rescue ClusterConnectionError => e
+    msg = "Could not connect to cluster: #{e.message}"
+    log.error msg
+    raise GUIException(msg)
+end
+```
+
+Then perform initial checks
+
+```ruby
+
+cluster.
+```

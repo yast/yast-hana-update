@@ -1,0 +1,270 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.5" epoch="227" num_updates="0" admin_epoch="0" cib-last-written="Mon May 15 12:38:33 2017" update-origin="hana01" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1084777750">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="maintenance-mode" value="false" id="cib-bootstrap-options-maintenance-mode"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="true"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.15-19.15-e174ec8"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="hanacluster"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1494583039"/>
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1084777749" uname="hana01">
+        <instance_attributes id="nodes-1084777749">
+          <nvpair id="nodes-1084777749-hana_xxx_vhost" name="hana_xxx_vhost" value="hana01"/>
+          <nvpair id="nodes-1084777749-hana_xxx_remoteHost" name="hana_xxx_remoteHost" value="hana02"/>
+          <nvpair id="nodes-1084777749-hana_xxx_site" name="hana_xxx_site" value="WDF"/>
+          <nvpair id="nodes-1084777749-lpa_xxx_lpt" name="lpa_xxx_lpt" value="1494844713"/>
+          <nvpair id="nodes-1084777749-hana_xxx_srmode" name="hana_xxx_srmode" value="sync"/>
+          <nvpair id="nodes-1084777749-hana_zzz_remoteHost" name="hana_zzz_remoteHost" value="hana02"/>
+        </instance_attributes>
+      </node>
+      <node id="1084777750" uname="hana02">
+        <instance_attributes id="nodes-1084777750">
+          <nvpair id="nodes-1084777750-hana_xxx_vhost" name="hana_xxx_vhost" value="hana02"/>
+          <nvpair id="nodes-1084777750-hana_xxx_remoteHost" name="hana_xxx_remoteHost" value="hana01"/>
+          <nvpair id="nodes-1084777750-lpa_xxx_lpt" name="lpa_xxx_lpt" value="10"/>
+          <nvpair id="nodes-1084777750-hana_xxx_site" name="hana_xxx_site" value="ROT"/>
+          <nvpair id="nodes-1084777750-hana_xxx_srmode" name="hana_xxx_srmode" value="sync"/>
+          <nvpair id="nodes-1084777750-hana_zzz_remoteHost" name="hana_zzz_remoteHost" value="hana01"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="stonith-sbd" class="stonith" type="external/sbd"/>
+      <primitive id="rsc_ip_XXX_HDB00" class="ocf" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="rsc_ip_XXX_HDB00-instance_attributes">
+          <nvpair name="ip" value="192.168.101.100" id="rsc_ip_XXX_HDB00-instance_attributes-ip"/>
+          <nvpair name="cidr_netmask" value="24" id="rsc_ip_XXX_HDB00-instance_attributes-cidr_netmask"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" timeout="20" interval="0" id="rsc_ip_XXX_HDB00-start-0"/>
+          <op name="stop" timeout="20" interval="0" id="rsc_ip_XXX_HDB00-stop-0"/>
+          <op name="monitor" interval="10" timeout="20" id="rsc_ip_XXX_HDB00-monitor-10"/>
+        </operations>
+      </primitive>
+      <master id="msl_SAPHana_XXX_HDB00">
+        <meta_attributes id="msl_SAPHana_XXX_HDB00-meta_attributes">
+          <nvpair name="clone-max" value="2" id="msl_SAPHana_XXX_HDB00-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="msl_SAPHana_XXX_HDB00-meta_attributes-clone-node-max"/>
+          <nvpair name="interleave" value="true" id="msl_SAPHana_XXX_HDB00-meta_attributes-interleave"/>
+          <nvpair id="msl_SAPHana_XXX_HDB00-meta_attributes-maintenance" name="maintenance" value="false"/>
+          <nvpair id="msl_SAPHana_XXX_HDB00-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+        <primitive id="rsc_SAPHana_XXX_HDB00" class="ocf" provider="suse" type="SAPHana">
+          <instance_attributes id="rsc_SAPHana_XXX_HDB00-instance_attributes">
+            <nvpair name="SID" value="XXX" id="rsc_SAPHana_XXX_HDB00-instance_attributes-SID"/>
+            <nvpair name="InstanceNumber" value="00" id="rsc_SAPHana_XXX_HDB00-instance_attributes-InstanceNumber"/>
+            <nvpair name="PREFER_SITE_TAKEOVER" value="true" id="rsc_SAPHana_XXX_HDB00-instance_attributes-PREFER_SITE_TAKEOVER"/>
+            <nvpair name="AUTOMATED_REGISTER" value="false" id="rsc_SAPHana_XXX_HDB00-instance_attributes-AUTOMATED_REGISTER"/>
+            <nvpair name="DUPLICATE_PRIMARY_TIMEOUT" value="7200" id="rsc_SAPHana_XXX_HDB00-instance_attributes-DUPLICATE_PRIMARY_TIMEOUT"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0" timeout="3600" id="rsc_SAPHana_XXX_HDB00-start-0"/>
+            <op name="stop" interval="0" timeout="3600" id="rsc_SAPHana_XXX_HDB00-stop-0"/>
+            <op name="promote" interval="0" timeout="3600" id="rsc_SAPHana_XXX_HDB00-promote-0"/>
+            <op name="monitor" interval="60" role="Master" timeout="700" id="rsc_SAPHana_XXX_HDB00-monitor-60"/>
+            <op name="monitor" interval="61" role="Slave" timeout="700" id="rsc_SAPHana_XXX_HDB00-monitor-61"/>
+          </operations>
+        </primitive>
+      </master>
+      <clone id="cln_SAPHanaTopology_XXX_HDB00">
+        <meta_attributes id="cln_SAPHanaTopology_XXX_HDB00-meta_attributes">
+          <nvpair name="is-managed" value="true" id="cln_SAPHanaTopology_XXX_HDB00-meta_attributes-is-managed"/>
+          <nvpair name="clone-node-max" value="1" id="cln_SAPHanaTopology_XXX_HDB00-meta_attributes-clone-node-max"/>
+          <nvpair name="interleave" value="true" id="cln_SAPHanaTopology_XXX_HDB00-meta_attributes-interleave"/>
+        </meta_attributes>
+        <primitive id="rsc_SAPHanaTopology_XXX_HDB00" class="ocf" provider="suse" type="SAPHanaTopology">
+          <instance_attributes id="rsc_SAPHanaTopology_XXX_HDB00-instance_attributes">
+            <nvpair name="SID" value="XXX" id="rsc_SAPHanaTopology_XXX_HDB00-instance_attributes-SID"/>
+            <nvpair name="InstanceNumber" value="00" id="rsc_SAPHanaTopology_XXX_HDB00-instance_attributes-InstanceNumber"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="10" timeout="600" id="rsc_SAPHanaTopology_XXX_HDB00-monitor-10"/>
+            <op name="start" interval="0" timeout="600" id="rsc_SAPHanaTopology_XXX_HDB00-start-0"/>
+            <op name="stop" interval="0" timeout="300" id="rsc_SAPHanaTopology_XXX_HDB00-stop-0"/>
+          </operations>
+        </primitive>
+      </clone>
+      <primitive id="rsc_ip_ZZZ_HDB99" class="ocf" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="rsc_ip_ZZZ_HDB99-instance_attributes">
+          <nvpair name="ip" value="192.168.200.200" id="rsc_ip_ZZZ_HDB99-instance_attributes-ip"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" timeout="20" interval="0" id="rsc_ip_ZZZ_HDB99-start-0"/>
+          <op name="stop" timeout="20" interval="0" id="rsc_ip_ZZZ_HDB99-stop-0"/>
+          <op name="monitor" interval="10" timeout="20" id="rsc_ip_ZZZ_HDB99-monitor-10"/>
+        </operations>
+      </primitive>
+      <master id="msl_SAPHana_ZZZ_HDB99">
+        <meta_attributes id="msl_SAPHana_ZZZ_HDB99-meta_attributes">
+          <nvpair name="clone-max" value="2" id="msl_SAPHana_ZZZ_HDB99-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="msl_SAPHana_ZZZ_HDB99-meta_attributes-clone-node-max"/>
+          <nvpair name="interleave" value="true" id="msl_SAPHana_ZZZ_HDB99-meta_attributes-interleave"/>
+        </meta_attributes>
+        <primitive id="rsc_SAPHana_ZZZ_HDB99" class="ocf" provider="suse" type="SAPHana">
+          <instance_attributes id="rsc_SAPHana_ZZZ_HDB99-instance_attributes">
+            <nvpair name="SID" value="ZZZ" id="rsc_SAPHana_ZZZ_HDB99-instance_attributes-SID"/>
+            <nvpair name="InstanceNumber" value="99" id="rsc_SAPHana_ZZZ_HDB99-instance_attributes-InstanceNumber"/>
+            <nvpair name="PREFER_SITE_TAKEOVER" value="yes" id="rsc_SAPHana_ZZZ_HDB99-instance_attributes-PREFER_SITE_TAKEOVER"/>
+            <nvpair name="AUTOMATED_REGISTER" value="no" id="rsc_SAPHana_ZZZ_HDB99-instance_attributes-AUTOMATED_REGISTER"/>
+            <nvpair name="DUPLICATE_PRIMARY_TIMEOUT" value="7200" id="rsc_SAPHana_ZZZ_HDB99-instance_attributes-DUPLICATE_PRIMARY_TIMEOUT"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0" timeout="3600" id="rsc_SAPHana_ZZZ_HDB99-start-0"/>
+            <op name="stop" interval="0" timeout="3600" id="rsc_SAPHana_ZZZ_HDB99-stop-0"/>
+            <op name="promote" interval="0" timeout="3600" id="rsc_SAPHana_ZZZ_HDB99-promote-0"/>
+            <op name="monitor" interval="60" role="Master" timeout="700" id="rsc_SAPHana_ZZZ_HDB99-monitor-60"/>
+            <op name="monitor" interval="61" role="Slave" timeout="700" id="rsc_SAPHana_ZZZ_HDB99-monitor-61"/>
+          </operations>
+        </primitive>
+      </master>
+      <clone id="cln_SAPHanaTopology_ZZZ_HDB99">
+        <meta_attributes id="cln_SAPHanaTopology_ZZZ_HDB99-meta_attributes">
+          <nvpair name="is-managed" value="true" id="cln_SAPHanaTopology_ZZZ_HDB99-meta_attributes-is-managed"/>
+          <nvpair name="clone-node-max" value="1" id="cln_SAPHanaTopology_ZZZ_HDB99-meta_attributes-clone-node-max"/>
+          <nvpair name="interleave" value="true" id="cln_SAPHanaTopology_ZZZ_HDB99-meta_attributes-interleave"/>
+        </meta_attributes>
+        <primitive id="rsc_SAPHanaTopology_ZZZ_HDB99" class="ocf" provider="suse" type="SAPHanaTopology">
+          <instance_attributes id="rsc_SAPHanaTopology_ZZZ_HDB99-instance_attributes">
+            <nvpair name="SID" value="ZZZ" id="rsc_SAPHanaTopology_ZZZ_HDB99-instance_attributes-SID"/>
+            <nvpair name="InstanceNumber" value="99" id="rsc_SAPHanaTopology_ZZZ_HDB99-instance_attributes-InstanceNumber"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="10" timeout="600" id="rsc_SAPHanaTopology_ZZZ_HDB99-monitor-10"/>
+            <op name="start" interval="0" timeout="600" id="rsc_SAPHanaTopology_ZZZ_HDB99-start-0"/>
+            <op name="stop" interval="0" timeout="300" id="rsc_SAPHanaTopology_ZZZ_HDB99-stop-0"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_colocation id="col_saphana_ip_XXX_HDB00" score="2000" rsc="rsc_ip_XXX_HDB00" rsc-role="Started" with-rsc="msl_SAPHana_XXX_HDB00" with-rsc-role="Master"/>
+      <rsc_order id="ord_SAPHana_XXX_HDB00" kind="Optional" first="cln_SAPHanaTopology_XXX_HDB00" then="msl_SAPHana_XXX_HDB00"/>
+      <rsc_colocation id="col_saphana_ip_ZZZ_HDB99" score="2000" rsc="rsc_ip_ZZZ_HDB99" rsc-role="Started" with-rsc="msl_SAPHana_ZZZ_HDB99" with-rsc-role="Master"/>
+      <rsc_order id="ord_SAPHana_ZZZ_HDB99" kind="Optional" first="cln_SAPHanaTopology_ZZZ_HDB99" then="msl_SAPHana_ZZZ_HDB99"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair name="resource-stickiness" value="1000" id="rsc-options-resource-stickiness"/>
+        <nvpair name="migration-threshold" value="5000" id="rsc-options-migration-threshold"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op-options">
+        <nvpair name="timeout" value="600" id="op-options-timeout"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status>
+    <node_state id="1084777749" uname="hana01" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1084777749">
+        <lrm_resources>
+          <lrm_resource id="stonith-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="stonith-sbd_last_0" operation_key="stonith-sbd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="10:0:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;10:0:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1494843740" last-rc-change="1494843740" exec-time="1180" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_ip_XXX_HDB00" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_ip_XXX_HDB00_last_0" operation_key="rsc_ip_XXX_HDB00_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="7:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;7:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1494843753" last-rc-change="1494843753" exec-time="151" queue-time="0" op-digest="6c4bb32fb31f32492bc0e9f88a7c74bf"/>
+            <lrm_rsc_op id="rsc_ip_XXX_HDB00_monitor_10000" operation_key="rsc_ip_XXX_HDB00_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;8:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="25" rc-code="0" op-status="0" interval="10000" last-rc-change="1494843753" exec-time="56" queue-time="0" op-digest="5e8e81c220f7e16362484ce3c2b564cb"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHanaTopology_XXX_HDB00" type="SAPHanaTopology" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHanaTopology_XXX_HDB00_last_0" operation_key="rsc_SAPHanaTopology_XXX_HDB00_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="23:9:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;23:9:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="53" rc-code="0" op-status="0" interval="0" last-run="1494844251" last-rc-change="1494844251" exec-time="2050" queue-time="1" op-digest="627076bc5c850629043e0e0067ffef34"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_XXX_HDB00_monitor_10000" operation_key="rsc_SAPHanaTopology_XXX_HDB00_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="24:9:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;24:9:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="54" rc-code="0" op-status="0" interval="10000" last-rc-change="1494844253" exec-time="4319" queue-time="0" op-digest="7b232c504c674bf49c25f8f23dccd05a"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_XXX_HDB00_last_failure_0" operation_key="rsc_SAPHanaTopology_XXX_HDB00_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="24:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:7;24:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="22" rc-code="7" op-status="0" interval="10000" last-rc-change="1494844249" exec-time="0" queue-time="0" op-digest="7b232c504c674bf49c25f8f23dccd05a"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHana_XXX_HDB00" type="SAPHana" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHana_XXX_HDB00_last_0" operation_key="rsc_SAPHana_XXX_HDB00_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;13:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1494844212" last-rc-change="1494844212" exec-time="2164" queue-time="1" op-digest="6748b0215a2fd51a575fe5061f56d433"/>
+            <lrm_rsc_op id="rsc_SAPHana_XXX_HDB00_monitor_60000" operation_key="rsc_SAPHana_XXX_HDB00_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="20:4:8:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:8;20:4:8:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="46" rc-code="8" op-status="0" interval="60000" last-rc-change="1494844230" exec-time="9674" queue-time="1" op-digest="72b45b30eb0adb098f1dce2a4d2c1087"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_ip_ZZZ_HDB99" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_ip_ZZZ_HDB99_last_0" operation_key="rsc_ip_ZZZ_HDB99_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="3:4:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;3:4:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="47" rc-code="0" op-status="0" interval="0" last-run="1494844220" last-rc-change="1494844220" exec-time="64" queue-time="0" op-digest="f919674aa652c9a3705c8d82bf886db0" exit-reason="[findif] failed"/>
+            <lrm_rsc_op id="rsc_ip_ZZZ_HDB99_last_failure_0" operation_key="rsc_ip_ZZZ_HDB99_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="31:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:1;31:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" exit-reason="[findif] failed" on_node="hana01" call-id="45" rc-code="1" op-status="0" interval="0" last-run="1494844212" last-rc-change="1494844212" exec-time="105" queue-time="0" op-digest="f919674aa652c9a3705c8d82bf886db0"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHana_ZZZ_HDB99" type="SAPHana" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHana_ZZZ_HDB99_last_0" operation_key="rsc_SAPHana_ZZZ_HDB99_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="4:4:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;4:4:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1494844220" last-rc-change="1494844220" exec-time="216" queue-time="0" op-digest="3609bcfdb5aa567982e0f4e50ea23f00"/>
+            <lrm_rsc_op id="rsc_SAPHana_ZZZ_HDB99_last_failure_0" operation_key="rsc_SAPHana_ZZZ_HDB99_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="35:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:7;35:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="44" rc-code="7" op-status="0" interval="0" last-run="1494844212" last-rc-change="1494844212" exec-time="262" queue-time="0" op-digest="3609bcfdb5aa567982e0f4e50ea23f00"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHanaTopology_ZZZ_HDB99" type="SAPHanaTopology" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHanaTopology_ZZZ_HDB99_last_failure_0" operation_key="rsc_SAPHanaTopology_ZZZ_HDB99_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="47:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:6;47:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="42" rc-code="6" op-status="0" interval="10000" last-run="1494844203" last-rc-change="1494844220" exec-time="8520" queue-time="1" op-digest="24a8b31809377209740ab63cff742b84"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_ZZZ_HDB99_last_0" operation_key="rsc_SAPHanaTopology_ZZZ_HDB99_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="5:5:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;5:5:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana01" call-id="50" rc-code="0" op-status="0" interval="0" last-run="1494844230" last-rc-change="1494844230" exec-time="8270" queue-time="1" op-digest="0da280b3e7b1a1d49883f5abb1f10dff"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1084777749">
+        <instance_attributes id="status-1084777749">
+          <nvpair id="status-1084777749-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1084777749-master-rsc_SAPHana_XXX_HDB00" name="master-rsc_SAPHana_XXX_HDB00" value="150"/>
+          <nvpair id="status-1084777749-hana_xxx_clone_state" name="hana_xxx_clone_state" value="PROMOTED"/>
+          <nvpair id="status-1084777749-hana_xxx_roles" name="hana_xxx_roles" value="4:P:master1:master:worker:master"/>
+          <nvpair id="status-1084777749-fail-count-rsc_ip_ZZZ_HDB99" name="fail-count-rsc_ip_ZZZ_HDB99" value="INFINITY"/>
+          <nvpair id="status-1084777749-last-failure-rsc_ip_ZZZ_HDB99" name="last-failure-rsc_ip_ZZZ_HDB99" value="1494844212"/>
+          <nvpair id="status-1084777749-fail-count-rsc_SAPHana_ZZZ_HDB99" name="fail-count-rsc_SAPHana_ZZZ_HDB99" value="INFINITY"/>
+          <nvpair id="status-1084777749-last-failure-rsc_SAPHana_ZZZ_HDB99" name="last-failure-rsc_SAPHana_ZZZ_HDB99" value="1494844212"/>
+          <nvpair id="status-1084777749-hana_zzz_roles" name="hana_zzz_roles" value="1:-:-:-:-:-"/>
+          <nvpair id="status-1084777749-fail-count-rsc_SAPHanaTopology_ZZZ_HDB99" name="fail-count-rsc_SAPHanaTopology_ZZZ_HDB99" value="1"/>
+          <nvpair id="status-1084777749-last-failure-rsc_SAPHanaTopology_ZZZ_HDB99" name="last-failure-rsc_SAPHanaTopology_ZZZ_HDB99" value="1494844220"/>
+          <nvpair id="status-1084777749-hana_xxx_sync_state" name="hana_xxx_sync_state" value="PRIM"/>
+          <nvpair id="status-1084777749-fail-count-rsc_SAPHanaTopology_XXX_HDB00" name="fail-count-rsc_SAPHanaTopology_XXX_HDB00" value="1"/>
+          <nvpair id="status-1084777749-last-failure-rsc_SAPHanaTopology_XXX_HDB00" name="last-failure-rsc_SAPHanaTopology_XXX_HDB00" value="1494844249"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1084777750" uname="hana02" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1084777750">
+        <lrm_resources>
+          <lrm_resource id="stonith-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="stonith-sbd_last_0" operation_key="stonith-sbd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="6:0:7:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:7;6:0:7:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1494843740" last-rc-change="1494843740" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_ip_XXX_HDB00" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_ip_XXX_HDB00_last_0" operation_key="rsc_ip_XXX_HDB00_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="6:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;6:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1494843753" last-rc-change="1494843753" exec-time="47" queue-time="0" op-digest="6c4bb32fb31f32492bc0e9f88a7c74bf"/>
+            <lrm_rsc_op id="rsc_ip_XXX_HDB00_monitor_10000" operation_key="rsc_ip_XXX_HDB00_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:0:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;12:0:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="16" rc-code="0" op-status="0" interval="10000" last-rc-change="1494843740" exec-time="41" queue-time="0" op-digest="5e8e81c220f7e16362484ce3c2b564cb"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHanaTopology_XXX_HDB00" type="SAPHanaTopology" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHanaTopology_XXX_HDB00_last_0" operation_key="rsc_SAPHanaTopology_XXX_HDB00_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="23:11:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;23:11:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="51" rc-code="0" op-status="0" interval="0" last-run="1494844259" last-rc-change="1494844259" exec-time="1904" queue-time="0" op-digest="627076bc5c850629043e0e0067ffef34"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_XXX_HDB00_monitor_10000" operation_key="rsc_SAPHanaTopology_XXX_HDB00_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="24:11:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;24:11:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="52" rc-code="0" op-status="0" interval="10000" last-rc-change="1494844261" exec-time="4770" queue-time="0" op-digest="7b232c504c674bf49c25f8f23dccd05a"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_XXX_HDB00_last_failure_0" operation_key="rsc_SAPHanaTopology_XXX_HDB00_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="28:0:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:7;28:0:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="23" rc-code="7" op-status="0" interval="10000" last-rc-change="1494844254" exec-time="0" queue-time="0" op-digest="7b232c504c674bf49c25f8f23dccd05a"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHana_XXX_HDB00" type="SAPHana" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHana_XXX_HDB00_last_0" operation_key="rsc_SAPHana_XXX_HDB00_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="4:2:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;4:2:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1494844203" last-rc-change="1494844203" exec-time="2306" queue-time="0" op-digest="6748b0215a2fd51a575fe5061f56d433"/>
+            <lrm_rsc_op id="rsc_SAPHana_XXX_HDB00_last_failure_0" operation_key="rsc_SAPHana_XXX_HDB00_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:1;12:1:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="26" rc-code="1" op-status="0" interval="0" last-run="1494843753" last-rc-change="1494843753" exec-time="450159" queue-time="0" op-digest="6748b0215a2fd51a575fe5061f56d433"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_ip_ZZZ_HDB99" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_ip_ZZZ_HDB99_last_0" operation_key="rsc_ip_ZZZ_HDB99_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="5:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;5:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1494844211" last-rc-change="1494844211" exec-time="95" queue-time="0" op-digest="f919674aa652c9a3705c8d82bf886db0" exit-reason="[findif] failed"/>
+            <lrm_rsc_op id="rsc_ip_ZZZ_HDB99_last_failure_0" operation_key="rsc_ip_ZZZ_HDB99_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="35:2:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:1;35:2:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" exit-reason="[findif] failed" on_node="hana02" call-id="42" rc-code="1" op-status="0" interval="0" last-run="1494844203" last-rc-change="1494844203" exec-time="43" queue-time="0" op-digest="f919674aa652c9a3705c8d82bf886db0"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHana_ZZZ_HDB99" type="SAPHana" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHana_ZZZ_HDB99_last_0" operation_key="rsc_SAPHana_ZZZ_HDB99_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:4:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;8:4:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1494844220" last-rc-change="1494844220" exec-time="160" queue-time="0" op-digest="3609bcfdb5aa567982e0f4e50ea23f00"/>
+            <lrm_rsc_op id="rsc_SAPHana_ZZZ_HDB99_last_failure_0" operation_key="rsc_SAPHana_ZZZ_HDB99_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="33:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:7;33:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="45" rc-code="7" op-status="0" interval="0" last-run="1494844212" last-rc-change="1494844212" exec-time="243" queue-time="0" op-digest="3609bcfdb5aa567982e0f4e50ea23f00"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHanaTopology_ZZZ_HDB99" type="SAPHanaTopology" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHanaTopology_ZZZ_HDB99_last_failure_0" operation_key="rsc_SAPHanaTopology_ZZZ_HDB99_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="50:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:6;50:3:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="44" rc-code="6" op-status="0" interval="10000" last-run="1494844203" last-rc-change="1494844220" exec-time="8471" queue-time="0" op-digest="24a8b31809377209740ab63cff742b84"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_ZZZ_HDB99_last_0" operation_key="rsc_SAPHanaTopology_ZZZ_HDB99_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:5:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" transition-magic="0:0;8:5:0:30f20d38-43ff-4128-ab60-72acfb2af9b6" on_node="hana02" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1494844230" last-rc-change="1494844230" exec-time="8222" queue-time="0" op-digest="0da280b3e7b1a1d49883f5abb1f10dff"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1084777750">
+        <instance_attributes id="status-1084777750">
+          <nvpair id="status-1084777750-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1084777750-hana_xxx_clone_state" name="hana_xxx_clone_state" value="UNDEFINED"/>
+          <nvpair id="status-1084777750-hana_xxx_roles" name="hana_xxx_roles" value="1:S:master1::worker:"/>
+          <nvpair id="status-1084777750-master-rsc_SAPHana_XXX_HDB00" name="master-rsc_SAPHana_XXX_HDB00" value="0"/>
+          <nvpair id="status-1084777750-hana_xxx_sync_state" name="hana_xxx_sync_state" value="SFAIL"/>
+          <nvpair id="status-1084777750-fail-count-rsc_SAPHana_XXX_HDB00" name="fail-count-rsc_SAPHana_XXX_HDB00" value="INFINITY"/>
+          <nvpair id="status-1084777750-last-failure-rsc_SAPHana_XXX_HDB00" name="last-failure-rsc_SAPHana_XXX_HDB00" value="1494844203"/>
+          <nvpair id="status-1084777750-fail-count-rsc_ip_ZZZ_HDB99" name="fail-count-rsc_ip_ZZZ_HDB99" value="INFINITY"/>
+          <nvpair id="status-1084777750-last-failure-rsc_ip_ZZZ_HDB99" name="last-failure-rsc_ip_ZZZ_HDB99" value="1494844203"/>
+          <nvpair id="status-1084777750-fail-count-rsc_SAPHana_ZZZ_HDB99" name="fail-count-rsc_SAPHana_ZZZ_HDB99" value="INFINITY"/>
+          <nvpair id="status-1084777750-last-failure-rsc_SAPHana_ZZZ_HDB99" name="last-failure-rsc_SAPHana_ZZZ_HDB99" value="1494844212"/>
+          <nvpair id="status-1084777750-hana_zzz_roles" name="hana_zzz_roles" value="1:-:-:-:-:-"/>
+          <nvpair id="status-1084777750-fail-count-rsc_SAPHanaTopology_ZZZ_HDB99" name="fail-count-rsc_SAPHanaTopology_ZZZ_HDB99" value="1"/>
+          <nvpair id="status-1084777750-last-failure-rsc_SAPHanaTopology_ZZZ_HDB99" name="last-failure-rsc_SAPHanaTopology_ZZZ_HDB99" value="1494844220"/>
+          <nvpair id="status-1084777750-fail-count-rsc_SAPHanaTopology_XXX_HDB00" name="fail-count-rsc_SAPHanaTopology_XXX_HDB00" value="1"/>
+          <nvpair id="status-1084777750-last-failure-rsc_SAPHanaTopology_XXX_HDB00" name="last-failure-rsc_SAPHanaTopology_XXX_HDB00" value="1494844254"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

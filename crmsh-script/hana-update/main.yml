@@ -1,0 +1,24 @@
+version: 2.2
+category: SAP
+shortdesc: Update HANA in a cluster
+longdesc: |
+  This wizard helps you update HANA software in a cluster setup.
+
+  Requires SSH access between cluster nodes. This command is
+  also available from the command line as "crm cluster hana-update".
+
+parameters:
+  - name: System_ID
+  shortdesc: SAP System ID
+  longdesc: |
+    A unique SAP System ID within the landscape. 
+    The SID is a 3-character alphanumeric string starting with a letter.
+
+
+actions:
+  - collect: collect.py
+    shortdesc: Collect information
+  - apply_local: hahealth.py
+    shortdesc: Run cluster health check
+  - report: report.py
+    shortdesc: Report cluster state

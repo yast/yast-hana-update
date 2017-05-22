@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<crm_mon version="1.1.15">
+    <summary>
+        <stack type="corosync" />
+        <current_dc present="true" version="1.1.15-19.14-e174ec8" name="hana01" id="1084777749" with_quorum="true" />
+        <last_update time="Mon Oct 31 18:41:55 2016" />
+        <last_change time="Mon Oct 31 17:47:30 2016" user="hacluster" client="crmd" origin="hana02" />
+        <nodes_configured number="2" expected_votes="unknown" />
+        <resources_configured number="6" disabled="0" blocked="0" />
+        <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" />
+    </summary>
+    <nodes>
+        <node name="hana01" id="1084777749" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member" />
+        <node name="hana02" id="1084777750" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="1" type="member" />
+    </nodes>
+    <resources>
+        <resource id="stonith-sbd" resource_agent="stonith:external/sbd" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
+            <node name="hana01" id="1084777749" cached="false"/>
+        </resource>
+        <resource id="rsc_ip_XXX_HDB00" resource_agent="ocf::heartbeat:IPaddr2" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
+            <node name="hana01" id="1084777749" cached="false"/>
+        </resource>
+        <clone id="msl_SAPHana_XXX_HDB00" multi_state="true" unique="false" managed="true" failed="false" failure_ignored="false" >
+            <resource id="rsc_SAPHana_XXX_HDB00" resource_agent="ocf::suse:SAPHana" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
+                <node name="hana01" id="1084777749" cached="false"/>
+            </resource>
+            <resource id="rsc_SAPHana_XXX_HDB00" resource_agent="ocf::suse:SAPHana" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0" />
+        </clone>
+        <clone id="cln_SAPHanaTopology_XXX_HDB00" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false" >
+            <resource id="rsc_SAPHanaTopology_XXX_HDB00" resource_agent="ocf::suse:SAPHanaTopology" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
+                <node name="hana01" id="1084777749" cached="false"/>
+            </resource>
+            <resource id="rsc_SAPHanaTopology_XXX_HDB00" resource_agent="ocf::suse:SAPHanaTopology" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
+                <node name="hana02" id="1084777750" cached="false"/>
+            </resource>
+        </clone>
+    </resources>
+    <node_attributes>
+        <node name="hana01">
+            <attribute name="hana_xxx_remoteHost" value="hana02" />
+            <attribute name="hana_xxx_roles" value="4:P:master1:master:worker:master" />
+            <attribute name="hana_xxx_site" value="WALLDORF" />
+            <attribute name="hana_xxx_srmode" value="sync" />
+            <attribute name="hana_xxx_vhost" value="hana01" />
+            <attribute name="master-rsc_SAPHana_XXX_HDB00" value="5" />
+        </node>
+        <node name="hana02">
+            <attribute name="hana_xxx_clone_state" value="UNDEFINED" />
+            <attribute name="hana_xxx_remoteHost" value="hana01" />
+            <attribute name="hana_xxx_roles" value="2:N:master1:master:worker:master" />
+            <attribute name="hana_xxx_srmode" value="sync" />
+            <attribute name="hana_xxx_sync_state" value="SFAIL" />
+            <attribute name="hana_xxx_vhost" value="hana02" />
+            <attribute name="lpa_xxx_lpt" value="10" />
+            <attribute name="master-rsc_SAPHana_XXX_HDB00" value="0" />
+        </node>
+    </node_attributes>
+    <node_history>
+        <node name="hana01">
+            <resource_history id="rsc_SAPHanaTopology_XXX_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="22" task="start" last-rc-change="Mon Oct 31 16:08:35 2016" last-run="Mon Oct 31 16:08:35 2016" exec-time="6401ms" queue-time="1ms" rc="0" rc_text="ok" />
+                <operation_history call="23" task="monitor" interval="10000ms" last-rc-change="Mon Oct 31 16:08:41 2016" exec-time="13344ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="stonith-sbd" orphan="false" migration-threshold="5000">
+                <operation_history call="19" task="start" last-rc-change="Mon Oct 31 16:07:41 2016" last-run="Mon Oct 31 16:07:41 2016" exec-time="1135ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_ip_XXX_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="20" task="start" last-rc-change="Mon Oct 31 16:07:42 2016" last-run="Mon Oct 31 16:07:42 2016" exec-time="70ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="21" task="monitor" interval="10000ms" last-rc-change="Mon Oct 31 16:07:42 2016" exec-time="35ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_SAPHana_XXX_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="29" task="probe" last-rc-change="Mon Oct 31 17:47:45 2016" last-run="Mon Oct 31 17:47:45 2016" exec-time="9255ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="30" task="promote" last-rc-change="Mon Oct 31 17:48:05 2016" last-run="Mon Oct 31 17:48:05 2016" exec-time="3901ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="31" task="monitor" interval="60000ms" last-rc-change="Mon Oct 31 17:48:15 2016" exec-time="6528ms" queue-time="0ms" rc="8" rc_text="master" />
+            </resource_history>
+        </node>
+        <node name="hana02">
+            <resource_history id="rsc_SAPHanaTopology_XXX_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="21" task="start" last-rc-change="Mon Oct 31 16:08:19 2016" last-run="Mon Oct 31 16:08:19 2016" exec-time="6241ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="22" task="monitor" interval="10000ms" last-rc-change="Mon Oct 31 16:08:26 2016" exec-time="8844ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_SAPHana_XXX_HDB00" orphan="false" migration-threshold="5000" fail-count="1000000" last-failure="Mon Oct 31 17:47:30 2016">
+                <operation_history call="91" task="probe" last-rc-change="Mon Oct 31 17:47:31 2016" last-run="Mon Oct 31 17:47:31 2016" exec-time="13750ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="92" task="stop" last-rc-change="Mon Oct 31 17:47:54 2016" last-run="Mon Oct 31 17:47:54 2016" exec-time="10478ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+        </node>
+    </node_history>
+    <tickets>
+    </tickets>
+    <bans>
+    </bans>
+</crm_mon>

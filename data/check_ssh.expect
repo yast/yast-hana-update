@@ -1,0 +1,166 @@
+#!/usr/bin/expect -f
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: SSH checks script
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
+# >>> Arguments:
+# 0: action
+#    either "check", "copy", "authorize"
+# 1: host name
+# 2: [password] (only if action==copy)
+# 3: [path] (only if action==copy)
+# >>> Retcodes:
+# 0 - all is peachy
+# 5 - timeout
+# 10 - password required
+# 11 - password is incorrect
+# 51 - remote host reset the connection
+# 52 - name or service not known
+# 53 - no route to host
+# 54 - connection refused
+# 55 - unknown error
+
+set have_password 0
+set action ""
+set host ""
+set password ""
+set path ""
+set password_sent 0
+
+for {set i 0} {$i < [llength $argv]} {incr i} {
+    puts "index=$i [lindex $argv $i]"
+}
+
+proc usage {{msg ""}} {
+    global argv0
+    if {$msg ne ""} {
+        puts "Error: $msg"
+    }
+    puts "Usage: $argv0 action host \[password\] \[path\]"
+    puts "\taction: check, copy, authorize"
+    exit 1
+}
+
+
+if {[llength $argv] > 4 || [llength $argv] < 2} {
+    usage "Incorrect number of arguments"
+}
+
+set action [lindex $argv 0]
+set host [lindex $argv 1]
+
+switch -exact -- $action {
+    copy {
+        # copy hostname password path
+        # copy the ssh keys from the host into the local path
+        set password [lindex $argv 2]
+        set path [lindex $argv 3]
+        spawn sh -c "scp root@$host:'/root/.ssh/id_*' $path"
+    }
+    check {
+        # check hostname [password]
+        # check if we can SSH to the host
+        set host [lindex $argv 1]
+        set password [lindex $argv 2]
+        puts "checking ssh to root@$host"
+        spawn ssh root@$host true
+    }
+    authorize {
+        # authorize hostname password
+        # make sure that host's own keys are authorized
+        set password [lindex $argv 2]
+        # spawn ssh root@$host ha-cluster-init -y ssh_remote
+        # spawn ssh root@$host sh -c {b=/root/.ssh; a=$b/authorized_keys; for i in $b/id_*[^.pub]; do grep $(cat $i) $a || cat $i >> $a; done}
+        # spawn ssh root@$host bash -c {'for i in /root/.ssh/id_*[^.pub] ; do
+        #         grep -- $(cat $i.pub) /root/.ssh/authorized_keys || cat $i >> /root/.ssh/authorized_keys; 
+        #     done'}
+        spawn ssh root@$host bash -c {'
+            for key in id_rsa id_dsa id_ecdsa id_ed25519 ; do
+                [ -f /root/.ssh/$key ] || continue
+                grep -q -s "$(cat /root/.ssh/$key.pub)" /root/.ssh/authorized_keys \
+                    || cat /root/.ssh/$key.pub >> /root/.ssh/authorized_keys
+            done
+        '}
+        # spawn ssh root@$host bash -c {'for i in /root/.ssh/id_*.pub ; do
+        #         echo $i
+        #     done'}
+
+    }
+    copy-id {
+        set password [lindex $argv 2]
+        spawn ssh-copy-id root@$host
+    }
+    default { 
+        usage "Unknown action $action"
+    }
+}
+
+set timeout 5
+
+while {1} {
+    expect {
+        timeout {
+            exit 5
+        }
+        "yes/no" { 
+            sleep 1
+            send "yes\r"
+        }
+        "Last login:" {
+            # send -- "exit\r"
+            exit 0
+        }
+        "Password: " {
+            sleep 1
+            if {$password != ""} {
+                if {$password_sent == 0} {
+                    send -- $password\r
+                    set password_sent 1
+                } else {
+                    exit 11
+                }
+            } else {
+                exit 10
+            }
+        }
+        "Connection reset by peer" {
+            exit 51
+        }
+        "Name or service not known" {
+            exit 52
+        }
+        "No route to host" {
+            exit 53
+        }
+        "Connection refused" {
+            exit 54
+        }
+        eof {
+            if {$action eq "copy" || $action eq "check" || $action eq "copy-id"} {
+                exit 0
+            } else {
+                exit 55
+            }
+
+        }
+    }
+}
+
+exit 0
