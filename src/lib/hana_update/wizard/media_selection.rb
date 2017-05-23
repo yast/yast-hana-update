@@ -61,29 +61,6 @@ module HANAUpdater
       def update_model
         @model.nfs_share = value(:hana_medium)
       end
-
-      # def handle_user_input(input, event)
-      #   case input
-      #   when :hana_systems_table
-      #     if event['EventReason'] == 'SelectionChanged'
-      #       item_id = value(:hana_systems_table)
-      #       sys_name = @model.hana_sys_table_items[item_id][2]
-      #       set_value(:sys_descr, "Selected system: #{sys_name}")
-      #     end
-      #   when :edit_node
-      #     update_model
-      #     edit_node
-      #   when :node_definition_table
-      #     update_model
-      #     edit_node if event['EventReason'] == 'Activated'
-      #   when :append_hosts
-      #     @my_model.append_hosts = value(:append_hosts)
-      #   else
-      #     super
-      #   end
-      # end
-
-
     end
   end
 end

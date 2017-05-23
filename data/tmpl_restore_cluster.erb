@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+    </head>
+    <body>
+        <span>The following plan was generated in order to restore the original state of the cluster:</span><br>
+        <ol>
+            <li>
+                Register site <b><%= remote.site %></b> as secondary to <b><%= local.site %></b> and wait
+                until replication finishes;
+            </li>
+            <li>
+                Revert synchronization direction, making site <b><%= remote.site %></b> primary;
+            </li>
+            <li>
+                Migrate resource <b>ip_rsc</b> to node <b><%= remote.node %></b>
+            </li>
+            <li>
+                Clean up cluster resources;
+            </li>
+            <li>
+                Disable maintenance mode for resources <b><%= local.msl_id %></b>, <b>clone</b> and <b>ip</b>.
+            </li>
+        </ol>
+    </body>
+</html>

@@ -47,7 +47,7 @@ module HANAUpdater
 
     def hana_sys_table_items      
       lst = HANAUpdater::Cluster.resources.map do |r|
-        node = r.nodes_running_on.first
+        node = r.running_on
         if node.nil?
           ['<stopped>', r.hana_sid, r.hana_ino, 'N/A', 'N/A', r.role]
         else
@@ -61,8 +61,18 @@ module HANAUpdater
 
     def select_hana_system(id)
       log.debug "--- #{self.class}.#{__callee__}(id=#{id.inspect}) --- "
-      @selected_system = HANAUpdater::Cluster.resources[id]
-      puts "hana_system=#{@selected_system}"
+      @selected_system = HANAUpdater::Cluster.resources[id].hana_sid
+    end
+
+    # def get_resource(role)
+    #   HANAUpdater::Cluster.resources.find {|r| r.hana_sid == @selected_system && r.role == role}
+    # end
+    def get_resource(role)
+      if role == :local
+        HANAUpdater::Cluster.resources.find {|r| r.hana_sid == @selected_system && r.running_on.localhost? }
+      else
+        HANAUpdater::Cluster.resources.find {|r| r.hana_sid == @selected_system && !r.running_on.localhost? }
+      end
     end
 
     def validate_share(verbosity)

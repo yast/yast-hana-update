@@ -53,25 +53,41 @@ module HANAUpdater
 
   class PriResource
     attr_reader :active, :blocked, :failed, :failure_ignored, :id, :managed,
-                :nodes_running_on, :orphaned, :resource_agent, :role, :attributes,
-                :hana_sid, :hana_ino
+                :running_on, :orphaned, :resource_agent, :role, :attributes,
+                :hana_sid, :hana_ino, :msl_id
 
-    def initialize(rsc_node, cib, crm_mon)
-      rsc_node.attributes.each do |k, v|
+    def initialize(resource_xml, cib, crm_mon)
+      @msl_id = resource_xml.parent.attributes['id']
+      resource_xml.attributes.each do |k, v|
         instance_variable_set("@#{k}", v)
       end
       @hana_sid = get_cib_inst_attrib(cib, 'SID')
       @hana_ino = get_cib_inst_attrib(cib, 'InstanceNumber')
-      # TODO: check that nodes_running_on.length == 1
-      @nodes_running_on = []
+      
+      @running_on = nil
       # binding.pry
-      rsc_node.elements.each('node') do |nd|
-        @nodes_running_on << Node.new(nd, crm_mon, @hana_sid)
+      nodes = resource_xml.get_elements('node')
+      if nodes.length > 1
+        rsc_id = rsc_node.attributes['id']
+        nodes_str = nodes.map{|n| n.attributes['name']}.join(',')
+        raise "Resource #{rsc_id} is running on more than one node: #{nodes_str}"
+      elsif nodes.length == 1
+        @running_on = Node.new(nodes.first, crm_mon, @hana_sid)
       end
     end
 
     def system_name
       "#{@hana_sid}/#{@hana_ino}"
+    end
+
+    def node
+      return nil if @running_on.nil?
+      @running_on.name
+    end
+
+    def site
+      return nil if @running_on.nil?
+      @running_on.attributes['site']
     end
 
     private

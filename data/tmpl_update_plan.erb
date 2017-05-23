@@ -1,14 +1,49 @@
+<!DOCTYPE html>
 <html>
-<head>
-</head>
-<body>
-    <span>The following plan was generated for the <%- if part ==1 -%>local<% else %>remote<% end %> node:</span>
-    <br/>
-    <ol>
-        <li>Put resources <b>msl</b>, <b>clone</b> and <b>ip</b> into maintenance mode;</li>
-        <li>Break system replication between sites <b>primary</b> and <b>secondary</b>;</li>
-        <li>Mount update medium <b><%= @configuration.nfs_share %></b> on <b>local_node</b>;</li>
-        <li>Update HANA on site <b>local_site</b> (host <b>local_node</b>) manually using the preferred update method;</li>
-    </ol>
-    <span>Refer to the on-screen instructions on the next screen and to the <i>SAP HANA Master Update Guide</i> and <i>HANA Server Installation and Update Guide</i>.</span> </body>
+    <head>
+        <title></title>
+    </head>
+    <body>
+        <span>The following plan was generated for the <%- if part ==1 -%>local<%else %>remote<%end %>
+        node:</span><br>
+        <ol>
+            <%if part == :local %>
+            <li>
+                Put resources <b><%= local.msl_id %></b>, <b>clone</b> and <b>ip</b> into maintenance mode;
+            </li>
+            <li>
+                Break system replication between sites <b><%= remote.site %></b> and <b><%= local.site %></b>;
+            </li>
+            <li>
+                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= local.node %></b>;
+            </li>
+            <li>
+                Update HANA on site <b><%= local.site  %></b> (host <b><%= local.node %></b>) manually using the preferred update method;
+            </li>
+            <%else %> <!-- remote node -->
+            <li>
+                Register site <b><%= local.site %></b> as secondary to <b><%= remote.site %></b> and wait
+                until replication finishes;
+            </li>
+            <li>
+                Take over from site <b><%= remote.site %></b> to <b><%= local.site %></b>;
+            </li>
+            <li>
+                Migrate resource <b>ip_rsc</b> to node <b><%= local.node %></b>
+            </li>
+            <li>
+                Break system replication between sites <b><%= local.site %></b> and <b><%= remote.site %>;</b>
+            </li>
+            <li>
+                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= remote.node %></b>;
+            </li>
+            <li>
+                Update HANA manually on site <b><%= remote.site %></b> (host <b><%= remote.node %></b>) using the preferred update method.
+            </li>
+            <%end %>
+        </ol>
+        <br>
+        <span>Refer to the on-screen instructions on the next screen and to the <i>SAP HANA Master Update
+        Guide</i> and <i>HANA Server Installation and Update Guide</i>.</span>
+    </body>
 </html>

@@ -75,6 +75,11 @@ module Yast
         },
         'update_site_remote'  => {
           abort: :abort,
+          next:  'restore_cluster_state',
+          back:  :back
+        },
+        'restore_cluster_state'  => {
+          abort: :abort,
           next:  'finish',
           back:  :back
         },
@@ -94,6 +99,7 @@ module Yast
         'update_plan_remote'  => -> { update_plan(:remote) },
         'update_site_local'  => -> { update_site(:local) },
         'update_site_remote'  => -> { update_site(:remote) },
+        'restore_cluster_state'  => -> { restore_cluster },
         'finish'         => -> { show_summary }
       }
 
@@ -122,43 +128,6 @@ module Yast
       )
     end
 
-    # def cluster_check
-    #   hana_instances = 0
-    #   hana_info = []
-    #   local_hana = HANAUpdater::Hana.discover
-    #   if !local_hana.empty?
-    #     hana_instances = local_hana.length
-    #     first_hana = local_hana.first
-    #   end
-    #   begin
-    #     cluster_up = HANAUpdater::Cluster.cluster_up?
-    #     hana_resources = HANAUpdater::Cluster.hana_resources4
-    #     hana_primary = hana_resources.find { |node| node.sr_state == 'PRIM' }
-    #     if hana_primary.nil?
-    #       replication_on = false
-    #     else
-    #       hana_secondary = (hana_resources - [hana_primary]).first
-    #       replication_on = hana_secondary.sr_state == 'SOK'
-    #     end
-    #   rescue HANAUpdater::UserError => e
-    #     log.error "Cluster status error: #{e.message}"
-    #     cluster_up = false
-    #     replication_on = false
-    #   end
-    #   can_continue = cluster_up && replication_on
-    #   @hana_primary = hana_primary
-    #   @hana_secondary = hana_secondary
-    #   @mount_point = 'nfs://f102.suse.de/'
-
-    #   HANAUpdater::Wizard::RichText.new.run(
-    #     'System Check',
-    #     HANAUpdater::Helpers.render_template('tmpl_cluster_status.erb', binding),
-    #     '',
-    #     true,
-    #     can_continue
-    #   )
-    # end
-
     def cluster_overview
       HANAUpdater::Wizard::ClusterOverviewPage.new(@configuration).run
     end
@@ -167,17 +136,9 @@ module Yast
       HANAUpdater::Wizard::MediaSelectionPage.new(@configuration).run
     end
 
-    # def update_medium
-    #   HANAUpdater::Wizard::RichText.new.run(
-    #     'Update plan',
-    #     HANAUpdater::Helpers.render_template('tmpl_update_plan.erb', binding),
-    #     '',
-    #     true,
-    #     true
-    #   )
-    # end
-
     def update_plan(part)
+      local = @configuration.get_resource(:local)
+      remote = @configuration.get_resource(:remote)
       begin
         content = HANAUpdater::Helpers.render_template('tmpl_update_plan.erb', binding)
       rescue HANAUpdater::Exceptions::TemplateRenderException => e
@@ -195,16 +156,46 @@ module Yast
 
     def update_site(node)
       # resource = HANAUpdater::Cluster.find_resource_by_system(@configuration.)
-      resource = HANAUpdater::Cluster.selected_system
-      
+      resource = @configuration.get_resource(node)
+      node = resource.running_on
+      hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{resource.hana_sid}/index.html"
+      # TODO: check node.nil?
+      nfs_share_local = '/tmp/dummy/share/change/me'
       begin
         content = HANAUpdater::Helpers.render_template('tmpl_update_site.erb', binding)
       rescue HANAUpdater::Exceptions::TemplateRenderException => e
         log.error "#{e}: #{e.renderer_message}"
         abort
       end
-      HANAUpdater::Wizard::RichText.new.run(
-        "Update site #{site_name}",
+      input = HANAUpdater::Wizard::RichText.new.run(
+        "Update site #{node.name}",
+        content,
+        '',
+        true,
+        true
+      )
+      while true
+        log.error "UPDATE_SITE: input=#{input.inspect}"
+        if input == 'hdblcm_web'
+          HANAUpdater::Helpers.open_url(hdblcm_link)
+        else
+          return input
+        end
+        input = Yast::UI.UserInput
+      end
+    end
+
+    def restore_cluster
+      local = @configuration.get_resource(:local)
+      remote = @configuration.get_resource(:remote)
+      begin
+        content = HANAUpdater::Helpers.render_template('tmpl_restore_cluster.erb', binding)
+      rescue HANAUpdater::Exceptions::TemplateRenderException => e
+        log.error "#{e}: #{e.renderer_message}"
+        abort
+      end
+      input = HANAUpdater::Wizard::RichText.new.run(
+        "Restore original cluster state",
         content,
         '',
         true,
@@ -215,7 +206,7 @@ module Yast
     def show_summary
       Yast::Wizard.SetContents(
         'Summary',
-        RichText('Here is the summary of the update procedure'),
+        RichText('HANA was successfully updated'),
         '',
         true, true
       )
