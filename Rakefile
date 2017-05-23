@@ -34,6 +34,7 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /doc/
   conf.exclude_files << /make_package.sh/
   conf.exclude_files << /test/
+  conf.exclude_files << /cluster2.rb/
 end
 
 desc "Run unit tests with coverage."
@@ -44,14 +45,14 @@ task "coverage" do
 end
 
 Packaging.configuration do |conf|
-  conf.obs_project = "home:imanyugin:hana-updater"
-  conf.package_name = "yast2-hana-updater"
+  conf.obs_project = "home:imanyugin:hana_update"
+  conf.package_name = "yast2-hana-update"
   conf.obs_api = "https://api.suse.de/"
-  # conf.obs_target = "SLE_12_SP1"
-  conf.obs_target = "SLE_12_SP2"
+  conf.obs_target = "SLE_12_SP3"
 end
 
 Rake::Task["check:committed"].clear
+Rake::Task["check:license"].clear
 
 # namespace :test do
 #   desc "Runs unit tests."

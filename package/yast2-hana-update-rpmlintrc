@@ -1,0 +1,2 @@
+# We don't provide the YaST2 binary
+addFilter("desktopfile-without-binary")
