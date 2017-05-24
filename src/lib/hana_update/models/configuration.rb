@@ -24,7 +24,7 @@ require 'yast'
 # require 'sap_ha/semantic_checks'
 require 'hana_update/node_logger'
 require 'hana_update/helpers'
-require 'hana_update/cluster3'
+require 'hana_update/cluster4'
 
 module HANAUpdater
   # Base class for component configuration
@@ -45,18 +45,21 @@ module HANAUpdater
       @no_validators = value
     end
 
-    def hana_sys_table_items      
-      lst = HANAUpdater::Cluster.resources.map do |r|
-        node = r.running_on
-        if node.nil?
-          ['<stopped>', r.hana_sid, r.hana_ino, 'N/A', 'N/A', r.role]
-        else
-          [node.to_s, r.hana_sid, r.hana_ino, node.attributes['site'],
-              node.attributes['version'] || 'N/A', r.role]
-        end
-      end
-      @hana_system_list = lst
-      HANAUpdater::Helpers.itemize_list(lst)
+    # def hana_sys_table_items
+    #   lst = HANAUpdater::Cluster.resources.map do |r|
+    #     node = r.running_on
+    #     if node.nil?
+    #       ['<stopped>', r.hana_sid, r.hana_ino, 'N/A', 'N/A', r.role]
+    #     else
+    #       [node.to_s, r.hana_sid, r.hana_ino, node.attributes['site'],
+    #           node.attributes['version'] || 'N/A', r.role]
+    #     end
+    #   end
+    #   @hana_system_list = lst
+    #   HANAUpdater::Helpers.itemize_list(lst)
+    # end
+
+    def hana_sys_table_items
     end
 
     def select_hana_system(id)

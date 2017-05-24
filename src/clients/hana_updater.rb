@@ -22,7 +22,7 @@
 require 'yast'
 require 'hana_update/helpers'
 require 'hana_update/hana'
-require 'hana_update/cluster3'
+require 'hana_update/cluster4'
 require 'hana_update/wizard/base_wizard_page'
 require 'hana_update/wizard/cluster_overview_page'
 require 'hana_update/wizard/media_selection'
@@ -155,7 +155,6 @@ module Yast
     end
 
     def update_site(node)
-      # resource = HANAUpdater::Cluster.find_resource_by_system(@configuration.)
       resource = @configuration.get_resource(node)
       node = resource.running_on
       hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{resource.hana_sid}/index.html"

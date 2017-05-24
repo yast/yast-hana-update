@@ -53,7 +53,7 @@ module HANAUpdater
       def before_refresh
         Yast::Popup.Feedback('Please wait', 'Querying cluster state') do
           begin
-            HANAUpdater::Cluster.update_state # TODO: move somewhere            
+            HANAUpdater::Cluster.update_state
           rescue RuntimeError => e
             raise AbortGUILoop.new(e.message, :abort)
           end
@@ -105,7 +105,8 @@ module HANAUpdater
             Id(:hana_systems_table),
             Opt(:keepSorting, :notify, :immediate),
             # Header(_('Host name'), _('System'), _('Site name'), _('HANA version'), _('RA role')),
-            Header(_('Host name'), _('SID'), _('Inst.'), _('Site name'), _('HANA version'), _('RA role')),
+            # Header(_('Host name'), _('SID'), _('Inst.'), _('Site name'), _('HANA version'), _('RA role')),
+            Header(_('SID'), _('Inst.'), _('Host name'), _('Site name'), _('HANA version'), _('RA role')),
             []
           ),
           MinSize(55, 1, Label(Id(:sys_descr), ''))
