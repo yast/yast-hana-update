@@ -2,7 +2,7 @@
 <head>
 </head>
 <body>
-    <h3>Update HANA on site <%= node.attributes['site'] %> using the preferred update method.</h3>
+    <h3>Update HANA on site <%= node.site %> using the preferred update method.</h3>
 
     Note: The contents of the NFS share have been copied locally to <code><%= nfs_share_local %></code>.
 
@@ -20,7 +20,7 @@
     <h3>2. Using the SAP HANA HDBLCM Web User Interface:</h3>
     <ul>
         <li>Open <a href="hdblcm_web"><%= hdblcm_link %></a></li>
-        <li>Log in with <code><%= resource.hana_sid.downcase %>adm</code> user.</li>
+        <li>Log in with <code><%= @configuration.system.hana_sid.downcase %>adm</code> user.</li>
         <li>Follow the procedure as described in <i>SAP HANA Server Installation and Update Guide</i>.</li>
     </ul>
 

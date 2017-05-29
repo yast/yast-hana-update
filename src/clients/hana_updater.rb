@@ -137,8 +137,9 @@ module Yast
     end
 
     def update_plan(part)
-      local = @configuration.get_resource(:local)
-      remote = @configuration.get_resource(:remote)
+      group = @configuration.system
+      local = group.master.local
+      remote = group.master.remote
       begin
         content = HANAUpdater::Helpers.render_template('tmpl_update_plan.erb', binding)
       rescue HANAUpdater::Exceptions::TemplateRenderException => e
@@ -155,9 +156,9 @@ module Yast
     end
 
     def update_site(node)
-      resource = @configuration.get_resource(node)
+      resource = @configuration.system.master.send(node)
       node = resource.running_on
-      hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{resource.hana_sid}/index.html"
+      hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{@configuration.system.hana_sid}/index.html"
       # TODO: check node.nil?
       nfs_share_local = '/tmp/dummy/share/change/me'
       begin
@@ -185,8 +186,9 @@ module Yast
     end
 
     def restore_cluster
-      local = @configuration.get_resource(:local)
-      remote = @configuration.get_resource(:remote)
+      group = @configuration.system
+      local = group.master.local
+      remote = group.master.remote
       begin
         content = HANAUpdater::Helpers.render_template('tmpl_restore_cluster.erb', binding)
       rescue HANAUpdater::Exceptions::TemplateRenderException => e

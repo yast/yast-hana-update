@@ -30,57 +30,37 @@ module HANAUpdater
   # Base class for component configuration
   class Configuration
     include Yast::Logger
-    # include SapHA::Exceptions
-    attr_reader   :no_validators, :selected_system
+    attr_reader   :no_validators, :system
     attr_accessor :nfs_share, :hana_instance, :hana_system
 
     def initialize
       @no_validators = false
       @nfs_share = nil
       @hana_system_list = []
-      @selected_system = nil
+      @system = nil
     end
 
     def debug=(value)
       @no_validators = value
     end
 
-    # def hana_sys_table_items
-    #   lst = HANAUpdater::Cluster.resources.map do |r|
-    #     node = r.running_on
-    #     if node.nil?
-    #       ['<stopped>', r.hana_sid, r.hana_ino, 'N/A', 'N/A', r.role]
-    #     else
-    #       [node.to_s, r.hana_sid, r.hana_ino, node.attributes['site'],
-    #           node.attributes['version'] || 'N/A', r.role]
-    #     end
-    #   end
-    #   @hana_system_list = lst
-    #   HANAUpdater::Helpers.itemize_list(lst)
-    # end
-
     def hana_sys_table_items
-    end
-
-    def select_hana_system(id)
-      log.debug "--- #{self.class}.#{__callee__}(id=#{id.inspect}) --- "
-      @selected_system = HANAUpdater::Cluster.resources[id].hana_sid
-    end
-
-    # def get_resource(role)
-    #   HANAUpdater::Cluster.resources.find {|r| r.hana_sid == @selected_system && r.role == role}
-    # end
-    def get_resource(role)
-      if role == :local
-        HANAUpdater::Cluster.resources.find {|r| r.hana_sid == @selected_system && r.running_on.localhost? }
-      else
-        HANAUpdater::Cluster.resources.find {|r| r.hana_sid == @selected_system && !r.running_on.localhost? }
+      l = HANAUpdater::Cluster.groups.map do |g|
+        # sort nodes by RA role alphabetically, i.e., Master, Slave, Stopped
+        node_list = g.master.primitives.map { |e| [e.running_on.name, e.mon_attr['role']] }
+        node_list = node_list.sort_by { |e| e[1] }.map { |e| e[0] }
+        [g.hana_sid, g.hana_inst, node_list.join(', ')]
       end
+      HANAUpdater::Helpers.itemize_list(l)
+    end
+
+    def select_hana_system(sid, ino)
+      log.error "--- #{self.class}.#{__callee__}(sid=#{sid}, ino=#{ino}) --- "
+      @system = HANAUpdater::Cluster.get_system(sid, ino)
     end
 
     def validate_share(verbosity)
-
+      # TODO: implement
     end
-
   end
 end

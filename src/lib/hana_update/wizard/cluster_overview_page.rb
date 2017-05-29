@@ -21,7 +21,7 @@
 
 require 'yast'
 require 'hana_update/wizard/base_wizard_page'
-require 'hana_update/cluster3'
+require 'hana_update/cluster'
 
 module HANAUpdater
   module Wizard
@@ -94,7 +94,7 @@ module HANAUpdater
         Yast::UI.ReplaceWidget(Id(:rp_content), hana_systems_table)
         set_value(:hana_systems_table, contents, :Items)
         item_id = value(:hana_systems_table)
-        sys_name = contents[item_id][2]
+        sys_name = contents[item_id][1]
         set_value(:sys_descr, "Selected HANA system: #{sys_name}")
         # end
       end
@@ -106,7 +106,7 @@ module HANAUpdater
             Opt(:keepSorting, :notify, :immediate),
             # Header(_('Host name'), _('System'), _('Site name'), _('HANA version'), _('RA role')),
             # Header(_('Host name'), _('SID'), _('Inst.'), _('Site name'), _('HANA version'), _('RA role')),
-            Header(_('SID'), _('Inst.'), _('Host name'), _('Site name'), _('HANA version'), _('RA role')),
+            Header(_('System ID'), _('Instance'), _('Nodes')),
             []
           ),
           MinSize(55, 1, Label(Id(:sys_descr), ''))
@@ -114,7 +114,9 @@ module HANAUpdater
       end
 
       def update_model
-        @model.select_hana_system(value(:hana_systems_table))
+        contents = @model.hana_sys_table_items
+        item_id = value(:hana_systems_table)
+        @model.select_hana_system(contents[item_id][1], contents[item_id][2])
       end
 
       def handle_user_input(input, event)

@@ -39,4 +39,6 @@ def user_root?
   Process.uid == 0
 end
 
-
+def test_file(name)
+  File.read("#{File.dirname(__FILE__)}/data/#{name}")
+end

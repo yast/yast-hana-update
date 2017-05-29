@@ -70,7 +70,7 @@ module HANAUpdater
         return @storage[basename].result(binding)
       rescue StandardError => e
         log.error("Error while rendering template '#{full_path}': #{e.message}")
-        exc = TemplateRenderException.new("Error rendering template.")
+        exc = TemplateRenderException.new("Error rendering template '#{basename}'.")
         exc.renderer_message = e.message
         raise exc
       end

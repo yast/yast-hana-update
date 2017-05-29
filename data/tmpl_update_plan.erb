@@ -4,45 +4,47 @@
         <title></title>
     </head>
     <body>
-        <span>The following plan was generated for the <%- if part ==1 -%>local<%else %>remote<%end %>
-        node:</span><br>
+        <span>The following plan was generated for the <%- if part == :local -%>local<%else %>remote<%end %>
+        node:</span>
+        <br/>
         <ol>
             <%if part == :local %>
             <li>
-                Put resources <b><%= local.msl_id %></b>, <b>clone</b> and <b>ip</b> into maintenance mode;
+                Put resources <b><%= group.master.id %></b>, <b><%= group.clone.id %></b> and <b><%= group.vip.id %></b> into maintenance mode;
             </li>
             <li>
-                Break system replication between sites <b><%= remote.site %></b> and <b><%= local.site %></b>;
+                Break system replication between sites <b><%= remote.running_on.site %></b> and <b><%= local.running_on.site %></b>;
             </li>
             <li>
-                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= local.node %></b>;
+                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= local.running_on.name %></b>;
             </li>
             <li>
-                Update HANA on site <b><%= local.site  %></b> (host <b><%= local.node %></b>) manually using the preferred update method;
+                Update HANA on site <b><%= local.running_on.site  %></b> (host <b><%= local.running_on.name %></b>) manually using the preferred update method;
             </li>
             <%else %> <!-- remote node -->
             <li>
-                Register site <b><%= local.site %></b> as secondary to <b><%= remote.site %></b> and wait
+                Register site <b><%= local.running_on.site %></b> as secondary to <b><%= remote.running_on.site %></b> and wait
                 until replication finishes;
             </li>
             <li>
-                Take over from site <b><%= remote.site %></b> to <b><%= local.site %></b>;
+                Take over from site <b><%= remote.running_on.site %></b> to <b><%= local.running_on.site %></b>;
             </li>
             <li>
-                Migrate resource <b>ip_rsc</b> to node <b><%= local.node %></b>
+                Migrate resource <b>ip_rsc</b> to node <b><%= local.running_on.name %></b>
             </li>
             <li>
-                Break system replication between sites <b><%= local.site %></b> and <b><%= remote.site %>;</b>
+                Break system replication between sites <b><%= local.running_on.site %></b> and <b><%= remote.running_on.site %>;</b>
             </li>
             <li>
-                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= remote.node %></b>;
+                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= remote.running_on.name %></b>;
             </li>
             <li>
-                Update HANA manually on site <b><%= remote.site %></b> (host <b><%= remote.node %></b>) using the preferred update method.
+                Update HANA manually on site <b><%= remote.running_on.site %></b> (host <b><%= remote.running_on.name %></b>) using the preferred update method.
             </li>
             <%end %>
         </ol>
-        <br>
+        <br/>
+        
         <span>Refer to the on-screen instructions on the next screen and to the <i>SAP HANA Master Update
         Guide</i> and <i>HANA Server Installation and Update Guide</i>.</span>
     </body>
