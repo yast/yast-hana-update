@@ -22,7 +22,7 @@
 require 'yast'
 require 'hana_update/helpers'
 require 'hana_update/hana'
-require 'hana_update/cluster4'
+require 'hana_update/cluster'
 require 'hana_update/wizard/base_wizard_page'
 require 'hana_update/wizard/cluster_overview_page'
 require 'hana_update/wizard/media_selection'

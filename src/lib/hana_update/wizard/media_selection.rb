@@ -21,7 +21,7 @@
 
 require 'yast'
 require 'hana_update/wizard/base_wizard_page'
-require 'hana_update/cluster4'
+require 'hana_update/cluster'
 
 module HANAUpdater
   module Wizard

@@ -1,274 +1,185 @@
+require 'yast'
 require 'rexml/document'
 require 'rexml/xpath'
 require 'hana_update/shell_commands'
 require 'hana_update/exceptions'
 require 'hana_update/hana'
 require 'hana_update/ssh'
-require 'hana_update/helpers'
 require 'socket'
-# schema is
-# /usr/share/pacemaker/crm_mon.rng
 
 module HANAUpdater
+  class Node
+    attr_reader :name, :id, :cached
+    def initialize(mon_xml_node, cib_xml, sid)
+      # print "Node(\nsid=#{sid},\nmon_xml_node=#{mon_xml_node},\ncib_xml_node=#{cib_xml}\n\n"
+      mon_xml_node.attributes.each { |k, v| instance_variable_set("@#{k}", v) }
+      @inst_attr = Hash[]
+      name_prefix = "hana_#{sid.downcase}"
+      REXML::XPath.each(cib_xml,
+        '/cib/configuration/nodes/node[@id=$node_id]/instance_attributes/nvpair', nil,
+        'node_id' => @id) do |z|
+        # transform attribute names from hana_sid_* to *
+        # and don't forget about lpt_sid_lpa
+        name = z.attributes['name']
+        name = name[name.rindex('_')+1..name.length()]
+        value = z.attributes['value']
+        @inst_attr[name] = value
+      end
+      
+    end
 
-  class XMLHelperClass
-    def initialize(attributes)
-      attributes.each do |k, v|
-        my_key = k.sub('-', '_')
-        my_key = "@#{my_key}".to_sym
-        instance_variable_set(my_key, transform_value(v))
+    def localhost?
+      @name == Socket.gethostname
+    end
+
+    def site
+      @inst_attr['site']
+    end
+  end
+
+  class PrmResource
+    attr_reader :mon_attr, :inst_attr, :id, :running_on
+    def initialize(sid, mon_xml_node, cib_xml_node)
+      # print "PrmResource(\nsid=#{sid},\nmon_xml_node=#{mon_xml_node},\ncib_xml_node=#{cib_xml_node}\n\n"
+      @mon_attr = Hash[mon_xml_node.attributes.map { |k, v| [k, v] }]
+      @id = @mon_attr['id']
+      # mon_xml_node.attributes.each { |k, v| instance_variable_set("@#{k}", v) }
+      # only primitives can be running
+      if self.class == PrmResource
+        if !mon_xml_node.elements['node'].nil?
+          # binding.pry
+          @running_on = Node.new(mon_xml_node.elements['node'], cib_xml_node.root, sid)
+        else
+          @running_on = nil
+        end
+      end
+      if !cib_xml_node.nil?
+        ia = cib_xml_node.elements['instance_attributes']
+        unless ia.nil?
+          @inst_attr = Hash[
+            ia.get_elements('nvpair').map {|e| [e.attributes['name'], e.attributes['value']] }]
+        end
+      end
+    end
+  end
+
+  class ClnResource < PrmResource
+    attr_reader :primitives
+    def initialize(sid, mon_xml_node, cib_xml_node)
+      # print "ClnResource(\nsid=#{sid},\nmon_xml_node=#{mon_xml_node},\ncib_xml_node=#{cib_xml_node}\n\n"
+      super
+      @primitives = mon_xml_node.get_elements('resource').map do |rsc|
+        primitive_cib = cib_xml_node.get_elements('primitive').first
+        PrmResource.new(sid, rsc, primitive_cib)
       end
     end
 
-    private
+    # get local instance of the primitive
+    def local
+      @primitives.find { |pri| pri.running_on.localhost? }
+    end
 
-    def transform_value(v)
-      # check boolean
-      return v == 'true' if v == 'true' || v == 'false'
-      begin
-        return Integer(v)
-      rescue ArgumentError
-        return v
-      end
-      v
+    def remote
+      @primitives.find { |pri| !pri.running_on.localhost? }
+    end
+  end
+
+  class MslResource < ClnResource
+    def initialize(sid, mon_xml_node, cib_xml_node)
+      # print "MslResource(\nsid=#{sid},\nmon_xml_node=#{mon_xml_node},\ncib_xml_node=#{cib_xml_node}\n\n"
+      super
+    end
+
+    def master
+      @primitives.find { |pri| pri.mon_attr['role'] == 'Master' }
+    end
+
+    def slave
+      @primitives.find { |pri| pri.mon_attr['role'] == 'Slave' }
+    end
+  end
+
+  class ResourceGroup
+    attr_reader :master, :clone, :vip, :hana_sid, :hana_inst
+    def initialize(mon_xml, cib_xml, msl_mon)
+      rsc_id = msl_mon.elements['resource'].attributes['id']
+      msl_cib = REXML::XPath.first(cib_xml, '//cib/configuration/resources/master[@id=$aid]',
+        nil, 'aid' => msl_mon.attributes['id'])
+      z = REXML::XPath.first(cib_xml, '//nvpair[@id=$aid]', {},
+        'aid'=>"#{rsc_id}-instance_attributes-SID")
+      sid = z.attributes['value']
+      # now find a clone for the same SID
+      cln_cib = REXML::XPath.first(cib_xml,
+        '//cib/configuration/resources/clone[./primitive/instance_attributes'\
+        '/nvpair[@name="SID" and @value=$sid]]', nil, 'sid' => sid)
+      cln_mon = REXML::XPath.first(mon_xml,
+        '//crm_mon/resources/clone[@id = $sid]', nil, 'sid' => cln_cib.attributes['id'])
+      @clone = ClnResource.new(sid, cln_mon, cln_cib)
+      @master = MslResource.new(sid, msl_mon, msl_cib)
+      vip_colocation = REXML::XPath.first(cib_xml,
+        '/cib/configuration/constraints/rsc_colocation[@with-rsc=$msl_id '\
+        'and @with-rsc-role="Master"]', nil, 'msl_id'=>msl_mon.attributes['id'])
+      vip_id = vip_colocation.attributes['rsc']
+      vip_mon = REXML::XPath.first(mon_xml,
+        '//crm_mon/resources/resource[@id=$vip_id]', nil, 'vip_id'=>vip_id)
+      vip_cib = REXML::XPath.first(cib_xml,
+        '//cib/configuration/resources/primitive[@id=$vip_id]', nil, 'vip_id'=>vip_id)
+      @vip = PrmResource.new(sid, vip_mon, vip_cib)
+      @hana_sid = sid
+      @hana_inst = @master.primitives.first.inst_attr['InstanceNumber']
     end
   end
 
   class ClusterClass
     include Singleton
     include ShellCommands
+    include Yast::Logger
 
-    class ClusterNode < XMLHelperClass
-      attr_reader :node_name, :id, :online, :standby, :maintenance, :pending, :unclean
+    attr_reader :groups
 
-      def set_hana_resource(node)
-      end
+    MSL_RESOURCE_TYPE = 'ocf::suse:SAPHana'.freeze
+    CLN_RESOURCE_TYPE = 'ocf::suse:SAPHanaTopology'.freeze
+
+    def initialize
+      @groups = []
     end
 
-    class ClusterState
-      attr_accessor :cluster_maintenance
-
-      def initialize
-        @cluster_maintenance = false
-        @nodes = []
-      end
+    def update_state
+      crm_mon = get_crm_mon
+      cib_status = get_cib
+      msl_mons = REXML::XPath.match(crm_mon,
+        '//crm_mon/resources/clone[./resource[@resource_agent=$ra_type and @orphaned="false"]]',
+        {}, 'ra_type'=>MSL_RESOURCE_TYPE
+                                   )
+      @groups = msl_mons.map { |msl_mon| ResourceGroup.new(crm_mon, cib_status, msl_mon) }
     end
 
-    class ResourceC
-      attr_reader :node, :sr_state, :site_name, :vhost, :remote_vhost, :ra_state, :hana_version,
-        :rep_mode, :op_mode
-      @@field_desc = {
-        node:         'Node Name',
-        sr_state:     'System Replication State',
-        site_name:    'Site Name',
-        vhost:        'HANA Virtual Host',
-        remote_vhost: 'HANA Remote Host',
-        ra_state:     'Cluster Resource State',
-        hana_version: 'HANA Version',
-        rep_mode:     'Replication Mode',
-        op_mode:      'Operation Mode'
-      }
-      def initialize(node_name, crm_attrs)
-        @node = node_name
-        # TODO: check the SID
-        @sr_state = crm_attrs.fetch('hana_xxx_sync_state', '?')
-        @site_name = crm_attrs.fetch('hana_xxx_site', '?')
-        @vhost = crm_attrs.fetch('hana_xxx_vhost', '?')
-        @remote_vhost = crm_attrs.fetch('hana_xxx_remoteHost', '?')
-        @ra_state = crm_attrs.fetch('hana_xxx_clone_state', '?')
-        @hana_version = crm_attrs.fetch('hana_xxx_version', '?')
-        @rep_mode = crm_attrs.fetch('hana_xxx_srmode', '?')
-        @op_mode = crm_attrs.fetch('hana_xxx_op_mode', 'N/A')
-        reinit_version
+    def get_system(sid, ino)
+      f = @groups.find { |g| g.hana_sid == sid && g.hana_inst == ino }
+      if f.nil?
+        log.error "Could not find HANA system with sid=#{sid} and ino=#{ino}"
+        log.error @groups.map { |g| [g.hana_sid, g.hana_inst].join(":") }.join(", ")
       end
-
-      def self.field_description(fld)
-        @@field_desc[fld.to_s[1..-1].to_sym]
-      end
-
-      def field_description(fld)
-        @@field_desc[fld.to_s[1..-1].to_sym]
-      end
-
-      private
-
-      def reinit_version
-        # TODO: check the SID
-        if @hana_version == '?' && localhost?
-          @hana_version = HANAUpdater::Hana.version('XXX')
-        else
-          out, status = SSH.run_command2(@node, 'su -l xxxadm HDB version')
-          match = /version:\s+(\d+.\d+.\d+.\d+.\d+)/.match(out)
-          @hana_version = match.captures.first
-        end
-      end
-
-      def localhost?
-        @node == Socket.gethostname
-      end
+      f
     end
+    
+    private
 
-
-    # Provide a cluster overview nicely rendered into HTML page
-    def cluster_overview
-      l = [['hana01', 'NDB/00', 'WDF', '?', 'Master'], ['hana02', 'NDB/00', 'ROT', '?', 'Slave']]
-      l = l.map { |e| e[0] }
-      cont = HANAUpdater::Helpers.itemize_list(l)
-      begin
-        continue = cluster_up?
-      rescue HANAUpdater::UserError => e
-        continue = false
-        log.error "Error connecting to the cluster management system: #{e.message}"
-        # cont << e.message
-      end
-      return continue, cont
-    end
-
-    # Check if cluster is up
-    # Return true if cluster services are up. Raise HANAUpdater::UserError with detailed error
-    # description otherwise.
-    def cluster_up?
-      status = exec_status('which', 'crm')
-      raise UserError.new("Could not find the `crm_mon` binary. Cannot proceed.",
-        UserError::CRITICAL) unless status.exitstatus == 0
-      err, status = exec_outerr_status('crm_mon', '-r1')
-      raise UserError, "Could not connect to cluster "\
-        "(exit code #{status.exitstatus}): #{err.strip}." unless status.exitstatus == 0
-      true
-    end
-
-    def hana_resources
+    # Read and parse output of crm_mon
+    def get_crm_mon
       out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
-      raise UserError.new("Could not get the CRM configuration: #{out}.",
-        UserError::CRITICAL) unless status.exitstatus == 0
-      doc = REXML::Document.new(out)
-      resources = REXML::XPath.match(doc, '//resource').select do |res|
-        res.attributes['resource_agent'] == "ocf::suse:SAPHana" ||
-          res.attributes['resource_agent'] == "ocf::suse:SAPHanaTopology"
-      end
-      resources.map(&:attributes)
+      # out = File.read('new_xml/crm_mon_fake.xml')
+      # TODO: log the output here
+      raise "Could not connect to cluster: #{out}" if status.exitstatus != 0
+      REXML::Document.new(out)
     end
 
-    def hana_resources2
-      # This method does not show correct situation:
-      # when HANA is stopped on hana02, it only returns one running instance on hana01
-      # (see fail_r.xml and fail_rn.xml)
-      out, status = exec_outerr_status('crm_mon', '-rn', '--as-xml')
-      raise UserError.new("Could not get the CRM configuration: #{out}.",
-        UserError::CRITICAL) unless status.exitstatus == 0
-      doc = REXML::Document.new(out)
-      resources = []
-      doc.elements.each('crm_mon/nodes/node') do |node|
-        hana_rsc = node.elements.find { |r| r.attributes['resource_agent'] == 'ocf::suse:SAPHana' }
-        next if hana_rsc.nil?
-        hana_attr = hana_rsc.attributes.to_h
-        hana_attr["resource_id"] = hana_attr.delete("id")
-        hana_attr.merge!(node.attributes)
-        hana_attr["node_id"] = hana_attr.delete("id")
-        # add the values from the node-specific attributes
-        node_attrs = REXML::XPath.first(doc, '/crm_mon/node_attributes/node[@name=$node_name]', {}, {"node_name" => hana_attr['name']})
-        unless node_attrs.nil?
-          node_attrs.elements.select { |e| e.attributes['name'].start_with?'hana' }.each do |a|
-            hana_attr[a.attributes['name']] = a.attributes['value']
-          end
-        end
-        resources << hana_attr
-      end
-      resources
-    end
-
-    def hana_resources3
-      out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
-      raise UserError.new("Could not get the CRM configuration: #{out}.",
-        UserError::CRITICAL) unless status.exitstatus == 0
-      doc = REXML::Document.new(out)
-      # match all multistate resources that have a child SAPHana  resource
-      resources = REXML::XPath.match(doc, '/crm_mon/resources/clone[@multi_state="true" && .resource[@resource_agent="ocf::suse:SAPHana"]]')
-    end
-
-    def hana_resources4
-      out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
-      raise UserError.new("Could not get the CRM configuration: #{out}.",
-        UserError::CRITICAL) unless status.exitstatus == 0
-      doc = REXML::Document.new(out)
-      resources = []
-      # loop through all HANA nodes
-      REXML::XPath.each(doc,
-        '/crm_mon/node_attributes/node[.attribute[starts-with(@name, "hana")]]') do |node|
-        node_name = node.attribute('name').value
-        node_attrs = Hash[ node.elements.map { |e| [e.attribute('name').value,
-          e.attribute('value').value] }]
-        r = ResourceC.new(node_name, node_attrs)
-        resources << r
-      end
-      resources
-    end
-
-    def hana_resources5
-      # Query the CIB via cibadmin -Ql (as in SAPHanaSR-showAttr)
-      out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
-      raise UserError.new("Could not get the CRM configuration: #{out}.",
-        UserError::CRITICAL) unless status.exitstatus == 0
-      doc = REXML::Document.new(out)
-      resources = []
-        # '/cib/configuration/nodes/node[./instance_attributes/nvpair/attribute[starts-with(@name, "hana")]]') do |node|
-        #'/cib/configuration/nodes/node[/instance_attributes/nvpair[attribute[starts-with(@name, "hana")]]') do |node|
-      REXML::XPath.each(doc, '/cib/configuration/nodes/node[.instance_attributes/nvpair[starts-with(@name, "hana")]]') do |node|
-        node_name = node.attribute('name').value
-        node_attrs = Hash[ node.elements.map { |e| [e.attribute('name').value,
-          e.attribute('value').value] }]
-        r = ResourceC.new(node_name, node_attrs)
-        resources << r
-      end
-      resources
-    end
-
-    def cluster_check
-      out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
-      raise UserError.new("Could not get the CRM configuration: #{out}.",
-        UserError::CRITICAL) unless status.exitstatus == 0
-      doc = REXML::Document.new(out)
-      nodes = []
-      REXML::XPath.each(doc, '/crm_mon/nodes/node') do |nd|
-        nodes << ClusterNode.new(nd.attributes)
-      end
-
-      nodes
-    end
-
-    def hana_overview
-      nodes = hana_resources4
-      primary = nodes.find { |node| node.sr_state == 'PRIM'}
-      no_primary = false
-      if primary.nil?
-        # we don't have a primary in the cluster, something is wrong
-        primary = nodes.first
-        no_primary = true
-      end
-      # TODO: rescue here
-      secondary = (nodes - [primary]).first
-
-      puts "HANA System Replication".center(80)
-      puts "-"*80
-      fmt_string = no_primary ? "%49s <??> %25s\n" : "%49s ===> %25s\n"
-      printf fmt_string, primary.node.rjust(25), secondary.node.ljust(25)
-      puts "-"*80
-      instvars = primary.instance_variables
-      instvars.each do |ivn|
-        # 20 for title, 3 space, 15 value, 6 spaces, 15 value
-        printf "%21s | %25s  ||  %25s\n", ResourceC.field_description(ivn),
-          primary.instance_variable_get(ivn), secondary.instance_variable_get(ivn)
-      end
-      true
-    end
-
-    def maintenance_mode(node_name, on = true)
-      if on
-        out, status = exec_outerr_status('crm', 'node', 'maintenance', node_name)
-      else
-        out, status = exec_outerr_status('crm', 'node', 'ready', node_name)
-      end
-      return status.exitstatus == 0
+    # Read and parse output of cibadmin -Ql
+    def get_cib
+      out, status = exec_outerr_status('cibadmin', '-Q', '-l')
+      # TODO: log the output here
+      raise "Could not connect to cluster: #{out}" if status.exitstatus != 0
+      REXML::Document.new(out)
     end
   end
 

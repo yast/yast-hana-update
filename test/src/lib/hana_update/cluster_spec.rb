@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 require_relative '../../../test_helper'
-require 'hana_update/cluster4'
+require 'hana_update/cluster'
 require 'rexml/document'
 require 'rexml/xpath'
 require "pry"

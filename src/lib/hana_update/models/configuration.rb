@@ -24,7 +24,7 @@ require 'yast'
 # require 'sap_ha/semantic_checks'
 require 'hana_update/node_logger'
 require 'hana_update/helpers'
-require 'hana_update/cluster4'
+require 'hana_update/cluster'
 
 module HANAUpdater
   # Base class for component configuration

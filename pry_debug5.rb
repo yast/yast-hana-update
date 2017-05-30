@@ -8,7 +8,7 @@ ENV['Y2DIR'] = File.expand_path('../src', __FILE__)
 
 require 'yast'
 require 'hana_update/hana'
-require 'hana_update/cluster4'
+require 'hana_update/cluster'
 require 'hana_update/ssh'
 require 'hana_update/shell_commands'
 include HANAUpdater::ShellCommands
