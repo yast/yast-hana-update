@@ -7,8 +7,11 @@ case x"$1" in
         shift
         yast2 --ncurses hana_updater "$@"
         ;;
-    * )
+    xg )
         shift
+        yast2 hana_updater "#@"
+        ;;
+    * )
         yast2 hana_updater "$@"
         ;;
 esac
