@@ -1,0 +1,41 @@
+# Algorithm
+
+
+HANA System ID XXX
+HANA Instance Number 
+
+## Initial configuration
+
+| Hostname | HANA Site |  SR mode  |
+|----------|-----------|-----------|
+| hana01   | WDF       | primary   |
+| hana02   | ROT       | secondary |
+
+## Algorithm
+
+1. Put nodes `hana01` and `hana02` to maintenance mode. 
+    Alternatively, put only the affected `SAPHana`, `SAPHanaTopology` and the `Virtual IP` resource agents to maintenance mode (allows for HANA MCOS scenario).
+2. Break system replication between nodes `hana01` and `hana02`. 
+    Given that the maintenance takes place on `hana02`, `hana01` is still fully operational, receives the SQL connections and has the Virtual IP assigned to it.
+3. Mount a user-prepared update medium served via NFS. 
+    Dependant on the update procedure to be used, this can be a full installation medium downloaded from SMP, or a prepared delta update downloaded with HANA Studio. In the former case, the media is to be copied locally, as the hdblcm is known to being unable to install/update certain HANA components from an NFS share.
+4. Display concise update guidelines to the user, i.e., allow the user to manually update HANA on node `hana02`.
+5. Stop HANA on node `hana02`.
+6. Register `hana02` as secondary to `hana01`.
+7. Start HANA on node `hana02`.
+8. Wait until primary syncs to the secondary (polling on the `M_SERVICE_REPLICATION` SQL view).
+9. Perform `hdbnsutil -sr_takeover` action on host `hana02`, effectively making `hana02` the primary.
+10. Forcefully migrate the Virtual IP resource to `hana02`. [note1](#note1)
+11. Break replication between nodes `hana01` and `hana02`. [note2](#note2)
+12. Mount the update medium on `hana01`.
+13. Allow user to update HANA on node `hana01`.
+14. Register `hana01` as secondary to `hana02`.
+15. Wait until primary syncs to the secondary (polling on the `M_SERVICE_REPLICATION` SQL view).
+16. Optionally, restore cluster to its initial state:
+    - Revert synchronization direction to original state (sr_takeover on `hana01`);
+    - Force-migrate Virtual IP to `hana01`;
+17. Clean up resources.
+18. Put resources out of maintenance mode.
+
+[note1]: It is yet unclear how `sr_takeover` is performed. Does it sync the data? Should we migrate the Virtual IP first and only then perform takeover?
+[note2]: The replication is already broken, right? Both nodes think they are primaries...

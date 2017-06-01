@@ -10,6 +10,7 @@ require 'yast'
 require 'hana_update/hana'
 require 'hana_update/cluster'
 require 'hana_update/ssh'
+require 'hana_update/system'
 require 'hana_update/shell_commands'
 include HANAUpdater::ShellCommands
 
@@ -30,6 +31,6 @@ include HANAUpdater::ShellCommands
 c = HANAUpdater::Cluster
 
 binding.pry
-c.update_state
+
 
 puts nil

@@ -45,4 +45,3 @@ module HANAUpdater
     end
   end
 end
-from sklearn.preprocessing import LabelEncoder

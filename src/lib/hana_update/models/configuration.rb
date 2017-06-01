@@ -35,13 +35,21 @@ module HANAUpdater
 
     def initialize
       @no_validators = false
-      @nfs_share = nil
+      @nfs_share = {}
       @hana_system_list = []
       @system = nil
     end
 
     def debug=(value)
       @no_validators = value
+    end
+
+    def nfs_source=(value)
+      @nfs_share[:source] = value
+    end
+
+    def nfs_source
+      @nfs_share[:source]
     end
 
     def hana_sys_table_items
@@ -61,6 +69,12 @@ module HANAUpdater
 
     def validate_share(verbosity)
       # TODO: implement
+    end
+
+    def validate_system
+      errors = []
+      errors << "This wizard has to be run on the secondary HANA node" unless @system.master.local.mon_attr['role'] == 'Slave'
+      errors
     end
   end
 end

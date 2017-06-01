@@ -22,7 +22,7 @@
 require 'yast'
 # require 'hana_update/exceptions'
 # require 'hana_update/helpers'
-# require 'hana_update/node_logger'
+require 'hana_update/node_logger'
 require 'hana_update/shell_commands'
 
 module HANAUpdater
@@ -136,6 +136,31 @@ module HANAUpdater
       )
     end
 
+    def enable_secondary_cmd(system_id, site_name, host_name_primary, instance, rmode, omode)
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name},"\
+        " #{host_name_primary}, #{instance}, #{rmode}, #{omode}) ---"
+      user_name = "#{system_id.downcase}adm"
+      # TODO: here we should query not the local system's version, but remote
+      version = version(system_id)
+      # Select an appropriate command-line switch for replication mode
+      # Assume legacy `mode` by default (pre-SPS12)
+      rmode_string = if HANAUpdater::Helpers.version_comparison('1.00.120', version)
+                       "--replicationMode=#{rmode}"
+                     else
+                       "--mode=#{rmode}"
+                     end
+      omode_string = if HANAUpdater::Helpers.version_comparison('1.00.110', version)
+                       "--operationMode=#{omode}"
+                     else
+                       nil
+                     end
+      command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
+                 "--remoteInstance=#{instance}", rmode_string, omode_string,
+                 "--name=#{site_name}"].reject(&:nil?)
+      cmd = 'su', '-lc', '"'+ command.join(' ') + '"', user_name
+      cmd.join(' ')
+    end
+
     # Enable System Replication on the secondary HANA system
     # @param system_id [String] HANA System ID
     # @param site_name [String] HANA site name of the secondary instance
@@ -150,12 +175,12 @@ module HANAUpdater
       version = version(system_id)
       # Select an appropriate command-line switch for replication mode
       # Assume legacy `mode` by default (pre-SPS12)
-      rmode_string = if SapHA::Helpers.version_comparison('1.00.120', version)
+      rmode_string = if HANAUpdater::Helpers.version_comparison('1.00.120', version)
                        "--replicationMode=#{rmode}"
                      else
                        "--mode=#{rmode}"
                      end
-      omode_string = if SapHA::Helpers.version_comparison('1.00.110', version)
+      omode_string = if HANAUpdater::Helpers.version_comparison('1.00.110', version)
                        "--operationMode=#{omode}"
                      else
                        nil
@@ -167,6 +192,31 @@ module HANAUpdater
       NodeLogger.log_status(status.exitstatus == 0,
         "Enabled HANA (#{system_id}) System Replication on the secondary host #{site_name}",
         "Could not enable HANA (#{system_id}) System Replication on the secondary host",
+        out
+      )
+    end
+
+    def takeover(system_id)
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id} ---"
+      user_name = "#{system_id.downcase}adm"
+      command = 'hdbnsutil', '-sr_takeover'
+      out, status = su_exec_outerr_status(user_name, *command)
+      NodeLogger.log_status(status.exitstatus == 0,
+        "Took over HANA #{system_id} to local site",
+        "Could not take-over HANA (#{system_id}) to local site",
+        out
+      )
+    end
+
+    # Disable System Replication on the secondary (local) HANA system
+    def disable_secondary(system_id)
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id} ---"
+      user_name = "#{system_id.downcase}adm"
+      command = ['hdbnsutil', '-sr_unregister']
+      out, status = su_exec_outerr_status(user_name, *command)
+      NodeLogger.log_status(status.exitstatus == 0,
+        "Disabled HANA (#{system_id}) System Replication on the secondary site",
+        "Could not disable HANA (#{system_id}) System Replication on the secondary site",
         out
       )
     end
@@ -223,6 +273,32 @@ module HANAUpdater
         return
       end
       out
+    end
+
+    # Execute an HDBSQL command
+    # @param system_id [String] HANA System ID
+    # @param user_name [String] HANA user name
+    # @param instance number [String] HANA instance number
+    # @param password [String] HANA password
+    # @param environment [String] HANA host:port specification (can be empty)
+    # @param statement [String] SQL statement
+    def check_system_replication(system_id, user_name, instance_number, password)
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{user_name},"\
+        " #{instance_number}, password ---"
+      su_name = "#{system_id.downcase}adm"
+      cmd = 'hdbsql', '-x', '-u', user_name, '-i', instance_number.to_s, '-p', password, '-a', "-F';'"
+      # cmd << '-n' << environment unless environment.empty?
+      cmd << '"' << 'select host,secondary_host, volume_id, replication_status from M_SERVICE_REPLICATION' << '"'
+      out, status = su_exec_outerr_status_no_echo(su_name, *cmd)
+      if status.exitstatus != 0
+        # remove the password from the command line
+        pass_index = (cmd.index('-p') || 0) + 1
+        cmd[pass_index] = "*" * cmd[pass_index].length
+        NodeLogger.error "Error executing command #{cmd.join(" ")}"
+        NodeLogger.output out
+        return
+      end
+      out.split.map{|e| e.split(';').reject(&:empty?).map { |z| z.gsub('"', '') } }
     end
   end # HanaClass
   Hana = HanaClass.instance

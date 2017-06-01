@@ -38,7 +38,7 @@ module HANAUpdater
           base_layout_with_label(
             _('Provide a HANA update medium'),
             HBox(
-              TextEntry(Id(:hana_medium), 'NFS share:')
+              TextEntry(Id(:hana_medium), Opt(:immediate), 'NFS share:')
             )
           ),
           Helpers.load_help('stub'),
@@ -55,11 +55,12 @@ module HANAUpdater
 
       def refresh_view
         super
-        set_value(:hana_medium, @model.nfs_share)
+        set_value(:hana_medium, @model.nfs_source)
+        Yast::UI::SetFocus(:hana_medium)
       end
 
       def update_model
-        @model.nfs_share = value(:hana_medium)
+        @model.nfs_source = value(:hana_medium)
       end
     end
   end

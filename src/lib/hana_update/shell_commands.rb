@@ -83,14 +83,14 @@ module HANAUpdater
       return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
     end
 
-  #   # Execute command as user _user_name_ and return its output and status
-  #   # Do not log the command
-  #   # @return [[String, String]] [stdout_and_stderr, status]
-  #   def su_exec_outerr_status_no_echo(user_name, *params)
-  #     Open3.capture2e('su', '-lc', params.join(' '), user_name)
-  #   rescue SystemCallError => e
-  #     return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
-  #   end
+    # Execute command as user _user_name_ and return its output and status
+    # Do not log the command
+    # @return [[String, String]] [stdout_and_stderr, status]
+    def su_exec_outerr_status_no_echo(user_name, *params)
+      Open3.capture2e('su', '-lc', params.join(' '), user_name)
+    rescue SystemCallError => e
+      return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
+    end
 
   #   def pipeline(cmd1, cmd2)
   #     Open3.pipeline_r(cmd1, cmd2, {err: "/dev/null"}) { |out, wait_thr| out.read }

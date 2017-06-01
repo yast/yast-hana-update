@@ -91,7 +91,7 @@ describe HANAUpdater::ClusterClass do
   # end
 
 
-  # # TODO: auto-generated
+
   # describe '#hdb_start' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.hdb_start(system_id)
@@ -99,16 +99,15 @@ describe HANAUpdater::ClusterClass do
   #   end
   # end
 
-  # # TODO: auto-generated
+
   # describe '#version' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.version(system_id)
   #     expect(result).not_to be_nil
-  #     # TODO: copy from the yast-sap-ha
   #   end
   # end
 
-  # # TODO: auto-generated
+
   # describe '#hdb_stop' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.hdb_stop(system_id)
@@ -116,7 +115,7 @@ describe HANAUpdater::ClusterClass do
   #   end
   # end
 
-  # # TODO: auto-generated
+
   # describe '#enable_primary' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.enable_primary(system_id, site_name)
@@ -124,7 +123,7 @@ describe HANAUpdater::ClusterClass do
   #   end
   # end
 
-  # # TODO: auto-generated
+
   # describe '#enable_secondary' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.enable_secondary(system_id, site_name, host_name_primary, instance, rmode, omode)
@@ -132,7 +131,7 @@ describe HANAUpdater::ClusterClass do
   #   end
   # end
 
-  # # TODO: auto-generated
+
   # describe '#check_secure_store' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.check_secure_store(system_id)
@@ -140,7 +139,7 @@ describe HANAUpdater::ClusterClass do
   #   end
   # end
 
-  # # TODO: auto-generated
+
   # describe '#set_secute_store' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.set_secute_store(system_id, key_name, env, user_name, password)
@@ -148,7 +147,7 @@ describe HANAUpdater::ClusterClass do
   #   end
   # end
 
-  # # TODO: auto-generated
+
   # describe '#hdbsql_command' do
   #   it 'works' do
   #     result = HANAUpdater::Hana.hdbsql_command(system_id, user_name, instance_number, password, environment, statement)

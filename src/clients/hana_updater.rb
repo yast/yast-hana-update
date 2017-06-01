@@ -23,6 +23,9 @@ require 'yast'
 require 'hana_update/helpers'
 require 'hana_update/hana'
 require 'hana_update/cluster'
+require 'hana_update/system'
+require 'hana_update/ssh'
+require 'hana_update/shell_commands'
 require 'hana_update/wizard/base_wizard_page'
 require 'hana_update/wizard/cluster_overview_page'
 require 'hana_update/wizard/media_selection'
@@ -109,6 +112,10 @@ module Yast
     def main
       textdomain 'hana-update'
       @configuration.debug = true if WFM.Args.include?('tst')
+      # if WFM.Args.include? 'skipto'
+      #   step_ix = WFM.Args.index('skipto') + 1
+      #   @yast_sequence['ws_start'] = WFM.Args[step_ix]
+      # end
       Wizard.CreateDialog
       Wizard.SetDialogTitle("SUSE HANA Cluster Update")
       begin
@@ -146,21 +153,67 @@ module Yast
         log.error "#{e}: #{e.renderer_message}"
         abort
       end
-      HANAUpdater::Wizard::RichText.new.run(
+      input = HANAUpdater::Wizard::RichText.new(allow_skip: true).run(
         "Update plan (#{part} node)",
         content,
         '',
         true,
         true
       )
+      if input == :next
+        if part == :local
+          # put resources to maintenance mode
+          Yast::Popup.Feedback('Please wait', 'Setting resources to maintenance mode') do
+            HANAUpdater::System.resource_maintenance(group.master.id, :on)
+            HANAUpdater::System.resource_maintenance(group.clone.id, :on)
+            HANAUpdater::System.resource_maintenance(group.vip.id, :on)
+          end
+          # break replication
+          Yast::Popup.Feedback('Please wait', 'Breaking replication') do          
+            HANAUpdater::Hana.hdb_stop(group.hana_sid)
+            HANAUpdater::Hana.disable_secondary(group.hana_sid.downcase)
+          end
+          # mount update medium
+          Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
+            local_nfs_path = HANAUpdater::System.mount_nfs(@configuration.nfs_source)
+            @configuration.nfs_share[part] = local_nfs_path
+          end
+        elsif part == :remote
+            # TODO: what kind of omode should we use here?
+            # operation modes for system replication:
+            # > delta_datashipping [def]
+            # > logreplay
+          Yast::Popup.Feedback('Please wait', 'Stopping HANA on local node') do
+            HANAUpdater::Hana.hdb_stop(group.hana_sid)
+          end
+          Yast::Popup.Feedback('Please wait', 'Registering local HANA instance for SR') do
+            # cmd_line = HANAUpdater::Hana.enable_secondary_cmd(group.hana_sid, local.running_on.site,
+            #   remote.running_on.name, group.hana_inst, local.running_on.inst_attr['srmode'],
+            #   'delta_datashipping')
+            # HANAUpdater::SSH.run_command(remote.running_on.name, cmd_line)
+            HANAUpdater::Hana.enable_secondary(group.hana_sid, local.running_on.site,
+              remote.running_on.name, group.hana_inst, local.running_on.inst_attr['srmode'],
+              'delta_datashipping')
+          end
+          Yast::Popup.Feedback('Please wait', 'Starting HANA on local node') do
+            HANAUpdater::Hana.hdb_start(group.hana_sid)
+          end
+          Yast::Popup.Feedback('Please wait', 'Taking over to local site') do
+            HANAUpdater::Hana.takeover(group.hana_sid)
+          end
+        end
+      elsif input == :skip
+        return :next          
+      end
+      input
     end
 
-    def update_site(node)
-      resource = @configuration.system.master.send(node)
+    def update_site(part)
+      resource = @configuration.system.master.send(part)
       node = resource.running_on
       hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{@configuration.system.hana_sid}/index.html"
       # TODO: check node.nil?
-      nfs_share_local = '/tmp/dummy/share/change/me'
+      nfs_share_local = @configuration.nfs_share[part]
       begin
         content = HANAUpdater::Helpers.render_template('tmpl_update_site.erb', binding)
       rescue HANAUpdater::Exceptions::TemplateRenderException => e
@@ -178,6 +231,8 @@ module Yast
         log.error "UPDATE_SITE: input=#{input.inspect}"
         if input == 'hdblcm_web'
           HANAUpdater::Helpers.open_url(hdblcm_link)
+        elsif input == :skip
+          return :next          
         else
           return input
         end

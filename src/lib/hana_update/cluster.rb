@@ -9,7 +9,7 @@ require 'socket'
 
 module HANAUpdater
   class Node
-    attr_reader :name, :id, :cached
+    attr_reader :name, :id, :cached, :inst_attr
     def initialize(mon_xml_node, cib_xml, sid)
       # print "Node(\nsid=#{sid},\nmon_xml_node=#{mon_xml_node},\ncib_xml_node=#{cib_xml}\n\n"
       mon_xml_node.attributes.each { |k, v| instance_variable_set("@#{k}", v) }
@@ -127,6 +127,10 @@ module HANAUpdater
       @vip = PrmResource.new(sid, vip_mon, vip_cib)
       @hana_sid = sid
       @hana_inst = @master.primitives.first.inst_attr['InstanceNumber']
+    end
+
+    def validate
+      # TODO: make sure we are dealing with a healthy HANA SR setup here
     end
   end
 

@@ -9,11 +9,11 @@
     <h3>1. Using a full update medium:</h3>
     <ul>
         <li><span>Log in to <%= node.name %>:</li><br/>
-        <code>ssh root@<%= node.name %></code></span>
+        <code>ssh root@<%= node.name %></code> or <code>ssh root -Y root@<%= node.name %></code> for GUI mode</span>
         <li>Navigate to the HDB LCM directory:</li><br/>
-        <code>cd <%= nfs_share_local %>HDB_LCM_LINUX_X86_64</code> <!-- TODO: check architecture -->
+        <code>cd <%= nfs_share_local %>/DATA_UNITS/HDB_LCM_LINUX_X86_64</code> <!-- TODO: check architecture -->
         <li>Execute <code>hdblcm</code>:</li><br/>
-        <code>./hdblcm --action=update</code>
+        <code>./hdblcm --action=update</code> or <code>./hdblcmgui --action=update</code> for GUI mode
         <li>Follow the on-screen update instructions.</li>
     </ul>
 

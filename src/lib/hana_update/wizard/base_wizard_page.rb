@@ -68,7 +68,7 @@ module HANAUpdater
       # Return true if the user can proceed to the next screen
       # Use this if additional verification of the data is needed
       def can_go_next?
-        true
+        
       end
 
       # Show the error dialog if model validation failed?
@@ -121,8 +121,13 @@ module HANAUpdater
             return input            
           when :next, :summary
             update_model
-            return input if can_go_next?
-            show_dialog_errors(@page_validator.call) if show_errors?
+            return input if @model.no_validators
+            errors = @page_validator.call unless @page_validator.nil?
+            unless errors.nil? or errors.empty?
+              show_dialog_errors(errors)
+            else
+              return input
+            end
           else
             handle_user_input(input, event)
           end

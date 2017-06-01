@@ -39,9 +39,9 @@ module HANAUpdater
       log.debug "--- #{self.class}.#{__callee__} --- "
       @script_path = Helpers.data_file_path('check_ssh.expect')
       @ssh_user_dir = File.join(Dir.home, '.ssh')
-      reinit_identities
-      create_user_identities unless check_user_identities
-      authorize_own_keys
+      #reinit_identities
+      #create_user_identities unless check_user_identities
+      #authorize_own_keys
     end
 
     def reinit_identities

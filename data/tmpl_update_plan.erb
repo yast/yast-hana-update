@@ -16,16 +16,18 @@
                 Break system replication between sites <b><%= remote.running_on.site %></b> and <b><%= local.running_on.site %></b>;
             </li>
             <li>
-                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= local.running_on.name %></b>;
+                Mount update medium <b><%= @configuration.nfs_source %></b> on <b><%= local.running_on.name %></b>;
             </li>
             <li>
                 Update HANA on site <b><%= local.running_on.site  %></b> (host <b><%= local.running_on.name %></b>) manually using the preferred update method;
             </li>
             <%else %> <!-- remote node -->
+            <li>Stop HANA on local site <%= local.running_on.site %></li>
             <li>
                 Register site <b><%= local.running_on.site %></b> as secondary to <b><%= remote.running_on.site %></b> and wait
                 until replication finishes;
             </li>
+            <li>Start HANA on local site <%= local.running_on.site %></li>
             <li>
                 Take over from site <b><%= remote.running_on.site %></b> to <b><%= local.running_on.site %></b>;
             </li>
@@ -33,10 +35,11 @@
                 Migrate resource <b>ip_rsc</b> to node <b><%= local.running_on.name %></b>
             </li>
             <li>
+                # TODO: this already broke the replication!
                 Break system replication between sites <b><%= local.running_on.site %></b> and <b><%= remote.running_on.site %>;</b>
             </li>
             <li>
-                Mount update medium <b><%= @configuration.nfs_share %></b> on <b><%= remote.running_on.name %></b>;
+                Mount update medium <b><%= @configuration.nfs_source %></b> on <b><%= remote.running_on.name %></b>;
             </li>
             <li>
                 Update HANA manually on site <b><%= remote.running_on.site %></b> (host <b><%= remote.running_on.name %></b>) using the preferred update method.
