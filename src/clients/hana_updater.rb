@@ -168,9 +168,13 @@ module Yast
             HANAUpdater::System.resource_maintenance(group.clone.id, :on)
             HANAUpdater::System.resource_maintenance(group.vip.id, :on)
           end
-          # break replication
-          Yast::Popup.Feedback('Please wait', 'Breaking replication') do          
+          # TODO: this is not necessary?
+          # stop HANA on local node
+          Yast::Popup.Feedback('Please wait', 'Stopping HANA on local node') do          
             HANAUpdater::Hana.hdb_stop(group.hana_sid)
+          end
+          # break replication
+          Yast::Popup.Feedback('Please wait', 'Breaking system replication') do          
             HANAUpdater::Hana.disable_secondary(group.hana_sid.downcase)
           end
           # mount update medium
@@ -198,6 +202,7 @@ module Yast
           Yast::Popup.Feedback('Please wait', 'Starting HANA on local node') do
             HANAUpdater::Hana.hdb_start(group.hana_sid)
           end
+          # TODO: here we need to wait until replication is finished
           Yast::Popup.Feedback('Please wait', 'Taking over to local site') do
             HANAUpdater::Hana.takeover(group.hana_sid)
           end
