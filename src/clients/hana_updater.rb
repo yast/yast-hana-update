@@ -20,18 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-require 'hana_update/helpers'
-require 'hana_update/hana'
-require 'hana_update/cluster'
-require 'hana_update/system'
-require 'hana_update/ssh'
-require 'hana_update/shell_commands'
-require 'hana_update/wizard/base_wizard_page'
-require 'hana_update/wizard/cluster_overview_page'
-require 'hana_update/wizard/media_selection'
-require 'hana_update/wizard/rich_text'
-require 'hana_update/exceptions'
-require 'hana_update/models/configuration'
+require 'y2hanaupdate'
 
 module Yast
   class HanaUpdaterClass < Yast::Client
@@ -178,6 +167,7 @@ module Yast
             HANAUpdater::Hana.disable_secondary(group.hana_sid.downcase)
           end
           # mount update medium
+          # TODO: only if requested!
           Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
             local_nfs_path = HANAUpdater::System.mount_nfs(@configuration.nfs_source)
             @configuration.nfs_share[part] = local_nfs_path
@@ -187,6 +177,7 @@ module Yast
             # operation modes for system replication:
             # > delta_datashipping [def]
             # > logreplay
+            # TODO: get from cluster attribute hana_<SID>_op_mode
           Yast::Popup.Feedback('Please wait', 'Stopping HANA on local node') do
             HANAUpdater::Hana.hdb_stop(group.hana_sid)
           end

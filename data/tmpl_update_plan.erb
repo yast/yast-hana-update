@@ -2,6 +2,9 @@
 <html>
     <head>
         <title></title>
+        <style type="text/css">
+            font-size: 16pt;
+        </style>
     </head>
     <body>
         <span>The following plan was generated for the <%- if part == :local -%>local<%else %>remote<%end %>
@@ -15,9 +18,14 @@
             <li>
                 Break system replication between sites <b><%= remote.running_on.site %></b> and <b><%= local.running_on.site %></b>;
             </li>
+            <% if @configuration.mount_nfs %>
             <li>
                 Mount update medium <b><%= @configuration.nfs_source %></b> on <b><%= local.running_on.name %></b>;
             </li>
+                <% if @configuration.copy_medium %>
+                <li>Copy contents of the update medium to <b><%= @configuration.nfs_copy_path %></b>;</li>
+                <% end %>
+            <% end %>
             <li>
                 Update HANA on site <b><%= local.running_on.site  %></b> (host <b><%= local.running_on.name %></b>) manually using the preferred update method;
             </li>
@@ -47,7 +55,8 @@
             <%end %>
         </ol>
         <br/>
-        
+        <span></span>
+        <br/>
         <span>Refer to the on-screen instructions on the next screen and to the <i>SAP HANA Master Update
         Guide</i> and <i>HANA Server Installation and Update Guide</i>.</span>
     </body>

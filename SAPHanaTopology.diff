@@ -1,9 +1,0 @@
-DIFF
-
-line 845:
-    if ocf_is_probe; then
-            super_ocf_log debug "DBG2: PROBE ONLY"
-            local hana_version=$(HANA_CALL --timeout 10 --cmd "HDB version" | awk -F':' '$1=="  version" {print $2}; ' | tr -d '[:space:]')
-            set_hana_attribute "${NODENAME}" "$hana_version" "hana_${sid}_version"
-    sht_monitor; rc=$?
-    else

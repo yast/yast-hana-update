@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -35,7 +35,7 @@ module HANAUpdater
 
     def initialize
       @no_validators = false
-      @nfs_share = {}
+      @nfs_share = {mount: false, source: '', copy_medium: false, nfs_copy_path: ''}
       @hana_system_list = []
       @system = nil
     end
@@ -50,6 +50,37 @@ module HANAUpdater
 
     def nfs_source
       @nfs_share[:source]
+    end
+
+    def mount_nfs=(value)
+      @nfs_share[:mount] = value
+    end
+
+    def mount_nfs
+      @nfs_share[:mount]
+    end
+
+    def copy_medium
+      @nfs_share[:copy_medium]
+    end
+
+    def copy_medium=(value)
+      @nfs_share[:copy_medium] = value
+    end
+
+    def nfs_copy_path=(value)
+      @nfs_share[:nfs_copy_path] = value
+    end
+
+    def nfs_copy_path
+      @nfs_share[:nfs_copy_path]
+    end
+
+    def validate(component, mode)
+      case component
+      when :nfs_share
+        true
+      end
     end
 
     def hana_sys_table_items

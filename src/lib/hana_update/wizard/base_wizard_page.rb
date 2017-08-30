@@ -106,7 +106,7 @@ module HANAUpdater
       def main_loop
         log.debug "--- #{self.class}.#{__callee__} ---"
         loop do
-          log.debug "--- #{self.class}.#{__callee__} ---"
+          log.debug "--- #{self.class}.#{__callee__}: Enter loop ---"
           event = Yast::Wizard.WaitForEvent
           log.error "--- #{self.class}.#{__callee__}: event=#{event} ---"
           input = event["ID"]
