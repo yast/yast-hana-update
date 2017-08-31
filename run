@@ -17,9 +17,15 @@ case x"$1" in
         export Y2DEBUG=1
         yast2 hana_updater "$@"
         ;;
+    xcd)
+        shift
+        export Y2DEBUG=1
+        yast2 --ncurses hana_updater "$@"
+        ;;
     'x-h')
         echo "Parameters:"
         echo "  c       Force ncurses"
+        echo "  cd      Force ncurses with Debug Mode"
         echo "  g       Run in Qt"
         echo "  deb     Run in Qt with Debug Mode"
         exit 0

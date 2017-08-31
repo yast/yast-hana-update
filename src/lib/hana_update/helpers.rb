@@ -90,9 +90,13 @@ module HANAUpdater
       File.join(@var_path, basename)
     end
 
-    def itemize_list(l)
+    def itemize_list(l, use_indices=true)
       require 'yast'
-      l.each_with_index.map { |e, i| Yast::Term.new(:item, Yast::Term.new(:id, i), *e) }
+      if use_indices
+        l.each_with_index.map { |e, i| Yast::Term.new(:item, Yast::Term.new(:id, i), *e) }
+      else
+        l.each.map { |e| Yast::Term.new(:item, Yast::Term.new(:id, e[0]), *e[1..e.length]) }
+      end
     end
 
     # def program_file_path(basename)

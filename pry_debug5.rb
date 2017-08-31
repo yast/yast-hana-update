@@ -29,7 +29,10 @@ include HANAUpdater::ShellCommands
 # # out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
 # doc = REXML::Document.new(File.read('crm_mon_r_as_xml.xml'))
 c = HANAUpdater::Cluster
-
+c.update_state
+node = c.groups.first.master.primitives.first.running_on
+f = c.groups.first
+s = c.groups[1]
 binding.pry
 
 

@@ -9,23 +9,33 @@ require 'socket'
 
 module HANAUpdater
   class Node
-    attr_reader :name, :id, :cached, :inst_attr
+    attr_reader :name, :id, :cached, :instance_attributes, :transient_attributes
     def initialize(mon_xml_node, cib_xml, sid)
       # print "Node(\nsid=#{sid},\nmon_xml_node=#{mon_xml_node},\ncib_xml_node=#{cib_xml}\n\n"
       mon_xml_node.attributes.each { |k, v| instance_variable_set("@#{k}", v) }
-      @inst_attr = Hash[]
+      @instance_attributes = Hash[]
       name_prefix = "hana_#{sid.downcase}"
       REXML::XPath.each(cib_xml,
         '/cib/configuration/nodes/node[@id=$node_id]/instance_attributes/nvpair', nil,
         'node_id' => @id) do |z|
         # transform attribute names from hana_sid_* to *
         # and don't forget about lpt_sid_lpa
+        if name.index(name_prefix)
+          name = name[name_prefix.length+1..name.length()]
+        end
         name = z.attributes['name']
         name = name[name.rindex('_')+1..name.length()]
         value = z.attributes['value']
-        @inst_attr[name] = value
+        @instance_attributes[name] = value
       end
-      
+      @transient_attributes = Hash[]
+      REXML::XPath.each(cib_xml, '//cib/status/node_state[@id=$node_id]/transient_attributes/instance_attributes/nvpair', {}, {'node_id' => @id}) do |ta|
+        name = ta.attributes['name']
+        if name.index(name_prefix)
+          name = name[name_prefix.length+1..name.length()]
+        end
+        @transient_attributes[name] = ta.attributes['value']
+      end
     end
 
     def localhost?
@@ -33,12 +43,12 @@ module HANAUpdater
     end
 
     def site
-      @inst_attr['site']
+      @instance_attributes['site']
     end
   end
 
   class PrmResource
-    attr_reader :mon_attr, :inst_attr, :id, :running_on
+    attr_reader :mon_attr, :instance_attributes, :id, :running_on
     def initialize(sid, mon_xml_node, cib_xml_node)
       # print "PrmResource(\nsid=#{sid},\nmon_xml_node=#{mon_xml_node},\ncib_xml_node=#{cib_xml_node}\n\n"
       @mon_attr = Hash[mon_xml_node.attributes.map { |k, v| [k, v] }]
@@ -56,10 +66,18 @@ module HANAUpdater
       if !cib_xml_node.nil?
         ia = cib_xml_node.elements['instance_attributes']
         unless ia.nil?
-          @inst_attr = Hash[
+          @instance_attributes = Hash[
             ia.get_elements('nvpair').map {|e| [e.attributes['name'], e.attributes['value']] }]
         end
       end
+    end
+
+    def managed?
+      @mon_attr['managed'] == 'true'
+    end
+
+    def role
+      @mon_attr['role']
     end
   end
 
@@ -76,11 +94,11 @@ module HANAUpdater
 
     # get local instance of the primitive
     def local
-      @primitives.find { |pri| pri.running_on.localhost? }
+      @primitives.find { |pri| !pri.running_on.nil? && pri.running_on.localhost? }
     end
 
     def remote
-      @primitives.find { |pri| !pri.running_on.localhost? }
+      @primitives.find { |pri| !pri.running_on.nil? && !pri.running_on.localhost? }
     end
   end
 
@@ -91,11 +109,11 @@ module HANAUpdater
     end
 
     def master
-      @primitives.find { |pri| pri.mon_attr['role'] == 'Master' }
+      @primitives.find { |pri| pri.role == 'Master' }
     end
 
     def slave
-      @primitives.find { |pri| pri.mon_attr['role'] == 'Slave' }
+      @primitives.find { |pri| pri.role == 'Slave' }
     end
   end
 
@@ -126,11 +144,19 @@ module HANAUpdater
         '//cib/configuration/resources/primitive[@id=$vip_id]', nil, 'vip_id'=>vip_id)
       @vip = PrmResource.new(sid, vip_mon, vip_cib)
       @hana_sid = sid
-      @hana_inst = @master.primitives.first.inst_attr['InstanceNumber']
+      @hana_inst = @master.primitives.first.instance_attributes['InstanceNumber']
     end
 
     def validate
       # TODO: make sure we are dealing with a healthy HANA SR setup here
+    end
+
+    def all_managed?
+      [
+        @vip.managed?,
+        *@master.primitives.map {|p| p.managed?},
+        *@clone.primitives.map {|p| p.managed?}
+      ].all?
     end
   end
 

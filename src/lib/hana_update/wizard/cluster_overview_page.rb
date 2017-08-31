@@ -40,7 +40,7 @@ module HANAUpdater
         Yast::Wizard.SetContents(
           _('Cluster overview'),
           base_layout_with_label(
-            _('Select the system for update'),
+            _('Select the system to update'),
             VBox(
               ReplacePoint(Id(:rp_content), Empty())
             )
@@ -64,39 +64,58 @@ module HANAUpdater
 
       def refresh_view
         super
-        contents = @model.hana_sys_table_items
+        # contents = @model.hana_sys_table_items
         Yast::UI.ReplaceWidget(Id(:rp_content), hana_systems_table)
-        set_value(:hana_systems_table, contents, :Items)
-        item_id = value(:hana_systems_table)
-        sys_name = contents[item_id][1]
-        set_value(:sys_descr, "Selected HANA system: #{sys_name}")
+        set_value(:hana_systems_list, @model.hana_sids, :Items)
+        # TODO: make a variable for that
+        selected_id = value(:hana_systems_list, :CurrentItem)
+        log.debug "--- #{self.class}.#{__callee__} :: @model.hana_sids=#{@model.hana_sids.inspect} --- "
+        log.debug "--- #{self.class}.#{__callee__} :: selected_id=#{selected_id.inspect} --- "
+        sys = @model.get_system_by_sid(selected_id)
+        set_value(:hana_system_table, @model.hana_sys_table_items(sys), :Items)
+        # set_value(:hana_systems_table, contents, :Items)
+        # item_id = value(:hana_systems_table)
+        # sys_name = contents[item_id][1]
+        # set_value(:sys_descr, "Selected HANA system: #{sys_name}")
       end
 
       def hana_systems_table
         VBox(
-          Table(
-            Id(:hana_systems_table),
-            Opt(:keepSorting, :notify, :immediate),
-            Header(_('System ID'), _('Instance'), _('Nodes')),
-            []
+          MinHeight(3,
+            SelectionBox(
+              Id(:hana_systems_list),
+              Opt(:keepSorting, :notify, :immediate),
+              'Available SAP HANA Systems:',
+              []
+            )
           ),
-          MinSize(55, 1, Label(Id(:sys_descr), ''))
+          # MinSize(55, 1, Label(Id(:sys_descr), ''))
+          Left(Label('Selected System:')),
+          MinHeight(10,
+            Table(
+              Id(:hana_system_table),
+              Opt(:keepSorting, :notify, :immediate),
+              Header('Host Name', 'Site Name', 'SAP HANA Version', 'Resource Role'),
+              []
+              )
+          )
         )
       end
 
       def update_model
-        contents = @model.hana_sys_table_items
-        item_id = value(:hana_systems_table)
-        @model.select_hana_system(contents[item_id][1], contents[item_id][2])
+        # contents = @model.hana_sys_table_items
+        item_id = value(:hana_systems_list, :CurrentItem)
+        log.debug "--- #{self.class}.#{__callee__} :: current item is #{item_id.inspect} --- "
+        @model.select_hana_system(item_id)
       end
 
       def handle_user_input(input, event)
         case input
-        when :hana_systems_table
+        when :hana_systems_list
           if event['EventReason'] == 'SelectionChanged'
-            item_id = value(:hana_systems_table)
-            sys_name = @model.hana_sys_table_items[item_id][2]
-            set_value(:sys_descr, "Selected system: #{sys_name}")
+            selected_id = value(:hana_systems_list, :CurrentItem)
+            sys = @model.get_system_by_sid(selected_id)
+            set_value(:hana_system_table, @model.hana_sys_table_items(sys), :Items)
           end
         else
           super

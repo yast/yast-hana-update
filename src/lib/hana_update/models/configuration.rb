@@ -83,19 +83,40 @@ module HANAUpdater
       end
     end
 
-    def hana_sys_table_items
-      l = HANAUpdater::Cluster.groups.map do |g|
-        # sort nodes by RA role alphabetically, i.e., Master, Slave, Stopped
-        node_list = g.master.primitives.map { |e| [e.running_on.name, e.mon_attr['role']] }
-        node_list = node_list.sort_by { |e| e[1] }.map { |e| e[0] }
-        [g.hana_sid, g.hana_inst, node_list.join(', ')]
+    def hana_sids
+      # HANAUpdater::Cluster.groups.map {|g| "System #{g.hana_sid}, Instance #{g.hana_inst}" }
+      l = HANAUpdater::Cluster.groups.map {|g| [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"] }
+      HANAUpdater::Helpers.itemize_list(l, false)
+    end
+
+    def get_system_by_sid(sid)
+      HANAUpdater::Cluster.groups.find {|g| g.hana_sid == sid}
+    end
+
+    def hana_sys_table_items(group)
+      l = group.master.primitives.map do |prim|
+        if prim.running_on.nil?
+          host_name = '<not running>'
+          site_name = '<N/A>'
+          version = '<N/A>'
+          rsc_role = prim.role
+          rsc_role += ' (unmanaged)' if prim.managed?
+        else
+          host_name = prim.running_on.name
+          host_name += ' (this host)' if prim.running_on.localhost?
+          site_name = prim.running_on.instance_attributes['site']
+          version = prim.running_on.transient_attributes['version'] # TODO: fetch it if not available in the cluster
+          rsc_role = prim.role
+          rsc_role += ' (unmanaged)' if prim.managed?
+        end
+        [host_name, site_name, version, rsc_role]
       end
       HANAUpdater::Helpers.itemize_list(l)
     end
 
-    def select_hana_system(sid, ino)
-      log.error "--- #{self.class}.#{__callee__}(sid=#{sid}, ino=#{ino}) --- "
-      @system = HANAUpdater::Cluster.get_system(sid, ino)
+    def select_hana_system(sid)
+      log.debug "--- #{self.class}.#{__callee__}(sid=#{sid.inspect}) --- "
+      @system = get_system_by_sid(sid)
     end
 
     def validate_share(verbosity)
@@ -104,7 +125,14 @@ module HANAUpdater
 
     def validate_system
       errors = []
-      errors << "This wizard has to be run on the secondary HANA node" unless @system.master.local.mon_attr['role'] == 'Slave'
+      if @system.master.local.nil?
+        errors << "This wizard can only handle active (i.e., running and managed) SAP HANA instances"
+      elsif @system.master.local.role != 'Slave'
+        errors << "This wizard has to be run on the secondary SAP HANA node"
+      elsif !@system.all_managed?
+        errors << "Some resources belonging to the SAP HANA SR group are not managed"
+        errors << "This wizard can only handle active (i.e., running and managed) SAP HANA instances"
+      end
       errors
     end
   end

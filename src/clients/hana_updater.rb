@@ -183,11 +183,11 @@ module Yast
           end
           Yast::Popup.Feedback('Please wait', 'Registering local HANA instance for SR') do
             # cmd_line = HANAUpdater::Hana.enable_secondary_cmd(group.hana_sid, local.running_on.site,
-            #   remote.running_on.name, group.hana_inst, local.running_on.inst_attr['srmode'],
+            #   remote.running_on.name, group.hana_inst, local.running_on.instance_attributes['srmode'],
             #   'delta_datashipping')
             # HANAUpdater::SSH.run_command(remote.running_on.name, cmd_line)
             HANAUpdater::Hana.enable_secondary(group.hana_sid, local.running_on.site,
-              remote.running_on.name, group.hana_inst, local.running_on.inst_attr['srmode'],
+              remote.running_on.name, group.hana_inst, local.running_on.instance_attributes['srmode'],
               'delta_datashipping')
           end
           Yast::Popup.Feedback('Please wait', 'Starting HANA on local node') do
