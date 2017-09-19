@@ -9,7 +9,7 @@ case x"$1" in
         ;;
     xg )
         shift
-        yast2 hana_updater "#@"
+        yast2 hana_updater "$@"
         ;;
     xdeb)
         echo "Running X"
@@ -28,6 +28,10 @@ case x"$1" in
         echo "  cd      Force ncurses with Debug Mode"
         echo "  g       Run in Qt"
         echo "  deb     Run in Qt with Debug Mode"
+        echo 
+        echo "Additional parameters:"
+        echo "  skipto <stage_name>"
+        echo "  setsys <SID>"
         exit 0
         ;;
     * )

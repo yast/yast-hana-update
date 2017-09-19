@@ -1,60 +1,110 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title></title>
-    </head>
-    <body>
-        <span>The following plan was generated for the <%- if part == :local -%>local<%else %>remote<%end %>
-        node:</span>
-        <br/>
-        <ol>
-            <%if part == :local %>
-            <li>
-                Put resources <b><%= group.master.id %></b>, <b><%= group.clone.id %></b> and <b><%= group.vip.id %></b> into maintenance mode;
-            </li>
-            <li>
-                Break system replication between sites <b><%= remote.running_on.site %></b> and <b><%= local.running_on.site %></b>;
-            </li>
-            <% if @configuration.mount_nfs %>
-            <li>
-                Mount update medium <b><%= @configuration.nfs_source %></b> on <b><%= local.running_on.name %></b>;
-            </li>
-                <% if @configuration.copy_medium %>
-                <li>Copy contents of the update medium to <b><%= @configuration.nfs_copy_path %></b>;</li>
-                <% end %>
-            <% end %>
-            <li>
-                Update HANA on site <b><%= local.running_on.site  %></b> (host <b><%= local.running_on.name %></b>) manually using the preferred update method;
-            </li>
-            <%else %> <!-- remote node -->
-            <li>Stop HANA on local site <%= local.running_on.site %></li>
-            <li>
-                Register site <b><%= local.running_on.site %></b> as secondary to <b><%= remote.running_on.site %></b> and wait
-                until replication finishes;
-            </li>
-            <li>Start HANA on local site <%= local.running_on.site %></li>
-            <li>
-                Take over from site <b><%= remote.running_on.site %></b> to <b><%= local.running_on.site %></b>;
-            </li>
-            <li>
-                Migrate resource <b>ip_rsc</b> to node <b><%= local.running_on.name %></b>
-            </li>
-            <li>
-                # TODO: this already broke the replication!
-                Break system replication between sites <b><%= local.running_on.site %></b> and <b><%= remote.running_on.site %>;</b>
-            </li>
-            <li>
-                Mount update medium <b><%= @configuration.nfs_source %></b> on <b><%= remote.running_on.name %></b>;
-            </li>
-            <li>
-                Update HANA manually on site <b><%= remote.running_on.site %></b> (host <b><%= remote.running_on.name %></b>) using the preferred update method.
-            </li>
-            <%end %>
-        </ol>
-        <br/>
-        <span></span>
-        <br/>
-        <span>Refer to the on-screen instructions on the next screen and to the <i>SAP HANA Master Update
-        Guide</i> and <i>HANA Server Installation and Update Guide</i>.</span>
-    </body>
+<head>
+  <title></title>
+  <style type="text/css">
+    code {
+      font-family: "Nimbus Mono L", "Monospace", monospace;
+    }
+  </style>
+</head>
+<body>
+  <span>
+      The following plan was generated for the <%= part.to_s %> node:
+  </span>
+  <% if part == :local %>
+    <!--
+            PLAN FOR LOCAL NODE
+     -->
+    <ol>
+      <li>
+        Put the following resources into <i>maintenance mode</i>:
+        <ul>
+          <li><b><code><%= group.master.id %></code></b>,</li>
+          <li><b><code><%= group.clone.id %></code></b>,</li>
+          <li><b><code><%= group.vip.id %></code></b>.</li>
+        </ul>
+      </li>
+      <li>
+        Disable system replication between sites
+        <b><code><%= remote.running_on.site %></code></b> and
+        <b><code><%= local.running_on.site %></code></b>;
+      </li>
+      <% if model.nfs.should_mount? %>
+          <li>
+            Mount update medium
+            <b><code><%= model.nfs.source %></code></b> on
+            <b><code><%= local.running_on.name %></code></b>;
+          </li>
+          <% if model.nfs.copy_medium? %>
+              <li>
+                Copy contents of the update medium to
+                <b><code><%= model.nfs.copy_path %></code></b>;
+              </li>
+          <% end %>
+      <% end %> <!-- if model.nfs.should_mount? -->
+      <li>
+        <b>[Manual step]</b>
+        Update SAP HANA on site <b><code><%= local.running_on.site %></code></b>
+        (host <b><code><%= local.running_on.name %></code></b>)
+        manually using the preferred update method;
+      </li>
+    </ol>
+  <% else %>
+    <!--
+            PLAN FOR REMOTE NODE
+     -->
+    <ol>
+      <li>
+        Stop SAP HANA on local site <%= local.running_on.site %>
+      </li>
+      <li>
+        Register site <b><code><%= local.running_on.site %></code></b>
+        as secondary to <b><code><%= remote.running_on.site %></code></b>
+        and wait until both instances are in sync;
+      </li>
+      <li>
+        Start SAP HANA on local site <b><code><%= local.running_on.site %></code></b>;
+      </li>
+      <li>
+        Take over from site <b><code><%= remote.running_on.site %></code></b> to
+        <b><code><%= local.running_on.site %></code></b>;
+      </li>
+      <li>
+        Migrate virtual IP resource <b><code>ip_rsc</code></b> to node
+        <b><code><%= local.running_on.name %></code></b>
+      </li>
+      <li>
+        <b>TODO: this already broke the replication!</b>
+        Break system replication between sites
+        <b><code><%= local.running_on.site %></code></b> and
+        <b><code><%= remote.running_on.site %></code>;</b>
+      </li>
+      <% if model.nfs.should_mount? %>
+          <li>
+            Mount update medium
+            <b><code><%= model.nfs.source %></code></b> on
+            <b><code><%= remote.running_on.name %></code></b>;
+          </li>
+          <% if model.nfs.copy_medium? %>
+              <li>
+                Copy contents of the update medium to
+                <b><code><%= model.nfs.copy_path %></code></b>;
+              </li>
+          <% end %>
+      <% end %> <!-- if model.nfs.should_mount? -->
+      <li>
+        <b>[Manual step]</b>
+        Update SAP HANA on site <b><code><%= remote.running_on.site %></code></b>
+        (host <b><code><%= remote.running_on.name %></code></b>)
+        manually using the preferred update method;
+      </li>
+    </ol>
+  <% end %>
+  <p>
+    Refer to the help section in the next screen and to the
+    <i>SAP HANA Master Update Guide</i> and
+    <i>SAP HANA Server Installation and Update Guide</i>.
+  </p>
+</body>
 </html>

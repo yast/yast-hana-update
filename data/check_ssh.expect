@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2017 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: SSH checks script
+# Summary: SUSE SAP HANA Cluster Update: SSH checks script
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 # >>> Arguments:
@@ -26,9 +26,9 @@
 # 1: host name
 # 2: [password] (only if action==copy)
 # 3: [path] (only if action==copy)
-# >>> Retcodes:
-# 0 - all is peachy
-# 5 - timeout
+# >>> Return codes:
+# 0  - ok
+# 5  - timeout
 # 10 - password required
 # 11 - password is incorrect
 # 51 - remote host reset the connection

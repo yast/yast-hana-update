@@ -2,18 +2,23 @@
 <head>
 </head>
 <body>
-    <h3>Updating SAP HANA software</h3>
+<h3>Updating SAP HANA software</h3>
+<p>
+  Please update SAP HANA software on node <b><code><%= node.name %></code></b>
+  (site <b><code><%= node.site %></code></b>) using your preferred update method.
+</p>
+<% if model.nfs.should_mount? %>
     <p>
-        Please update SAP HANA software on node <b><code><%= node.name %></code></b>
-        (site <b><code><%= node.site %></code></b>) using your preferred update method.
+      <i>Note:</i> The NFS share <%= model.nfs.source %> was mounted to <%= model.nfs.mount_path %>.
     </p>
-    <% if @model.nfs.copy_medium? %>
+<% end %>
+<% if model.nfs.copy_medium? %>
     <p>
-        <i>Note:</i> The contents of the NFS share have been copied locally to 
-        <code><%= @model.nfs.copy_path %></code>.
+      <i>Note:</i> The contents of the NFS share have been copied locally to
+      <code><%= model.nfs.copy_path %></code>.
     </p>
-    <% end %>
-    <p></p>
-    <p>Click "Next" once the site <b><code><%= node.site %></code></b> is updated.</p>
+<% end %>
+<p></p>
+<p>Click "Next" once the site <b><code><%= node.site %></code></b> is updated.</p>
 </body>
 </html>

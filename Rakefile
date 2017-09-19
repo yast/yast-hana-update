@@ -1,7 +1,7 @@
 #
 # Rake file
 #
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2016 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -15,8 +15,8 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
-require "yast/rake"
-require "packaging"
+require 'yast/rake'
+require 'packaging'
 
 Yast::Tasks.configuration do |conf|
   conf.skip_license_check << /.*desktop$/
@@ -37,22 +37,22 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /cluster2.rb/
 end
 
-desc "Run unit tests with coverage."
-task "coverage" do
-  files = Dir["**/test/**/*_{spec,test}.rb"]
+desc 'Run unit tests with coverage.'
+task 'coverage' do
+  files = Dir['**/test/**/*_{spec,test}.rb']
   sh "export COVERAGE=1; rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-  sh "xdg-open coverage/index.html"
+  sh 'xdg-open coverage/index.html'
 end
 
 Packaging.configuration do |conf|
-  conf.obs_project = "home:imanyugin:hana_update"
-  conf.package_name = "yast2-hana-update"
-  conf.obs_api = "https://api.suse.de/"
-  conf.obs_target = "SLE_12_SP3"
+  conf.obs_project = 'home:imanyugin:hana_update'
+  conf.package_name = 'yast2-hana-update'
+  conf.obs_api = 'https://api.suse.de/'
+  conf.obs_target = 'SLE_12_SP3'
 end
 
-Rake::Task["check:committed"].clear
-Rake::Task["check:license"].clear
+Rake::Task['check:committed'].clear
+Rake::Task['check:license'].clear
 
 # namespace :test do
 #   desc "Runs unit tests."

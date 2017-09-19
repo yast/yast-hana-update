@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title></title>
-    </head>
-    <body>
-        <span>The following plan was generated in order to restore the original state of the cluster:</span><br>
-        <ol>
-            <li>
-                Register site <b><%= remote.running_on.site %></b> as secondary to <b><%= local.running_on.site %></b> and wait
-                until replication finishes;
-            </li>
-            <li>
-                Revert synchronization direction, making site <b><%= remote.running_on.site %></b> primary;
-            </li>
-            <li>
-                Migrate resource <b><%= group.vip.id %></b> to node <b><%= remote.running_on.name %></b>
-            </li>
-            <li>
-                Clean up cluster resources;
-            </li>
-            <li>
-                Disable maintenance mode for resources <b><%= group.master.id %></b>, <b><%= group.clone.id %></b> and <b><%= group.vip.id %></b>.
-            </li>
-        </ol>
-    </body>
+<head>
+  <title></title>
+</head>
+<body>
+<p>The following plan was generated in order to restore the original state of the cluster:</p>
+<ol>
+  <li>
+    Register site <b><code><%= remote.running_on.site %></code></b>
+    as secondary to <b><code><%= local.running_on.site %></code></b>
+    and wait until both instances are in sync;
+  </li>
+  <li>
+    Revert synchronization direction, making site
+    <b><code><%= remote.running_on.site %></code></b> primary;
+  </li>
+  <li>
+    Migrate resource <b><code><%= group.vip.id %></code></b>
+    to node <b><code><%= remote.running_on.name %></code></b>;
+  </li>
+  <li>
+    Clean up and disable maintenance mode for the following cluster resources:
+    <ul>
+      <li><b><code><%= group.master.id %></code></b>,</li>
+      <li><b><code><%= group.clone.id %></code></b>,</li>
+      <li><b><code><%= group.vip.id %></code></b>.</li>
+    </ul>
+  </li>
+</ol>
+</body>
 </html>

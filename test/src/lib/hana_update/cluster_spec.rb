@@ -3,7 +3,7 @@ require_relative '../../../test_helper'
 require 'hana_update/cluster'
 require 'rexml/document'
 require 'rexml/xpath'
-require "socket"
+require 'socket'
 
 describe HANAUpdater::ClusterClass do
   before(:each) do

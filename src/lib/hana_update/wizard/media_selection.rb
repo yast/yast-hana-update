@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Cluster Nodes Configuration Page
+# Summary: SAP HANA updater in a SUSE cluster: Update Media Selection Page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -34,7 +34,7 @@ module HANAUpdater
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Update medium'),
+          _('Step 2 of 7. Update medium'),
           base_layout_with_label(
             _('Mount and copy SAP HANA update medium?'),
             VBox(
@@ -56,32 +56,32 @@ module HANAUpdater
       end
 
       def can_go_next?
-        @model.validate(:nfs_share)
+        model.validate(:nfs_share)
       end
 
       def refresh_view
         super
         log.debug "Refreshing MediaSelectionPage: :rb_auto is #{value(:rb_auto)}"
         # handle radiobuttons and stuff
-        log.debug "--- #{self.class}.#{__callee__} : refresh, params #{@model.nfs_share} ---"
+        log.debug "--- #{self.class}.#{__callee__} : refresh, params #{model.nfs_share} ---"
         
-        flag = @model.mount_nfs
+        flag = model.nfs.should_mount?
         set_value(:rb_manual, !flag)
         set_value(:rb_auto, flag)
         set_value(:hana_medium, flag, :Enabled)
-        set_value(:hana_medium, @model.nfs_source)
+        set_value(:hana_medium, model.nfs.source)
         set_value(:copy_medium, flag, :Enabled)
-        set_value(:copy_medium, @model.copy_medium)
-        set_value(:copy_path, flag && @model.copy_medium, :Enabled)
-        set_value(:copy_path, @model.nfs_copy_path)
+        set_value(:copy_medium, model.nfs.copy_medium?)
+        set_value(:copy_path, flag && model.nfs.copy_medium?, :Enabled)
+        set_value(:copy_path, model.nfs.copy_path)
       end
 
       def update_model
-        @model.mount_nfs = value(:rb_auto)
-        @model.nfs_source = value(:hana_medium)
-        @model.copy_medium = value(:copy_medium)
-        @model.nfs_copy_path = value(:copy_path)
-        log.debug "--- #{self.class}.#{__callee__} : nfs_share=#{@model.nfs_share.inspect} ---"
+        model.nfs.should_mount = value(:rb_auto)
+        model.nfs.source = value(:hana_medium)
+        model.nfs.copy_medium = value(:copy_medium)
+        model.nfs.copy_path = value(:copy_path)
+        log.debug "--- #{self.class}.#{__callee__} : nfs_share=#{model.nfs_share.inspect} ---"
       end
 
       def handle_user_input(input, event)
@@ -100,8 +100,7 @@ module HANAUpdater
         when :hana_medium
           log.info "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
         else
-        log.warn "--- #{self.class}.#{__callee__} : Unexpected user "\
-        "input=#{input.inspect}, event=#{event.inspect} ---"
+        log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
         end
       end
     end

@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: common routines
+# Summary: SAP HANA updater in a SUSE cluster: common routines
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'erb'
@@ -55,7 +55,7 @@ module HANAUpdater
     # Render an ERB template by its name
     def render_template(basename, binding)
       full_path = data_file_path(basename)
-      if !@storage.key? basename
+      unless @storage.key? basename
         template = ERB.new(read_file(full_path), nil, '-')
         @storage[basename] = template
       end
@@ -72,7 +72,7 @@ module HANAUpdater
     # Load the help file by its name
     def load_help(basename)
       file_name = "help_#{basename}.html"
-      if !@storage.key? file_name
+      unless @storage.key? file_name
         full_path = File.join(@data_path, file_name)
         # TODO: apply the CSS
         contents = read_file(full_path)
@@ -171,11 +171,11 @@ module HANAUpdater
     def read_file(path)
       File.read(path)
     rescue Errno::ENOENT => e
-      log.error("Could not find the file '#{path}': #{e.message}.")
-      raise _("Program data could not be found. Please reinstall the package.")
+      log.error("Could not find file '#{path}': #{e.message}.")
+      raise _('Program data could not be found. Please reinstall the package.')
     rescue Errno::EACCES => e
-      log.error("Could not access the file '#{path}': #{e.message}.")
-      raise _("Program data could not be accessed. Please reinstall the package.")
+      log.error("Could not access file '#{path}': #{e.message}.")
+      raise _('Program data could not be accessed. Please reinstall the package.')
     end
   end
 

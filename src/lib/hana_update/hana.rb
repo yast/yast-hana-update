@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: HANA Cluster Updater: HANA configuration
+# Summary: SAP HANA updater in a SUSE cluster
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -66,7 +66,7 @@ module HANAUpdater
     def hdb_start(system_id)
       log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
       user_name = "#{system_id.downcase}adm"
-      command = ['HDB', 'start']
+      command = %w(HDB start)
       out, status = su_exec_outerr_status(user_name, *command)
       s = NodeLogger.log_status(status.exitstatus == 0,
         "Started HANA #{system_id}",
@@ -88,10 +88,10 @@ module HANAUpdater
     def version(system_id)
       log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
       user_name = "#{system_id.downcase}adm"
-      command = ['HDB', 'version']
+      command = %w(HDB version)
       out, status = su_exec_outerr_status(user_name, *command)
       unless status.exitstatus == 0
-        NodeLogger.error("Could not retrieve HANA version, assuming legacy version")
+        NodeLogger.error('Could not retrieve HANA version, assuming legacy version')
         NodeLogger.output(out)
         return nil
       end
@@ -105,7 +105,7 @@ module HANAUpdater
     def hdb_stop(system_id)
       log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
       user_name = "#{system_id.downcase}adm"
-      command = ['HDB', 'stop']
+      command = %w(HDB stop)
       out, status = su_exec_outerr_status(user_name, *command)
       s = NodeLogger.log_status(status.exitstatus == 0,
         "Stopped HANA #{system_id}",
@@ -161,6 +161,14 @@ module HANAUpdater
       cmd.join(' ')
     end
 
+    # Form a command line for checking the System Replication status
+    # @param system_id [String] HANA System ID
+    def check_sys_replication_cmd(system_id)
+      user_name = "#{system_id.downcase}adm"
+      cmd = 'su', '-lc', '"HDBSettings.sh systemReplicationStatus.py"', user_name
+      return cmd
+    end
+
     # Enable System Replication on the secondary HANA system
     # @param system_id [String] HANA System ID
     # @param site_name [String] HANA site name of the secondary instance
@@ -212,7 +220,7 @@ module HANAUpdater
     def disable_secondary(system_id)
       log.info "--- called #{self.class}.#{__callee__}(#{system_id} ---"
       user_name = "#{system_id.downcase}adm"
-      command = ['hdbnsutil', '-sr_unregister']
+      command = %w(hdbnsutil -sr_unregister)
       out, status = su_exec_outerr_status(user_name, *command)
       NodeLogger.log_status(status.exitstatus == 0,
         "Disabled HANA (#{system_id}) System Replication on the secondary site",
@@ -221,17 +229,22 @@ module HANAUpdater
       )
     end
 
+    def disable_primary_cmd(system_id)
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id} ---"
+      user_name = "#{system_id.downcase}adm"
+      command = 'su', '-lc', '"hdbnsutil -sr_unregister"', user_name
+    end
+
     # List the keys out of the HANA secure user store
     # @param system_id [String] HANA System ID
     def check_secure_store(system_id)
       log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
       regex = /^KEY (\w+)$/
       user_name = "#{system_id.downcase}adm"
-      command = ['hdbuserstore', 'list']
+      command = %w(hdbuserstore list)
       out, status = su_exec_outerr_status(user_name, *command)
       unless status.exitstatus == 0
-        log.error "Could not get the list of keys in the HANA secure user store"\
-          " (status=#{status.exitstatus}): #{out}"
+        log.error "Could not get the list of keys in the HANA secure user store (status=#{status.exitstatus}): #{out}"
         return []
       end
       out.scan(regex).flatten
@@ -267,8 +280,8 @@ module HANAUpdater
       if status.exitstatus != 0
         # remove the password from the command line
         pass_index = (cmd.index('-p') || 0) + 1
-        cmd[pass_index] = "*" * cmd[pass_index].length
-        NodeLogger.error "Error executing command #{cmd.join(" ")}"
+        cmd[pass_index] = '*' * cmd[pass_index].length
+        NodeLogger.error "Error executing command #{cmd.join(' ')}"
         NodeLogger.output out
         return
       end
@@ -278,7 +291,7 @@ module HANAUpdater
     # Execute an HDBSQL command
     # @param system_id [String] HANA System ID
     # @param user_name [String] HANA user name
-    # @param instance number [String] HANA instance number
+    # @param instance_number [String] HANA instance number
     # @param password [String] HANA password
     # @param environment [String] HANA host:port specification (can be empty)
     # @param statement [String] SQL statement
@@ -293,8 +306,8 @@ module HANAUpdater
       if status.exitstatus != 0
         # remove the password from the command line
         pass_index = (cmd.index('-p') || 0) + 1
-        cmd[pass_index] = "*" * cmd[pass_index].length
-        NodeLogger.error "Error executing command #{cmd.join(" ")}"
+        cmd[pass_index] = '*' * cmd[pass_index].length
+        NodeLogger.error "Error executing command #{cmd.join(' ')}"
         NodeLogger.output out
         return
       end

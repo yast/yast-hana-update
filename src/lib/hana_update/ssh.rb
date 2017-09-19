@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Remote SSH invocation
+# Summary: SAP HANA updater in a SUSE cluster: Remote SSH invocation
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -184,13 +184,30 @@ module HANAUpdater
     end
 
     def run_command(host, *cmd)
+      log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
       exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
     end
 
     def run_command2(host, *cmd)
+      log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
       exec_outerr_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
     end
     
+    # TODO: rename these methods
+    def run_command_wait(host, *cmd)
+      log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
+      ret = exec_status("ssh", "-o", "StrictHostKeyChecking=no", "root@#{host}", *cmd)
+      log.debug "--- #{self.class}.#{__callee__}: #{host} returned #{ret} ---"
+      ret
+    end
+
+    def run_command_wait2(host, *cmd)
+      log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
+      out, ret = exec_outerr_status("ssh", "-o", "StrictHostKeyChecking=no", "root@#{host}", *cmd)
+      log.debug "--- #{self.class}.#{__callee__}: #{host} returned #{ret}, #{out} ---"
+      return out, ret
+    end
+
     private
 
     def authorize_own_keys

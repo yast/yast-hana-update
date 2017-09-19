@@ -20,11 +20,10 @@ module HANAUpdater
         'node_id' => @id) do |z|
         # transform attribute names from hana_sid_* to *
         # and don't forget about lpt_sid_lpa
-        if name.index(name_prefix)
-          name = name[name_prefix.length+1..name.length()]
-        end
         name = z.attributes['name']
-        name = name[name.rindex('_')+1..name.length()]
+        if name.index(name_prefix)
+          name = name[name_prefix.length+1..name.length]
+        end
         value = z.attributes['value']
         @instance_attributes[name] = value
       end
@@ -32,7 +31,7 @@ module HANAUpdater
       REXML::XPath.each(cib_xml, '//cib/status/node_state[@id=$node_id]/transient_attributes/instance_attributes/nvpair', {}, {'node_id' => @id}) do |ta|
         name = ta.attributes['name']
         if name.index(name_prefix)
-          name = name[name_prefix.length+1..name.length()]
+          name = name[name_prefix.length+1..name.length]
         end
         @transient_attributes[name] = ta.attributes['value']
       end
@@ -63,11 +62,11 @@ module HANAUpdater
           @running_on = nil
         end
       end
-      if !cib_xml_node.nil?
+      unless cib_xml_node.nil?
         ia = cib_xml_node.elements['instance_attributes']
         unless ia.nil?
           @instance_attributes = Hash[
-            ia.get_elements('nvpair').map {|e| [e.attributes['name'], e.attributes['value']] }]
+              ia.get_elements('nvpair').map { |e| [e.attributes['name'], e.attributes['value']] }]
         end
       end
     end
@@ -188,7 +187,7 @@ module HANAUpdater
       f = @groups.find { |g| g.hana_sid == sid && g.hana_inst == ino }
       if f.nil?
         log.error "Could not find HANA system with sid=#{sid} and ino=#{ino}"
-        log.error @groups.map { |g| [g.hana_sid, g.hana_inst].join(":") }.join(", ")
+        log.error @groups.map { |g| [g.hana_sid, g.hana_inst].join(':') }.join(', ')
       end
       f
     end

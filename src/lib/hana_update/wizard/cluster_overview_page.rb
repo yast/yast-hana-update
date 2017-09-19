@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Cluster Nodes Configuration Page
+# Summary: SAP HANA updater in a SUSE cluster: Cluster Nodes Configuration Page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -38,7 +38,7 @@ module HANAUpdater
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Cluster overview'),
+          _('Step 1 of 7. Select SAP HANA system'),
           base_layout_with_label(
             _('Select the system to update'),
             VBox(

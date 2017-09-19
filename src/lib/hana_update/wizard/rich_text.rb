@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Base Rich Text view
+# Summary: SAP HANA updater in a SUSE cluster: Base Rich Text view
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -34,9 +34,12 @@ module HANAUpdater
       def run(title, contents, help, allow_back=true, allow_next=true)
         base_rich_text(title, contents, help, allow_back, allow_next)
         if @allow_skip
-          Yast::Wizard.SetBackButton(:skip, "&Skip")
+          Yast::Wizard.SetBackButton(:skip, '&Skip')
         end
-        Yast::UI.UserInput
+        input = Yast::UI.UserInput
+        # Restore the "back button"
+        Yast::Wizard.SetBackButton(:back, '&Back') if @allow_skip
+        input
       end
     end
   end

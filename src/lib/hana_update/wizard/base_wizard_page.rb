@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Base YaST Wizard page
+# Summary: SAP HANA updater in a SUSE cluster: Base YaST Wizard page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -56,7 +56,7 @@ module HANAUpdater
       # GUI waiting screen before the first GUI refresh
       def before_refresh
       end
-      
+
       # Refresh the view, populating the values from the model
       def refresh_view
       end
@@ -68,7 +68,7 @@ module HANAUpdater
       # Return true if the user can proceed to the next screen
       # Use this if additional verification of the data is needed
       def can_go_next?
-        
+        true
       end
 
       # Show the error dialog if model validation failed?
@@ -79,8 +79,7 @@ module HANAUpdater
       # Handle custom user input
       # @param input [Symbol]
       def handle_user_input(input, event)
-        log.warn "--- #{self.class}.#{__callee__} : Unexpected user "\
-        "input=#{input.inspect}, event=#{event.inspect} ---"
+        log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input}, event=#{event} ---"
       end
 
       # Set the contents of the Wizard's page and run the event loop
@@ -109,7 +108,7 @@ module HANAUpdater
           log.debug "--- #{self.class}.#{__callee__}: Enter loop ---"
           event = Yast::Wizard.WaitForEvent
           log.error "--- #{self.class}.#{__callee__}: event=#{event} ---"
-          input = event["ID"]
+          input = event['ID']
           case input
           # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
           # it should redefine the main_loop
@@ -122,11 +121,13 @@ module HANAUpdater
           when :next, :summary
             update_model
             return input if @model.no_validators
-            errors = @page_validator.call unless @page_validator.nil?
-            unless errors.nil? or errors.empty?
-              show_dialog_errors(errors)
-            else
-              return input
+            unless @page_validator.nil?
+              errors = @page_validator.call
+              if errors.nil? or errors.empty?
+                return input
+              else
+                show_dialog_errors(errors)
+              end
             end
           else
             handle_user_input(input, event)
@@ -179,16 +180,14 @@ module HANAUpdater
       # @param property [Symbol]
       def value(widget_id, property = :Value)
         unless Yast::UI.WidgetExists(Id(widget_id))
-          log.error "--- #{self.class}.#{__callee__}: widget with "\
-            "ID=#{widget_id} does not exist ---"
+          log.error "--- #{self.class}.#{__callee__}: widget with ID=#{widget_id} does not exist ---"
         end
         Yast::UI.QueryWidget(Id(widget_id), property)
       end
 
       def set_value(widget_id, value, property = :Value)
         unless Yast::UI.WidgetExists(Id(widget_id))
-          log.error "--- #{self.class}.#{__callee__}: widget with "\
-            "ID=#{widget_id} does not exist ---"
+          log.error "--- #{self.class}.#{__callee__}: widget with ID=#{widget_id} does not exist ---"
         end
         Yast::UI.ChangeWidget(Id(widget_id), property, value)
       end
@@ -198,10 +197,8 @@ module HANAUpdater
         log.debug "--- #{self.class}.#{__callee__} ---"
         HBox(
           HSpacing(3),
-          # HStretch(),
           contents,
           HSpacing(3)
-          # HStretch()
         )
       end
 
@@ -255,6 +252,7 @@ module HANAUpdater
             end
             log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
             if validator && !@model.no_validators
+              # TODO: remove SemanticChecks
               ret = SemanticChecks.instance.check_popup(validator, parameters)
               unless ret.empty?
                 show_dialog_errors(ret)
@@ -359,13 +357,13 @@ module HANAUpdater
         end
       end
 
-      def show_dialog_errors(error_list, title = "Invalid input")
+      def show_dialog_errors(error_list, title = 'Invalid input')
         log.error "--- #{self.class}.#{__callee__}: #{error_list} ---"
         html_str = "<p>Configuration is invalid or incomplete and the Wizard
           cannot proceed to the next step.</p><p>Please review the following warnings:</p>\n"
         html_str << "<ul>\n"
         html_str << error_list.uniq.map { |e| "<li>#{e}</li>" }.join("\n")
-        html_str << "</ul>"
+        html_str << '</ul>'
         Yast::Popup.LongText(title, RichText(html_str), 60, 17)
       end
 

@@ -8,7 +8,7 @@ module HANAUpdater
       CRITICAL = 4
       
       def initialize(msg, level = ERROR)
-        prefix = { 2 => "Warning", 3 => "Error", 4 => "Critical" }.fetch(level, 'Info')
+        prefix = {2 => 'Warning', 3 => 'Error', 4 => 'Critical'}.fetch(level, 'Info')
         my_msg = "#{prefix}: #{msg}"
         super(my_msg)
         @level = level

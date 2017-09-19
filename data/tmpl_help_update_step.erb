@@ -1,0 +1,80 @@
+<html>
+<head>
+  <title></title>
+  <style type="text/css">
+    code {
+      font-family: "Nimbus Mono L", "Monospace", monospace;
+    }
+  </style>
+</head>
+<body>
+<h3>
+  Updating SAP HANA
+</h3>
+<p>
+  For detailed instructions on how to update a SAP HANA instance, please always refer to the official SAP documentation
+  corresponding to the target SAP HANA version, for example, the
+  <i>SAP HANA Master Update Guide</i> and <i>HANA Server Installation and Update Guide</i>
+</p>
+<p>
+  Below are the two possible ways of performing the update. Please note that these two may not work for your particular
+  case, depending on the current and target SAP HANA versions.
+</p>
+<h4>Update using a full update medium</h4>
+<ul>
+  <li>
+    <p>
+      Log in to <code><%= node.name %></code>:
+      <br/>
+      <code>ssh root@<%= node.name %></code> or
+      <code>ssh root -Y root@<%= node.name %></code> for GUI mode
+    </p>
+  </li>
+  <% if model.nfs.should_mount? %>
+     <% if model.nfs.copy_medium? %>
+        <li>
+          Navigate to the HDB LCM directory:
+          <br/>
+          <!-- TODO: check architecture -->
+          <!-- TODO: what if the media wasn't copied? -->
+          <code>cd <%= model.nfs.copy_path %>/DATA_UNITS/HDB_LCM_LINUX_X86_64</code>
+        </li>
+     <% else %>
+        <li>
+          Navigate to the HDB LCM directory:
+          <br/>
+          <code>cd <%= model.nfs.mount_path %>/DATA_UNITS/HDB_LCM_LINUX_X86_64</code>
+        </li>
+     <% end %>
+  <% else %>
+    <li>
+      Mount or copy an update medium to node <%= node.name %>, then navigate to the HDB LCM directory.
+    </li>
+  <% end %>
+  <li>
+    Execute <code>hdblcm</code>:
+    <br/>
+    <code>./hdblcm --action=update</code> or
+    <code>./hdblcmgui --action=update</code> for GUI mode
+  </li>
+  <li>
+    Follow the on-screen update instructions.
+  </li>
+</ul>
+<h4>Using the SAP HANA HDB LCM Web User Interface:</h4>
+<ul>
+  <li>
+    Open the following URL in your browser:
+    <br/>
+    <code><%= hdblcm_link %></code>
+  </li>
+  <li>
+    Log in as user <code><%= model.system.hana_sid.downcase %>adm</code>.
+  </li>
+  <li>
+    Follow the on-screen update instructions.
+  </li>
+</ul>
+<br/>
+</body>
+</html>

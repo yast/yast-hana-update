@@ -1,6 +1,6 @@
 # encoding: utf-8
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -15,7 +15,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: In-memory logger class
+# Summary: SAP HANA updater in a SUSE cluster: In-memory logger class
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -38,8 +38,8 @@ module HANAUpdater
       @logger.level = Logger::INFO
       @node_name = Socket.gethostname
       @logger.formatter = proc do |severity, datetime, _progname, msg|
-        date = datetime.strftime("%Y-%m-%d %H:%M:%S")
-        severity = "OUTPUT" if severity == "ANY"
+        date = datetime.strftime('%Y-%m-%d %H:%M:%S')
+        severity = 'OUTPUT' if severity == 'ANY'
         "[#{@node_name}] #{date} #{severity.rjust(6)}: #{msg}\n"
       end
       @highest_level = Logger::INFO
@@ -50,7 +50,7 @@ module HANAUpdater
     def output(str)
       return unless str
       str = str.strip
-      str.split("\n").each { |line| @logger.unknown(line.strip) }
+      str.split("\n").each { |line| log.unknown(line.strip) }
     end
 
     # # Proxy calls to the logger class if they are not found in NodeLogger
@@ -92,14 +92,14 @@ module HANAUpdater
     def summary
       txt = text
       if txt =~ /FATAL:/
-        @logger.error "Overall status: RED. Setup was halted due to a fatal error."
+        @logger.error 'Overall status: RED. Setup was halted due to a fatal error.'
       elsif txt =~ /ERROR:/
-        @logger.error "Overall status: RED. There were errors during the setup."
+        @logger.error 'Overall status: RED. There were errors during the setup.'
       elsif txt =~ /WARN:/
-        @logger.warn "Overall status: YELLOW. There were warnings during the setup."
+        @logger.warn 'Overall status: YELLOW. There were warnings during the setup.'
       else
         # elsif txt ~= /INFO:/
-        @logger.info "Overall status: GREEN. There were no errors."
+        @logger.info 'Overall status: GREEN. There were no errors.'
       end
     end
 
@@ -118,7 +118,7 @@ module HANAUpdater
         rule = rules.find { |r| r[:rex].match(line) }
         if rule
           node, time, level, message = rule[:rex].match(line).captures
-          if level == "OUTPUT"
+          if level == 'OUTPUT'
             "<font color=\"\#a6a6a6\">[#{node}]</font> #{message}"
           else
             "<font color=\"\#a6a6a6\">[#{node}] #{time}</font> "\
@@ -136,7 +136,7 @@ module HANAUpdater
 
     # Log a general fatal error
     def showstopper
-      @logger.fatal("Interrupting configuration process due to earlier errors.")
+      @logger.fatal('Interrupting configuration process due to earlier errors.')
     end
 
     # Log the status of an operation and, optionally, its output
@@ -146,10 +146,10 @@ module HANAUpdater
     # @param [String] stdout
     def log_status(status, msg_if_true, msg_if_false, stdout = nil, log_output_on_success = false)
       if status
-        @logger.info(msg_if_true)
+        log.info(msg_if_true)
         output(stdout) if log_output_on_success
       else
-        @logger.error(msg_if_false)
+        log.error(msg_if_false)
         output(stdout) if stdout
       end
       status

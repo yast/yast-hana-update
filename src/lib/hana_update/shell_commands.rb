@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE HANA Updater: shell commands wrapper
+# Summary: SAP HANA updater in a SUSE cluster: shell commands wrapper
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -39,8 +39,11 @@ module HANAUpdater
     # Execute command and return its status
     # @return [Process::Status]
     def exec_status(*command)
+      log.debug "--- called #{self.class}.#{__callee__}(#{command}) ---"
       log.info "Executing command #{command}"
-      Open3.popen3(*command) { |_, _, _, wait_thr| wait_thr.value }
+      status = Open3.popen3(*command) { |_, _, _, wait_thr| wait_thr.value }
+      log.debug "--- called #{self.class}.#{__callee__}: command returned '#{status}' ---"
+      status
     end
 
     # # Execute command and return its status and output (stdout)
@@ -53,8 +56,12 @@ module HANAUpdater
     # Execute command and return ist output (both stdout and stderr) and status
     # @return [[String, string]] stdout_and_stderr, status
     def exec_outerr_status(*params)
+      log.debug "--- called #{self.class}.#{__callee__}(#{params}) ---"
       log.info "Executing command #{params}"
-      Open3.capture2e(*params)
+      out, status = Open3.capture2e(*params)
+      out.split("\n").each { |ln| log.debug "--- OUT: #{ln}"}
+      log.debug "--- called #{self.class}.#{__callee__}: command returned '#{status}' ---"
+      return out, status
     rescue SystemCallError => e
       return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
     end
@@ -78,7 +85,10 @@ module HANAUpdater
     # @return [[String, String]] [stdout_and_stderr, status]
     def su_exec_outerr_status(user_name, *params)
       log.info "Executing #{params} as user #{user_name}"
-      Open3.capture2e('su', '-lc', params.join(' '), user_name)
+      out, status = Open3.capture2e('su', '-lc', params.join(' '), user_name)
+      out.split("\n").each { |ln| log.debug "--- OUT: #{ln}"}
+      log.debug "--- called #{self.class}.#{__callee__}: command returned '#{status}' ---"
+      return out, status
     rescue SystemCallError => e
       return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
     end
