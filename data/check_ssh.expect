@@ -17,7 +17,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE SAP HANA Cluster Update: SSH checks script
+# Summary: SAP HANA updater in a SUSE cluster: SSH checks script
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 # >>> Arguments:

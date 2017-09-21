@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Remote SSH invocation
+# Summary: SAP HANA updater in a SUSE cluster: Remote SSH invocation
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -94,8 +94,7 @@ module HANAUpdater
       local
     end
 
-    def recursive_copy(source, target, opts={node: :local})
-      # TODO: include SAP_SID to parameters
+    def recursive_copy(source, target, hana_sid, opts={node: :local})
       log.debug "--- called #{self.class}.#{__callee__}(#{source}, #{target}, #{opts}) ---"
       source_ = File.join(source, '.')
       if opts[:node] == :local
@@ -106,8 +105,11 @@ module HANAUpdater
           log.error "Cannot copy update medium: status=#{status}, out=#{out}"
           return false
         end
-        # TODO: chown the directory to <sidadm>:sapsys  
-        # FileUtils.chown_R('<sid>adm', 'sapsys', target)
+        out, status = HANAUpdater::System.exec_outerr_status('chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
+        unless status.exitstatus == 0
+          log.error "Cannot chown copied update medium: status=#{status}, out=#{out}"
+          return false
+        end
         return true
       else
         status = HANAUpdater::SSH.run_command_wait(opts[:node], 'test', '-d', target)
@@ -119,11 +121,14 @@ module HANAUpdater
             return false
           end
         end
-        # TODO: chown the directory to <sid>adm:sapsys
-        # cmd = 'chown', '-R', "<sidadm>:sapsys", target
         out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], 'cp', '-far', source_, target)
         unless status.exitstatus == 0
           log.error "Cannot copy update medium #{source_} to #{target}: #{status}, #{out}"
+          return false
+        end
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], 'chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
+        unless status.exitstatus == 0
+          log.error "Cannot chown copied update medium: status=#{status}, out=#{out}"
           return false
         end
       end

@@ -197,8 +197,6 @@ module HANAUpdater
     # Read and parse output of crm_mon
     def get_crm_mon
       out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
-      # out = File.read('new_xml/crm_mon_fake.xml')
-      # TODO: log the output here
       raise "Could not connect to cluster: #{out}" if status.exitstatus != 0
       REXML::Document.new(out)
     end

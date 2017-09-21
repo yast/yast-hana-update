@@ -15,7 +15,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: HANA Cluster Updater: YaST client
+# Summary: SAP HANA updater in a SUSE cluster: YaST client
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'

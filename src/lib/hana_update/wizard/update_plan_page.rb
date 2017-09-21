@@ -26,47 +26,64 @@ module HANAUpdater
   module Wizard
     # Simple RichText page
     class UpdatePlanPage < BaseWizardPage
-      def initialize(config)
+      attr_accessor :part
+      def initialize(config, part)
+        @part = part
         super(config)
       end
 
-      def run(part)
-        group = model.system
-        local = group.master.local
-        remote = group.master.remote
-        step_no = {local: 3, remote: 5, restore: 7}[part] || '?'
-        content, help = render(part, binding)
+      def set_contents
+        step_no = {local: 3, remote: 5, restore: 7}[@part] || '?'
+        short_descr = {local: 'local node', remote: 'remote node', restore: 'restore cluster state'}[@part] || '?'
+        content, help = render
         base_rich_text(
-            "Step #{step_no} of 7. Update plan (#{part} node)",
+            "Step #{step_no} of 7. Update plan (#{short_descr})",
             content,
             help,
             true,
             true
         )
         Yast::Wizard.SetBackButton(:skip, '&Skip')
-        input = Yast::UI.UserInput
-        # Restore the "back button"
-        Yast::Wizard.SetBackButton(:back, '&Back')
-        input
       end
 
-      def render(part, binding_)
-        file_name = case part
+      def after_main_loop
+        log.debug "--- called #{self.class}.#{__callee__}.after_main_loop ---"
+        Yast::Wizard.SetBackButton(:back, '&Back')
+      end
+
+      def render
+        group = model.system
+        local = group.master.local
+        remote = group.master.remote
+        file_name = case @part
                       when :local, :remote
                         'tmpl_update_plan.erb'
                       when :restore
                         'tmpl_restore_cluster.erb'
                       else
-                        raise ArgumentError, "Unknown part #{part}"
+                        raise ArgumentError, "Unknown part #{@part}"
                     end
         begin
-          content = HANAUpdater::Helpers.render_template(file_name, binding_)
+          content = HANAUpdater::Helpers.render_template(file_name, binding)
         rescue HANAUpdater::Exceptions::TemplateRenderException => e
           log.error "#{e}: #{e.renderer_message}"
           abort
         end
-        help = '' # TODO: write help
+        help = Helpers.load_help('update_plan')
         return content, help
+      end
+
+      def handle_user_input(input, event)
+        log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input}, event=#{event} ---"
+        case input
+          when 'revert_cluster_toggle'
+            log.info 'Revert_Cluster was toggled'
+            model.revert_cluster = !model.revert_cluster
+            content, _help = render
+            set_value(:rtext, content)
+          else
+            log.error "Unknown input #{input.inspect}"
+        end
       end
     end
   end

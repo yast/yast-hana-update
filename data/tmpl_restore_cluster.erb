@@ -7,18 +7,45 @@
 <p>The following plan was generated in order to restore the original state of the cluster:</p>
 <ol>
   <li>
+    Disable System Replication on remote node <b><code>remote.running_on.name</code></b> (site
+    <b><code>remote.running_on.site</code></b>).
+  </li>
+  <li>
+    Stop SAP HANA instance on remote node.
+  </li>
+  <li>
     Register site <b><code><%= remote.running_on.site %></code></b>
-    as secondary to <b><code><%= local.running_on.site %></code></b>
-    and wait until both instances are in sync;
+    as secondary to <b><code><%= local.running_on.site %></code></b>, start site
+    <b><code><%= remote.running_on.site %></code></b>
+    and wait until the secondary instance is synchronized.
   </li>
-  <li>
-    Revert synchronization direction, making site
-    <b><code><%= remote.running_on.site %></code></b> primary;
-  </li>
-  <li>
-    Migrate resource <b><code><%= group.vip.id %></code></b>
-    to node <b><code><%= remote.running_on.name %></code></b>;
-  </li>
+  <% if model.revert_cluster %>
+      <li>
+        Synchronization will be reversed to original state.
+        [<a style="color:#00843E" href="revert_cluster_toggle">Do not reverse</a>]<br/>
+        Site <b><code><%= remote.running_on.site %></code></b> will become the new primary instance.
+      </li>
+      <ul>
+        <li>
+          Perform System Replication takeover on site <b><code><%= remote.running_on.site %></code></b>.
+        </li>
+        <li>
+          Migrate resource <b><code><%= group.vip.id %></code></b> to node
+          <b><code><%= remote.running_on.name %></code></b>;
+        </li>
+        <li>
+          Register site <b><code><%= local.running_on.site %></code></b> as secondary to site
+          <b><code><%= remote.running_on.site %></code></b>.
+        </li>
+
+      </ul>
+  <% else %>
+      <li>
+        Synchronization will not be reversed to its original state.
+        [<a style="color:#00843E" href="revert_cluster_toggle">Reverse</a>]<br/>
+        Site <b><code><%= local.running_on.site %></code></b> will stay the new primary instance.
+      </li>
+  <% end %>
   <li>
     Clean up and disable maintenance mode for the following cluster resources:
     <ul>
@@ -28,5 +55,6 @@
     </ul>
   </li>
 </ol>
+<span></span>
 </body>
 </html>

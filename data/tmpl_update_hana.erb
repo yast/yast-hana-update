@@ -9,7 +9,7 @@
 </p>
 <% if model.nfs.should_mount? %>
     <p>
-      <i>Note:</i> The NFS share <%= model.nfs.source %> was mounted to <%= model.nfs.mount_path %>.
+    <i>Note:</i> The NFS share <code><%= model.nfs.source %></code> was mounted to <code><%= model.nfs.mount_path %></code>.
     </p>
 <% end %>
 <% if model.nfs.copy_medium? %>

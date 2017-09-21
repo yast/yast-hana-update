@@ -63,6 +63,7 @@ module HANAUpdater
 
       # Refresh model, populating the values from the view
       def update_model
+          log.debug "--- called BaseWizardPage.update_model ---"
       end
 
       # Return true if the user can proceed to the next screen
@@ -82,6 +83,10 @@ module HANAUpdater
         log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input}, event=#{event} ---"
       end
 
+      def after_main_loop
+        log.debug "--- called #{self.class}.#{__callee__}.after_main_loop ---"
+      end
+
       # Set the contents of the Wizard's page and run the event loop
       def run
         log.debug "--- #{self.class}.#{__callee__} ---"
@@ -89,7 +94,9 @@ module HANAUpdater
           set_contents
           before_refresh
           refresh_view
-          main_loop
+          ret = main_loop
+          after_main_loop
+          return ret
         rescue AbortGUILoop => e
           log.error "GUI loop was interrupted: #{e.message}"
           show_message(e.message, 'Error')
@@ -107,18 +114,20 @@ module HANAUpdater
         loop do
           log.debug "--- #{self.class}.#{__callee__}: Enter loop ---"
           event = Yast::Wizard.WaitForEvent
-          log.error "--- #{self.class}.#{__callee__}: event=#{event} ---"
+          log.debug "--- #{self.class}.#{__callee__}: event=#{event} ---"
           input = event['ID']
           case input
           # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
           # it should redefine the main_loop
-          when :back, :cancel, :join_cluster
+          when :back, :cancel, :skip
             # @model.write_config if input == :abort || input == :cancel
             update_model
             return input
           when :abort
             return input            
           when :next, :summary
+            log.debug "--- #{self.class}.#{__callee__}: user clicked `next`"
+            log.debug "--- #{self.class}.#{__callee__}: @page_validator=#{@page_validator.inspect}"
             update_model
             return input if @model.no_validators
             unless @page_validator.nil?
@@ -147,7 +156,7 @@ module HANAUpdater
         Yast::Wizard.SetContents(
           title,
           base_layout(
-            RichText(contents)
+            RichText(Id(:rtext), contents)
           ),
           help,
           allow_back,

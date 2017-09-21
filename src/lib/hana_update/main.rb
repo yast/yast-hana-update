@@ -15,7 +15,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: HANA Cluster Updater: YaST client
+# Summary: SAP HANA updater in a SUSE cluster: YaST client
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 module HANAUpdater
@@ -135,7 +135,7 @@ module HANAUpdater
     end
 
     def update_plan_page(part)
-      input = Wizard::UpdatePlanPage.new(@configuration).run(part)
+      input = Wizard::UpdatePlanPage.new(@configuration, part).run
       if input == :next
         Executor.instance.execute_update_plan(part, @configuration)
       elsif input == :skip

@@ -1,0 +1,45 @@
+<html>
+<head>
+    <style type="text/css">
+        dt {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        code {
+            font-family: "Nimbus Mono L", "Monospace", monospace;
+        }
+    </style>
+
+</head>
+<body>
+<p>This step allows you to mount an SAP HANA update medium via NFS and, optionally, copy it to the local filesystem.</p>
+<!-- TODO: revise this doc wrt. the interface -->
+<dl>
+    <dt>Mount NFS share</dt>
+    <dd>
+        With this option enabled, the Wizard will mount the NFS share specified in the next step to each of the nodes
+        running SAP HANA.
+    </dd>
+
+    <dt>NFS share path</dt>
+    <dd>
+        Specify the path to the NFS share here. Please use the same format, as with <code>mount.nfs</code> utility, i.e.
+        <code>servername:/path/to/share</code>.
+    </dd>
+
+    <dt>Copy medium locally</dt>
+    <dd>
+        Check this option if you wish the contents of the update medium to be copied locally.
+        Please note that, depending on your network, this can take a considerable amount of time.
+    </dd>
+
+    <dt>Copy path</dt>
+    <dd>
+        Specify path on the local node where the contents of the update medium should be copied.
+        This path will be created, if it does not exist.
+        Additionally, the filesystem owner will be set to <code>&lt;SID&gt;adm:sapsys</code>.
+    </dd>
+</dl>
+</body>
+</html>

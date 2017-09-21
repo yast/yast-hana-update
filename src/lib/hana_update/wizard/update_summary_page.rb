@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Base Rich Text view
+# Summary: SAP HANA updater in a SUSE cluster: Base Rich Text view
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -25,23 +25,18 @@ require 'yast'
 module HANAUpdater
   module Wizard
     # Simple RichText page
-    class UpdateNodePage < BaseWizardPage
+    class UpdateSummaryPage < BaseWizardPage
       def initialize(config)
         super(config)
       end
 
-      def run(part)
-        step_no = case part
-            when :local
-              4
-            when :remote
-              6
-            end
+      def run
+
         resource = model.system.master.send(part)
         node = resource.running_on
         hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{model.system.hana_sid}/index.html"
         begin
-          # TODO: this module is not used at all!
+
           content = HANAUpdater::Helpers.render_template('tmpl_update_site.erb', binding)
         rescue HANAUpdater::Exceptions::TemplateRenderException => e
           log.error "#{e}: #{e.renderer_message}"

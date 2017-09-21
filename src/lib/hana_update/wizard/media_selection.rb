@@ -29,6 +29,7 @@ module HANAUpdater
     class MediaSelectionPage < BaseWizardPage
       def initialize(model)
         super(model)
+        @page_validator = lambda { model.validate(:nfs_share, :verbose) }
       end
 
       def set_contents
@@ -49,7 +50,7 @@ module HANAUpdater
               TextEntry(Id(:copy_path), 'Local path:')
             )
           ),
-          Helpers.load_help('stub'),
+          Helpers.load_help('media_selection'), # TODO: write help
           true,
           true
         )
@@ -77,11 +78,12 @@ module HANAUpdater
       end
 
       def update_model
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         model.nfs.should_mount = value(:rb_auto)
         model.nfs.source = value(:hana_medium)
         model.nfs.copy_medium = value(:copy_medium)
         model.nfs.copy_path = value(:copy_path)
-        log.debug "--- #{self.class}.#{__callee__} : nfs_share=#{model.nfs_share.inspect} ---"
+        log.debug "--- #{self.class}.#{__callee__} : nfs_share=#{model.nfs.inspect} ---"
       end
 
       def handle_user_input(input, event)

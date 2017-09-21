@@ -53,13 +53,6 @@ module HANAUpdater
       str.split("\n").each { |line| log.unknown(line.strip) }
     end
 
-    # # Proxy calls to the logger class if they are not found in NodeLogger
-    # # @param [Symbol] method
-    # # @param [Array] args
-    # def method_missing(method, *args)
-    #   @logger.send(method, *args)
-    # end
-
     # Use debug mode
     def set_debug
       @logger.level = Logger::DEBUG

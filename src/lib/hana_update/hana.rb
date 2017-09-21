@@ -63,33 +63,41 @@ module HANAUpdater
 
     # Start HANA by issuing the `HDB start` command as `<sid>adm` user
     # @param system_id [String] SAP SID of the HANA instance
-    def hdb_start(system_id)
-      log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
+    def start(system_id, opts={node: :local})
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{opts}) ---"
       user_name = "#{system_id.downcase}adm"
       command = %w(HDB start)
-      out, status = su_exec_outerr_status(user_name, *command)
+      if opt[:node] == :local
+        out, status = su_exec_outerr_status(user_name, *command)
+      else
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *wrap_ssh_su_call(user_name, command))
+      end
       s = NodeLogger.log_status(status.exitstatus == 0,
-        "Started HANA #{system_id}",
-        "Could not start HANA #{system_id}, will retry.",
-        out
+                                "Started HANA #{system_id}",
+                                "Could not start HANA #{system_id}, will retry.",
+                                out
       )
       return true if s
       out, status = su_exec_outerr_status(user_name, *command)
       NodeLogger.log_status(status.exitstatus == 0,
-        "Started HANA #{system_id}",
-        "Could not start HANA #{system_id}, bailing out.",
-        out
+                            "Started HANA #{system_id}",
+                            "Could not start HANA #{system_id}, bailing out.",
+                            out
       )
     end
 
     # Get the HANA version as a string
     # @param system_id [String] SAP SID of the HANA instance
     # @return [String, nil] version string or nil on failure
-    def version(system_id)
-      log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
+    def version(system_id, opts={node: :local})
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{opts}) ---"
       user_name = "#{system_id.downcase}adm"
       command = %w(HDB version)
-      out, status = su_exec_outerr_status(user_name, *command)
+      if opts[:node] == :local
+        out, status = su_exec_outerr_status(user_name, *command)
+      else
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *wrap_ssh_su_call(user_name, command))
+      end
       unless status.exitstatus == 0
         NodeLogger.error('Could not retrieve HANA version, assuming legacy version')
         NodeLogger.output(out)
@@ -102,68 +110,90 @@ module HANAUpdater
 
     # Stop HANA by issuing the `HDB stop` command as `<sid>adm` user
     # @param system_id [String] SAP SID of the HANA instance
-    def hdb_stop(system_id)
-      log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
+    def stop(system_id, opts=[node: :local])
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{opts}) ---"
       user_name = "#{system_id.downcase}adm"
       command = %w(HDB stop)
-      out, status = su_exec_outerr_status(user_name, *command)
+      if opt[:node] == :local
+        out, status = su_exec_outerr_status(user_name, *command)
+      else
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *wrap_ssh_su_call(user_name, command))
+      end
       s = NodeLogger.log_status(status.exitstatus == 0,
-        "Stopped HANA #{system_id}",
-        "Could not stop HANA #{system_id}, will retry.",
-        out
+                                "Stopped HANA #{system_id}",
+                                "Could not stop HANA #{system_id}, will retry.",
+                                out
       )
       return true if s
       out, status = su_exec_outerr_status(user_name, *command)
       NodeLogger.log_status(status.exitstatus == 0,
-        "Stopped HANA #{system_id}",
-        "Could not stop HANA #{system_id}, bailing out.",
-        out
+                            "Stopped HANA #{system_id}",
+                            "Could not stop HANA #{system_id}, bailing out.",
+                            out
       )
     end
 
     # Enable System Replication on the primary HANA system
     # @param system_id [String] HANA System ID
     # @param site_name [String] HANA site name of the primary instance
-    def enable_primary(system_id, site_name)
-      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name}) ---"
+    def sr_enable_primary(system_id, site_name, opts={node: :local})
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name}, #{opts}) ---"
       user_name = "#{system_id.downcase}adm"
       command = ['hdbnsutil', '-sr_enable', "--name=#{site_name}"]
-      out, status = su_exec_outerr_status(user_name, *command)
+      if opts[:node] == :local
+        out, status = su_exec_outerr_status(user_name, *command)
+      else
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *wrap_ssh_su_call(user_name, command))
+      end
       NodeLogger.log_status(status.exitstatus == 0,
-        "Enabled HANA (#{system_id}) System Replication on the primary site #{site_name}",
-        "Could not enable HANA (#{system_id}) System Replication on the primary site #{site_name}",
-        out
+                            "Enabled HANA (#{system_id}) System Replication on the primary site #{site_name}",
+                            "Could not enable HANA (#{system_id}) System Replication on the primary site #{site_name}",
+                            out
       )
     end
 
-    def enable_secondary_cmd(system_id, site_name, host_name_primary, instance, rmode, omode)
+    # Enable System Replication on the secondary HANA system
+    # @param system_id [String] HANA System ID
+    # @param site_name [String] HANA site name of the secondary instance
+    # @param host_name_primary [String] host name of the primary node
+    # @param instance [String] instance number of the primary
+    # @param rmode [String] replication mode
+    # @param omode [String] operation mode
+    def sr_register_secondary(system_id, instance, site_name, host_name_primary, rmode, omode, opts={node: :local})
       log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name},"\
-        " #{host_name_primary}, #{instance}, #{rmode}, #{omode}) ---"
+        " #{host_name_primary}, #{instance}, #{rmode}, #{omode}, #{opts}) ---"
       user_name = "#{system_id.downcase}adm"
-      # TODO: here we should query not the local system's version, but remote
-      version = version(system_id)
-      # Select an appropriate command-line switch for replication mode
-      # Assume legacy `mode` by default (pre-SPS12)
-      rmode_string = if HANAUpdater::Helpers.version_comparison('1.00.120', version)
-                       "--replicationMode=#{rmode}"
-                     else
-                       "--mode=#{rmode}"
-                     end
-      omode_string = if HANAUpdater::Helpers.version_comparison('1.00.110', version)
-                       "--operationMode=#{omode}"
-                     else
-                       nil
-                     end
-      command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
-                 "--remoteInstance=#{instance}", rmode_string, omode_string,
-                 "--name=#{site_name}"].reject(&:nil?)
-      cmd = 'su', '-lc', '"'+ command.join(' ') + '"', user_name
-      cmd.join(' ')
+      version = version(system_id, opts[:node])
+      if HANAUpdater::Helpers.version_comparison('1.00.120', version)
+        rmode_string = "--replicationMode=#{rmode}"
+      else
+        rmode_string = "--mode=#{rmode}"
+      end
+      if HANAUpdater::Helpers.version_comparison('1.00.110', version)
+        omode_string = "--operationMode=#{omode}"
+      else
+        omode_string = nil
+      end
+      command = 'hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
+          "--remoteInstance=#{instance}", rmode_string, omode_string,
+          "--name=#{site_name}"
+      command.reject!(&:nil?)
+      if opts[:node] == :local
+        out, status = su_exec_outerr_status(user_name, *command)
+      else
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *wrap_ssh_su_call(user_name, command))
+      end
+      NodeLogger.log_status(status.exitstatus == 0,
+                            "Registered site #{site_name} (#{system_id}) as secondary site to primary on host #{host_name_primary}",
+                            "Could not register site #{site_name} (#{system_id}) as secondary to primary on host #{host_name_primary}",
+                            out
+      )
     end
 
     # Form a command line for checking the System Replication status
     # @param system_id [String] HANA System ID
     def check_sys_replication_cmd(system_id)
+      # TODO: provide parameter --site=REMOTESITENAME, so that the script filters all other stuff
       user_name = "#{system_id.downcase}adm"
       cmd = 'su', '-lc', '"HDBSettings.sh systemReplicationStatus.py"', user_name
       return cmd
@@ -198,34 +228,42 @@ module HANAUpdater
                  "--name=#{site_name}"].reject(&:nil?)
       out, status = su_exec_outerr_status(user_name, *command)
       NodeLogger.log_status(status.exitstatus == 0,
-        "Enabled HANA (#{system_id}) System Replication on the secondary host #{site_name}",
-        "Could not enable HANA (#{system_id}) System Replication on the secondary host",
-        out
+                            "Enabled HANA (#{system_id}) System Replication on the secondary host #{site_name}",
+                            "Could not enable HANA (#{system_id}) System Replication on the secondary host",
+                            out
       )
     end
 
-    def takeover(system_id)
-      log.info "--- called #{self.class}.#{__callee__}(#{system_id} ---"
+    def takeover(system_id, opts={node: :local})
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{opts}) ---"
       user_name = "#{system_id.downcase}adm"
       command = 'hdbnsutil', '-sr_takeover'
-      out, status = su_exec_outerr_status(user_name, *command)
+      if opts[:node] == :local
+        out, status = su_exec_outerr_status(user_name, *command)
+      else
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *wrap_ssh_su_call(user_name, command))
+      end
       NodeLogger.log_status(status.exitstatus == 0,
-        "Took over HANA #{system_id} to local site",
-        "Could not take-over HANA (#{system_id}) to local site",
-        out
+                            "Took over HANA #{system_id} to local site",
+                            "Could not take-over HANA (#{system_id}) to local site",
+                            out
       )
     end
 
     # Disable System Replication on the secondary (local) HANA system
-    def disable_secondary(system_id)
+    def disable_secondary(system_id, opts={node: :local})
       log.info "--- called #{self.class}.#{__callee__}(#{system_id} ---"
       user_name = "#{system_id.downcase}adm"
       command = %w(hdbnsutil -sr_unregister)
-      out, status = su_exec_outerr_status(user_name, *command)
+      if opts[:node] == :local
+        out, status = su_exec_outerr_status(user_name, *command)
+      else
+        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *wrap_ssh_su_call(user_name, command))
+      end
       NodeLogger.log_status(status.exitstatus == 0,
-        "Disabled HANA (#{system_id}) System Replication on the secondary site",
-        "Could not disable HANA (#{system_id}) System Replication on the secondary site",
-        out
+                            "Disabled HANA (#{system_id}) System Replication on the secondary site",
+                            "Could not disable HANA (#{system_id}) System Replication on the secondary site",
+                            out
       )
     end
 
@@ -256,9 +294,9 @@ module HANAUpdater
       command = ['hdbuserstore', 'set', key_name, env, user_name, password]
       out, status = su_exec_outerr_status(su_name, *command)
       NodeLogger.log_status(status.exitstatus == 0,
-        "Successfully set key #{key_name} in the secure user store on system #{system_id}",
-        "Could not set key #{key_name} in the secure user store on system #{system_id}",
-        out
+                            "Successfully set key #{key_name} in the secure user store on system #{system_id}",
+                            "Could not set key #{key_name} in the secure user store on system #{system_id}",
+                            out
       )
     end
 
@@ -311,7 +349,13 @@ module HANAUpdater
         NodeLogger.output out
         return
       end
-      out.split.map{|e| e.split(';').reject(&:empty?).map { |z| z.gsub('"', '') } }
+      out.split.map { |e| e.split(';').reject(&:empty?).map { |z| z.gsub('"', '') } }
+    end
+
+    private
+
+    def wrap_ssh_su_call(user_name, cmd)
+      ['su', '-lc', '"', cmd.join(' '), '"', user_name].join(' ')
     end
   end # HanaClass
   Hana = HanaClass.instance

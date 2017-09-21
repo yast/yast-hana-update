@@ -58,7 +58,7 @@ describe HANAUpdater::HanaClass do
 
   describe '#hdb_start' do
     it 'works' do
-      result = HANAUpdater::Hana.hdb_start(system_id)
+      result = HANAUpdater::Hana.start(system_id)
       expect(result).to eq true
     end
   end
@@ -74,7 +74,7 @@ describe HANAUpdater::HanaClass do
 
   describe '#hdb_stop' do
     it 'works' do
-      result = HANAUpdater::Hana.hdb_stop(system_id)
+      result = HANAUpdater::Hana.stop(system_id)
       expect(result).not_to be_nil
     end
   end
@@ -82,7 +82,7 @@ describe HANAUpdater::HanaClass do
 
   describe '#enable_primary' do
     it 'works' do
-      result = HANAUpdater::Hana.enable_primary(system_id, site_name)
+      result = HANAUpdater::Hana.sr_enable_primary(system_id, site_name)
       expect(result).not_to be_nil
     end
   end

@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Base configuration class
+# Summary: SAP HANA updater in a SUSE cluster: Base configuration class
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -46,21 +46,33 @@ module HANAUpdater
     def copy_medium?
       @copy_medium
     end
+
+    def validate(mode)
+      errors = []
+      if @source.start_with? 'nfs:'
+        errors << 'NFS urls are not supported. Please use format "servername:/path/to/share" instead.'
+      end
+      if mode == :verbose
+        return errors
+      else
+        return !errors.empty?
+      end
+    end
   end
 
   # Base class for component configuration
   class Configuration
     include Yast::Logger
     attr_reader   :no_validators, :system
-    attr_accessor :nfs_share, :hana_instance, :hana_system
+    attr_accessor :nfs_share, :hana_instance, :hana_system, :revert_cluster
     attr_reader :nfs
 
     def initialize
       @no_validators = false
       @nfs = NFSSettings.new
-      @nfs_share = {mount: false, source: '', copy_medium: false, nfs_copy_path: ''}
       @hana_system_list = []
       @system = nil
+      @revert_cluster = false
     end
 
     def debug=(value)
@@ -68,9 +80,11 @@ module HANAUpdater
     end
 
     def validate(component, mode)
+      log.debug "-- #{self.class}.#{__callee__}(#{component}, #{mode})"
       case component
       when :nfs_share
-        true
+        log.debug "-- #{self.class}.#{__callee__}: #{@nfs.inspect}"
+        return @nfs.validate(mode)
       end
     end
 
@@ -106,10 +120,6 @@ module HANAUpdater
     def select_hana_system(sid)
       log.debug "--- #{self.class}.#{__callee__}(sid=#{sid.inspect}) --- "
       @system = get_system_by_sid(sid)
-    end
-
-    def validate_share(verbosity)
-      # TODO: implement
     end
 
     def validate_system

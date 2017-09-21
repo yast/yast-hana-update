@@ -64,7 +64,6 @@ module HANAUpdater
 
       def refresh_view
         super
-        # contents = @model.hana_sys_table_items
         Yast::UI.ReplaceWidget(Id(:rp_content), hana_systems_table)
         set_value(:hana_systems_list, @model.hana_sids, :Items)
         # TODO: make a variable for that
@@ -73,10 +72,6 @@ module HANAUpdater
         log.debug "--- #{self.class}.#{__callee__} :: selected_id=#{selected_id.inspect} --- "
         sys = @model.get_system_by_sid(selected_id)
         set_value(:hana_system_table, @model.hana_sys_table_items(sys), :Items)
-        # set_value(:hana_systems_table, contents, :Items)
-        # item_id = value(:hana_systems_table)
-        # sys_name = contents[item_id][1]
-        # set_value(:sys_descr, "Selected HANA system: #{sys_name}")
       end
 
       def hana_systems_table
