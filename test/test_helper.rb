@@ -20,6 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'etc'
+require 'ostruct'
 
 # Set the paths
 ENV['Y2DIR'] = File.expand_path('../../src', __FILE__)
@@ -41,4 +42,17 @@ end
 
 def test_file(name)
   File.read("#{File.dirname(__FILE__)}/data/#{name}")
+end
+
+class Constants
+  attr_reader :system, :local, :remote, :replication_modes, :operation_modes
+  def initialize
+    @system = OpenStruct.new(id: 'PRD', instance: '00', user: 'prdadm')
+    @local = OpenStruct.new(host_name: 'hana01', site_name: 'NUREMBERG')
+    @remote = OpenStruct.new(host_name: 'hana02', site_name: 'PRAGUE')
+    @operation_modes = %w(delta_datashipping logreplay logreplay_readaccess)
+    # @operation_modes = {delta: 'delta_datashipping', log: 'logreplay', logr: 'logreplay_readaccess'}
+    @replication_modes = %w(syncmem sync async)
+    # @replication_modes = {sm: 'syncmem', s: 'sync', a: 'async'}
+  end
 end

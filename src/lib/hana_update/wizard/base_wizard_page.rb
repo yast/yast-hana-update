@@ -46,6 +46,7 @@ module HANAUpdater
       def initialize(model)
         log.debug "--- called #{self.class}.#{__callee__} ---"
         @model = model
+        @page_validator = nil
       end
 
       # Set the Wizard's contents, help and the back/next buttons
@@ -120,14 +121,12 @@ module HANAUpdater
           # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
           # it should redefine the main_loop
           when :back, :cancel, :skip
-            # @model.write_config if input == :abort || input == :cancel
             update_model
             return input
           when :abort
             return input            
-          when :next, :summary
-            log.debug "--- #{self.class}.#{__callee__}: user clicked `next`"
-            log.debug "--- #{self.class}.#{__callee__}: @page_validator=#{@page_validator.inspect}"
+          when :next
+            log.debug "--- #{self.class}.#{__callee__}: user clicked `Next`"
             update_model
             return input if @model.no_validators
             unless @page_validator.nil?
@@ -136,8 +135,10 @@ module HANAUpdater
                 return input
               else
                 show_dialog_errors(errors)
+                next
               end
             end
+            return input
           else
             handle_user_input(input, event)
           end

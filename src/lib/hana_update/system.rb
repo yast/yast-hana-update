@@ -41,8 +41,9 @@ module HANAUpdater
     end
 
     def resource_maintenance(resource_id, action=:on)
-      cmd = 'crm',  'resource', 'maintenance', resource_id, action.to_s
-      out, status = exec_outerr_status(*cmd)
+      raise RuntimeError, "#{self.class}.#{__callee__}: Action #{action} is not supported" unless [:on, :off].include?(action)
+      cmd = 'crm', 'resource', 'maintenance', resource_id, action.to_s
+      out, status = exec_get_output(*cmd)
     end
 
     # Force resource action
@@ -50,14 +51,15 @@ module HANAUpdater
     # @param action [Symbol] action to force (:start, :stop, :check)
     # @param opts [Hash] {node: :local} or {node: 'uname01'}
     def resource_force(resource_id, action, opts={node: :local})
+      raise RuntimeError, "#{self.class}.#{__callee__}: Action #{action} is not supported" unless [:start, :stop, :check].include?(action)
       cmd = '/usr/sbin/crm_resource', "--force-#{action.to_s}", '--resource', resource_id
       if opts[:node] == :local
         log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} ---"
-        out, status = exec_outerr_status(*cmd)
+        out, status = exec_get_output(*cmd)
         log.debug "--- #{self.class}.#{__callee__}: return: status=#{status.exitstatus}, out=#{out} ---"
       else
         log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} on node #{opts[:node]} ---"
-        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *cmd)
+        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], *cmd)
         log.debug "--- #{self.class}.#{__callee__}: return: status=#{status} ---"
       end
       return out, status
@@ -70,9 +72,9 @@ module HANAUpdater
       else
         tmp_cmd = 'mktemp', '-d'
         log.debug "--- #{self.class}.#{__callee__}: executing command #{tmp_cmd} on node #{opts[:node]} ---"
-        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *tmp_cmd)
+        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], *tmp_cmd)
         unless status.exitstatus == 0
-          log.error "Could not create a temporary directory for the NFS mount"
+          log.error 'Could not create a temporary directory for the NFS mount'
           log.error "returned status=#{status}, out=#{out}"
           return
         end
@@ -81,10 +83,10 @@ module HANAUpdater
       log.debug "--- #{self.class}.#{__callee__}: created a temporary directory #{local} ---"
       cmd = 'mount', source, local
       if opts[:node] == :local
-        out, status = exec_outerr_status(*cmd)
+        out, status = exec_get_output(*cmd)
         log.debug "--- #{self.class}.#{__callee__}: mount retuned with #{out}, #{status} ---"
       else
-        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], *cmd)
+        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], *cmd)
         unless status.exitstatus == 0
           log.error "Could not mount the NFS share on node #{opts[:node]}"
           log.error "returned status=#{status}, out=#{out}"
@@ -100,33 +102,33 @@ module HANAUpdater
       if opts[:node] == :local
         FileUtils.mkdir_p(target) unless Dir.exists?(target)
         # FileUtils.cp_r(source_, target) :: takes way too long, make a system call instead
-        out, status = HANAUpdater::System.exec_outerr_status('cp', '-far', source_, target)
+        out, status = HANAUpdater::System.exec_get_output('cp', '-far', source_, target)
         unless status.exitstatus == 0
           log.error "Cannot copy update medium: status=#{status}, out=#{out}"
           return false
         end
-        out, status = HANAUpdater::System.exec_outerr_status('chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
+        out, status = HANAUpdater::System.exec_get_output('chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
         unless status.exitstatus == 0
           log.error "Cannot chown copied update medium: status=#{status}, out=#{out}"
           return false
         end
         return true
       else
-        status = HANAUpdater::SSH.run_command_wait(opts[:node], 'test', '-d', target)
+        status = HANAUpdater::SSH.exec_wait(opts[:node], 'test', '-d', target)
         unless status.exitstatus == 0
           log.warn "--- #{self.class}.#{__callee__}: target directory #{target} does not exist on node #{opts[:node]} ---"
-          out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], 'mkdir', '-p', target)
+          out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], 'mkdir', '-p', target)
           unless status.exitstatus == 0
-            log.error "Cannot create target directory #{target} on node #{opts[:node]}: status=#{status}, out=#{out}" 
+            log.error "Cannot create target directory #{target} on node #{opts[:node]}: status=#{status}, out=#{out}"
             return false
           end
         end
-        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], 'cp', '-far', source_, target)
+        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], 'cp', '-far', source_, target)
         unless status.exitstatus == 0
           log.error "Cannot copy update medium #{source_} to #{target}: #{status}, #{out}"
           return false
         end
-        out, status = HANAUpdater::SSH.run_command_wait2(opts[:node], 'chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
+        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], 'chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
         unless status.exitstatus == 0
           log.error "Cannot chown copied update medium: status=#{status}, out=#{out}"
           return false

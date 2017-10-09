@@ -24,7 +24,7 @@ include HANAUpdater::ShellCommands
 # puts "HANA XXX:10 is running? #{HANAUpdater::Hana.check_hdb_daemon_running('XXX', 10)}"
 
 cls = HANAUpdater::Cluster.cluster_check
-out, status = exec_outerr_status('crm_mon', '-r', '--as-xml')
+out, status = exec_get_output('crm_mon', '-r', '--as-xml')
 doc = REXML::Document.new(out)
 
 binding.pry

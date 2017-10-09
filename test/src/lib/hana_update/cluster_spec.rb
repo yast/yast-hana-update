@@ -6,6 +6,8 @@ require 'rexml/xpath'
 require 'socket'
 
 describe HANAUpdater::ClusterClass do
+  let (:const) {Constants.new}
+
   before(:each) do
     allow(HANAUpdater::Cluster).to receive(:get_cib)
       .and_return(REXML::Document.new(test_file('cibadmin.xml')))
@@ -24,10 +26,10 @@ describe HANAUpdater::ClusterClass do
   describe '#get_system' do
     it 'returns the correct system' do
       HANAUpdater::Cluster.update_state
-      grp = HANAUpdater::Cluster.get_system('XXX', '00')
+      grp = HANAUpdater::Cluster.get_system(const.system.id, const.system.instance)
       expect(grp).not_to be_nil
-      expect(grp.hana_sid).to eq 'XXX'
-      expect(grp.hana_inst).to eq '00'
+      expect(grp.hana_sid).to eq const.system.id
+      expect(grp.hana_inst).to eq const.system.instance
     end
   end
 
@@ -36,10 +38,10 @@ describe HANAUpdater::ClusterClass do
       # fake our hostname
       allow(Socket).to receive(:gethostname).and_return('hana01')
       HANAUpdater::Cluster.update_state
-      grp = HANAUpdater::Cluster.get_system('XXX', '00')
+      grp = HANAUpdater::Cluster.get_system(const.system.id, const.system.instance)
       local = grp.master.local
       expect(local.mon_attr['nodes_running_on']).to eq '1'
-      expect(local.running_on.name).to eq 'hana01'
+      expect(local.running_on.name).to eq const.local.host_name
       remote = grp.master.remote
       expect(local).not_to eq(remote)
       expect(local.running_on.site).not_to eq remote.running_on.site

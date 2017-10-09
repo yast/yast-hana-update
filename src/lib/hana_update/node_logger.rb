@@ -50,7 +50,7 @@ module HANAUpdater
     def output(str)
       return unless str
       str = str.strip
-      str.split("\n").each { |line| log.unknown(line.strip) }
+      str.split("\n").each {|line| log.unknown(line.strip)}
     end
 
     # Use debug mode
@@ -100,15 +100,15 @@ module HANAUpdater
     def to_html(txt)
       time_rex = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
       rules = [
-        { rex: /^\[(.*)\] (#{time_rex})\s+(OUTPUT): (.*)$/, color: '#808080'  }, # gray
-        { rex: /^\[(.*)\] (#{time_rex})\s+(DEBUG): (.*)$/,  color: '#808080'  }, # gray
-        { rex: /^\[(.*)\] (#{time_rex})\s+(INFO): (.*)$/,   color: '#009900'  }, # green
-        { rex: /^\[(.*)\] (#{time_rex})\s+(WARN): (.*)$/,   color: '#e6b800'  }, # yellow
-        { rex: /^\[(.*)\] (#{time_rex})\s+(ERROR): (.*)$/,  color: '#800000'  }, # error
-        { rex: /^\[(.*)\] (#{time_rex})\s+(FATAL): (.*)$/,  color: '#800000'  }, # fatal error
+          {rex: /^\[(.*)\] (#{time_rex})\s+(OUTPUT): (.*)$/, color: '#808080'}, # gray
+          {rex: /^\[(.*)\] (#{time_rex})\s+(DEBUG): (.*)$/, color: '#808080'}, # gray
+          {rex: /^\[(.*)\] (#{time_rex})\s+(INFO): (.*)$/, color: '#009900'}, # green
+          {rex: /^\[(.*)\] (#{time_rex})\s+(WARN): (.*)$/, color: '#e6b800'}, # yellow
+          {rex: /^\[(.*)\] (#{time_rex})\s+(ERROR): (.*)$/, color: '#800000'}, # error
+          {rex: /^\[(.*)\] (#{time_rex})\s+(FATAL): (.*)$/, color: '#800000'}, # fatal error
       ]
       lines = txt.split("\n").map do |line|
-        rule = rules.find { |r| r[:rex].match(line) }
+        rule = rules.find {|r| r[:rex].match(line)}
         if rule
           node, time, level, message = rule[:rex].match(line).captures
           if level == 'OUTPUT'

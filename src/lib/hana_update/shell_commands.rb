@@ -38,7 +38,7 @@ module HANAUpdater
 
     # Execute command and return its status
     # @return [Process::Status]
-    def exec_status(*command)
+    def exec_get_status(*command)
       log.debug "--- called #{self.class}.#{__callee__}(#{command}) ---"
       log.info "Executing command #{command}"
       status = Open3.popen3(*command) { |_, _, _, wait_thr| wait_thr.value }
@@ -46,16 +46,9 @@ module HANAUpdater
       status
     end
 
-    # # Execute command and return its status and output (stdout)
-    # # @return [[Process::Status, String]]
-    # def exec_output_status(*command)
-    #   log.info "Executing command #{command}"
-    #   Open3.capture2(*command)
-    # end
-
     # Execute command and return ist output (both stdout and stderr) and status
     # @return [[String, string]] stdout_and_stderr, status
-    def exec_outerr_status(*params)
+    def exec_get_output(*params)
       log.debug "--- called #{self.class}.#{__callee__}(#{params}) ---"
       log.info "Executing command #{params}"
       out, status = Open3.capture2e(*params)
@@ -66,24 +59,10 @@ module HANAUpdater
       return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
     end
 
-  #   def exec_outerr_status_stdin(*params, stdin_data)
-  #     log.info "Executing command #{params}"
-  #     Open3.capture2e(*params, stdin_data: stdin_data)
-  #   rescue SystemCallError => e
-  #     return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
-  #   end
-
-  #   # Pipe the commands and return the common status
-  #   # @return [Boolean] success
-  #   def pipe(*commands)
-  #     log.info "Executing commands #{commands}"
-  #     stats = Open3.pipeline(*commands)
-  #     stats.all? { |s| s.exitstatus == 0 }
-  #   end
 
     # Execute command as user _user_name_ and return its output (stdout & stderr) and status
     # @return [[String, String]] [stdout_and_stderr, status]
-    def su_exec_outerr_status(user_name, *params)
+    def su_exec_get_output(user_name, *params)
       log.info "Executing #{params} as user #{user_name}"
       out, status = Open3.capture2e('su', '-lc', params.join(' '), user_name)
       out.split("\n").each { |ln| log.debug "--- OUT: #{ln}"}
@@ -96,14 +75,10 @@ module HANAUpdater
     # Execute command as user _user_name_ and return its output and status
     # Do not log the command
     # @return [[String, String]] [stdout_and_stderr, status]
-    def su_exec_outerr_status_no_echo(user_name, *params)
+    def su_exec_get_output_no_echo(user_name, *params)
       Open3.capture2e('su', '-lc', params.join(' '), user_name)
     rescue SystemCallError => e
       return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
     end
-
-  #   def pipeline(cmd1, cmd2)
-  #     Open3.pipeline_r(cmd1, cmd2, {err: "/dev/null"}) { |out, wait_thr| out.read }
-  #   end
   end
 end

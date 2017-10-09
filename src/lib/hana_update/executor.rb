@@ -44,7 +44,7 @@ module HANAUpdater
         when :remote
           execute_remote_update_plan(config)
         when :restore
-          restore_cluster(config, true)
+          restore_cluster(config)
         else
           raise ArgumentError, "unknown part=#{part.inspect}"
       end
@@ -67,18 +67,18 @@ module HANAUpdater
       # break replication
       log.warn '--- Disabling system replication ---'
       Yast::Popup.Feedback('Please wait', 'Disabling system replication') do
-        HANAUpdater::Hana.disable_secondary(sap_sys.hana_sid)
+        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, node: :local)
       end
       # start HANA to apply SR settings
       log.warn '--- Starting SAP HANA on local node ---'
       Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
-        HANAUpdater::Hana.start(sap_sys.hana_sid)
+        HANAUpdater::Hana.start(sap_sys.hana_sid, node: :local)
       end
       # mount update medium
       if config.nfs.should_mount?
         log.warn "--- Mounting update medium '#{config.nfs.source}' ---"
         Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
-          local_path = HANAUpdater::System.mount_nfs(config.nfs.source)
+          local_path = HANAUpdater::System.mount_nfs(config.nfs.source, node: :local)
           config.nfs.mount_path = local_path
         end
       end
@@ -86,7 +86,7 @@ module HANAUpdater
       if config.nfs.copy_medium?
         log.warn "--- Copying contents of the update medium '#{config.nfs.source}' to '#{config.nfs.copy_path}' ---"
         Yast::Popup.Feedback('Please wait', 'Copying contents of the update medium') do
-          HANAUpdater::System.recursive_copy(config.nfs.mount_path, config.nfs.copy_path, sap_sys.hana_sid)
+          HANAUpdater::System.recursive_copy(config.nfs.mount_path, config.nfs.copy_path, sap_sys.hana_sid, node: :local)
         end
       end
       # # TODO: start HANA for update?
@@ -106,22 +106,14 @@ module HANAUpdater
       end
       log.warn '--- Registering local HANA instance for SR ---'
       Yast::Popup.Feedback('Please wait', 'Registering local HANA instance for SR') do
-        # cmd_line = HANAUpdater::Hana.enable_secondary_cmd(
-        #   sap_sys.hana_sid,
-        #   sap_sys.master.local.running_on.site,
-        #   sap_sys.master.remote.running_on.name,
-        #   sap_sys.hana_inst,
-        #   sap_sys.master.local.running_on.instance_attributes['srmode'],
-        #   sap_sys.clone.local.running_on.instance_attributes['op_mode']
-        # )
-        # HANAUpdater::SSH.run_command_wait(remote.running_on.name, cmd_line)
-        HANAUpdater::Hana.enable_secondary(
+        HANAUpdater::Hana.sr_register_secondary(
             sap_sys.hana_sid,
+            sap_sys.hana_inst,
             sap_sys.master.local.running_on.site,
             sap_sys.master.remote.running_on.name,
-            sap_sys.hana_inst,
             sap_sys.master.local.running_on.instance_attributes['srmode'],
-            sap_sys.clone.local.running_on.instance_attributes['op_mode']
+            sap_sys.clone.local.running_on.instance_attributes['op_mode'],
+            node: :local
         )
       end
       log.warn '--- Starting SAP HANA on local node ---'
@@ -131,7 +123,8 @@ module HANAUpdater
       log.warn '--- Waiting for data to be synchronized ---'
       Yast::Popup.Feedback('Please wait', 'Waiting for data to be synchronized') do
         begin
-          check_system_replication(sap_sys.hana_sid, node: sap_sys.master.remote.running_on.name)
+          check_system_replication(sap_sys.hana_sid, sap_sys.master.remote.running_on.site,
+                                   node: sap_sys.master.remote.running_on.name)
         rescue SystemReplicationException => e
           answer = Yast::Popup.AnyQuestion('Error while checking System Replication Status',
                                            e.message,
@@ -142,7 +135,7 @@ module HANAUpdater
       end
       log.warn '--- System Replication: Taking over to local site ---'
       Yast::Popup.Feedback('Please wait', 'Taking over to local site') do
-        HANAUpdater::Hana.takeover(sap_sys.hana_sid)
+        HANAUpdater::Hana.sr_takeover(sap_sys.hana_sid)
       end
       log.warn '--- Migrating the virtual IP ---'
       Yast::Popup.Feedback('Please wait', 'Migrating the virtual IP') do
@@ -157,9 +150,8 @@ module HANAUpdater
       end
       log.warn "Disabling replication between nodes #{remote_node} and #{local_node}"
       Yast::Popup.Feedback('Please wait', "Disabling replication between nodes #{remote_node} and #{local_node}") do
-        HANAUpdater::Hana.disable_secondary(sap_sys.hana_sid)
-        cmd_line = HANAUpdater::Hana.disable_primary_cmd(sap_sys.hana_sid)
-        status = HANAUpdater::SSH.run_command_wait(remote_node, *cmd_line)
+        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, node: :local)
+        status, _out = HANAUpdater::Hana.sr_disable_primary(sap_sys.hana_sid, node: :local)
         log.info "--- #{self.class}.#{__callee__} : disable system replication on source site #{remote_node}: rc=#{status.exitstatus}"
       end
       if config.nfs.should_mount?
@@ -194,29 +186,21 @@ module HANAUpdater
       # wait for sync
     end
 
-    def check_system_replication(system_id, opts={node: :local})
-      cmd_line = HANAUpdater::Hana.check_sys_replication_cmd(system_id)
-      statuses = {10 => 'No HANA SR', 11 => 'Fatal Error', 12 => 'Unknown',
-                  13 => 'Initializing', 14 => 'Syncing', 15 => 'Active'}
+    def check_system_replication(system_id, remote_site, opts={node: :local})
       while true
-        if opts[:node] == :local
-          # TODO: change me
-          status = HANAUpdater::SSH.run_command_wait(sap_sys.master.remote.running_on.name, *cmd_line)
-        else
-          status = HANAUpdater::SSH.run_command_wait(opts[:node], *cmd_line)
-        end
-        case status.exitstatus
+        rc, explanation = HANAUpdater::Hana.sr_check_status(system_id, remote_site, node: opts[:node])
+        case rc
           when 10, 11
-            log.error "--- systemReplicationStatus.py reports status #{status.exitstatus} '#{statuses[status.exitstatus]}'"
-            raise SystemReplicationException, "systemReplicationStatus.py reports status #{status.exitstatus} '#{statuses[status.exitstatus]}'"
+            log.error "--- systemReplicationStatus.py reports status #{rc} '#{explanation}'"
+            raise SystemReplicationException, "systemReplicationStatus.py reports status #{rc} '#{explanation}'"
           when 12, 13, 14
-            log.warn "--- systemReplicationStatus.py reports status #{status.exitstatus} '#{statuses[status.exitstatus]}'. Will wait"
+            log.warn "--- systemReplicationStatus.py reports status #{rc} '#{explanation}'. Will wait"
             sleep 10
           when 15
             log.warn '--- systemReplicationStatus.py reports status 15 (Active) (instances are in sync)'
           else
-            log.error "--- Unexpected status returned from systemReplicationStatus.py: rc=#{status.exitstatus}"
-            raise SystemReplicationException, "Unexpected status returned from systemReplicationStatus.py: rc=#{status.exitstatus}"
+            log.error "--- Unexpected status returned from systemReplicationStatus.py: rc=#{rc}"
+            raise SystemReplicationException, "Unexpected status returned from systemReplicationStatus.py: rc=#{rc}"
         end
       end
       true

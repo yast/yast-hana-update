@@ -114,20 +114,6 @@ module HANAUpdater
       file_path
     end
 
-    # Get configuration files from the previous runs
-    # Pass parameters for filtering or pass
-    # @param product_id [String]
-    # @param scenario_name [String]
-    def get_configuration_files(product_id = nil, scenario_name = nil)
-      files = Dir.chdir(@var_path) { Dir.glob('configuration_*.yml') }
-      configs = files.map { |fn| YAML.load(read_file(var_file_path(fn))) }
-      selected = configs.select do |c|
-        (product_id.nil? || c.product_id == product_id) &&
-          (scenario_name.nil? || c.scenario_name == scenario_name)
-      end
-      selected.map { |c| ["#{c.product_name} Installation [#{c.timestamp.utc}]", c] }
-    end
-
     def write_file(path, data)
       begin
         File.open(path, 'wb') do |fh|
@@ -156,11 +142,10 @@ module HANAUpdater
       basename = "#{name}_#{Time.now.strftime('%Y%m%d_%H%M%S')}#{ext}"
     end
 
-    def version_comparison(version_target, version_current, cmp = '~>')
+    def version_comparison(version_target, version_current, cmp = '>=')
       Gem::Dependency.new('', cmp + version_target).match?('', version_current)
     rescue StandardError => e
-      log.error "HANA version comparison failed: target=#{version_target},"\
-      " current=#{version_current}, cmp=#{cmp}."
+      log.error "HANA version comparison failed: target=#{version_target}, current=#{version_current}, cmp=#{cmp}."
       log.error "Gem::Dependency.match? :: #{e.message}"
       return false
     end

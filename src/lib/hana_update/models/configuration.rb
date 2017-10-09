@@ -25,11 +25,14 @@ require 'yast'
 require 'hana_update/node_logger'
 require 'hana_update/helpers'
 require 'hana_update/cluster'
+require 'hana_update/ssh'
+require 'hana_update/exceptions'
 
 module HANAUpdater
   class NFSSettings
     attr_writer :should_mount, :copy_medium
     attr_accessor :source, :copy_path, :mount_path
+
     def initialize
       # TODO: rename to mount
       @should_mount = false
@@ -63,7 +66,7 @@ module HANAUpdater
   # Base class for component configuration
   class Configuration
     include Yast::Logger
-    attr_reader   :no_validators, :system
+    attr_reader :no_validators, :system
     attr_accessor :nfs_share, :hana_instance, :hana_system, :revert_cluster
     attr_reader :nfs
 
@@ -82,15 +85,15 @@ module HANAUpdater
     def validate(component, mode)
       log.debug "-- #{self.class}.#{__callee__}(#{component}, #{mode})"
       case component
-      when :nfs_share
-        log.debug "-- #{self.class}.#{__callee__}: #{@nfs.inspect}"
-        return @nfs.validate(mode)
+        when :nfs_share
+          log.debug "-- #{self.class}.#{__callee__}: #{@nfs.inspect}"
+          return @nfs.validate(mode)
       end
     end
 
     def hana_sids
       # HANAUpdater::Cluster.groups.map {|g| "System #{g.hana_sid}, Instance #{g.hana_inst}" }
-      l = HANAUpdater::Cluster.groups.map {|g| [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"] }
+      l = HANAUpdater::Cluster.groups.map {|g| [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"]}
       HANAUpdater::Helpers.itemize_list(l, false)
     end
 
@@ -131,6 +134,13 @@ module HANAUpdater
       elsif !@system.all_managed?
         errors << 'Some resources belonging to the SAP HANA SR group are not managed'
         errors << 'This wizard can only handle active (i.e., running and managed) SAP HANA instances'
+      end
+      # check connection to the remote node
+      remote_node = @system.master.remote.running_on.name
+      begin
+        SSH.check_ssh(remote_node)
+      rescue HANAUpdater::Exceptions::SSHException => e
+        errors << "Could not connect to the remote node: #{e}"
       end
       errors
     end

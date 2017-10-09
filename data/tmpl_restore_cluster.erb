@@ -2,57 +2,67 @@
 <html>
 <head>
   <title></title>
+  <style type="text/css">
+    code {
+      font-family: "Nimbus Mono L", "Monospace", monospace;
+      color: #00843E;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 <p>The following plan was generated in order to restore the original state of the cluster:</p>
 <ol>
   <li>
-    Disable System Replication on remote node <b><code>remote.running_on.name</code></b> (site
-    <b><code>remote.running_on.site</code></b>).
+    Disable System Replication on remote node <code><%= remote.running_on.name %></code> (site
+    <code><%= remote.running_on.site %></code>).
   </li>
   <li>
     Stop SAP HANA instance on remote node.
   </li>
   <li>
-    Register site <b><code><%= remote.running_on.site %></code></b>
-    as secondary to <b><code><%= local.running_on.site %></code></b>, start site
-    <b><code><%= remote.running_on.site %></code></b>
+    Register site <code><%= remote.running_on.site %></code>
+    as secondary to <code><%= local.running_on.site %></code>, start site
+    <code><%= remote.running_on.site %></code>
     and wait until the secondary instance is synchronized.
   </li>
   <% if model.revert_cluster %>
       <li>
         Synchronization will be reversed to original state.
-        [<a style="color:#00843E" href="revert_cluster_toggle">Do not reverse</a>]<br/>
-        Site <b><code><%= remote.running_on.site %></code></b> will become the new primary instance.
+        [<a style="color:#00843E;font-weight:bold" href="revert_cluster_toggle">Do not reverse</a>]<br/>
+        Site <code><%= remote.running_on.site %></code> will become the new primary instance.
       </li>
       <ul>
         <li>
-          Perform System Replication takeover on site <b><code><%= remote.running_on.site %></code></b>.
+          Perform System Replication takeover on site <code><%= remote.running_on.site %></code>.
         </li>
         <li>
-          Migrate resource <b><code><%= group.vip.id %></code></b> to node
-          <b><code><%= remote.running_on.name %></code></b>;
+          Migrate resource <code><%= group.vip.id %></code> to node
+          <code><%= remote.running_on.name %></code>;
         </li>
         <li>
-          Register site <b><code><%= local.running_on.site %></code></b> as secondary to site
-          <b><code><%= remote.running_on.site %></code></b>.
+          Register site <code><%= local.running_on.site %></code> as secondary to site
+          <code><%= remote.running_on.site %></code>.
         </li>
 
       </ul>
   <% else %>
       <li>
         Synchronization will not be reversed to its original state.
-        [<a style="color:#00843E" href="revert_cluster_toggle">Reverse</a>]<br/>
-        Site <b><code><%= local.running_on.site %></code></b> will stay the new primary instance.
+        [<a style="color:#00843E;font-weight:bold" href="revert_cluster_toggle">Reverse</a>]<br/>
+        Site <code><%= local.running_on.site %></code> will stay the new primary instance.
       </li>
   <% end %>
   <li>
     Clean up and disable maintenance mode for the following cluster resources:
     <ul>
-      <li><b><code><%= group.master.id %></code></b>,</li>
-      <li><b><code><%= group.clone.id %></code></b>,</li>
-      <li><b><code><%= group.vip.id %></code></b>.</li>
+      <li><code><%= group.master.id %></code>,</li>
+      <li><code><%= group.clone.id %></code>,</li>
+      <li><code><%= group.vip.id %></code>.</li>
     </ul>
+  </li>
+  <li>
+    Cluster configuration will be completed.
   </li>
 </ol>
 <span></span>

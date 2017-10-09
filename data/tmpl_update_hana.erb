@@ -1,15 +1,26 @@
 <html>
 <head>
+  <style>
+    code {
+      font-family: "Nimbus Mono L", "Monospace", monospace;
+      color: #00843E;
+      font-weight: bold;
+    }
+    h3 {
+      color: #00843E;
+    }
+  </style>
 </head>
 <body>
 <h3>Updating SAP HANA software</h3>
 <p>
   Please update SAP HANA software on node <b><code><%= node.name %></code></b>
-  (site <b><code><%= node.site %></code></b>) using your preferred update method.
+  (site <code><%= node.site %></code>) using your preferred update method.
 </p>
 <% if model.nfs.should_mount? %>
     <p>
-    <i>Note:</i> The NFS share <code><%= model.nfs.source %></code> was mounted to <code><%= model.nfs.mount_path %></code>.
+      <i>Note:</i> The NFS share <code><%= model.nfs.source %></code> was mounted to
+      <code><%= model.nfs.mount_path %></code>.
     </p>
 <% end %>
 <% if model.nfs.copy_medium? %>
@@ -19,6 +30,6 @@
     </p>
 <% end %>
 <p></p>
-<p>Click "Next" once the site <b><code><%= node.site %></code></b> is updated.</p>
+<p>Click "Next" once the site <code><%= node.site %></code> is updated.</p>
 </body>
 </html>

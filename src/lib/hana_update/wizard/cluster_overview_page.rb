@@ -38,7 +38,7 @@ module HANAUpdater
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Step 1 of 7. Select SAP HANA system'),
+          _('Step 1 of 7. Select an SAP HANA system'),
           base_layout_with_label(
             _('Select the system to update'),
             VBox(

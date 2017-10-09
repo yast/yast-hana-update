@@ -5,13 +5,19 @@
   <style type="text/css">
     code {
       font-family: "Nimbus Mono L", "Monospace", monospace;
+      color: #00843E;
+      font-weight: bold;
+    }
+    h3 {
+      color: #00843E;
     }
   </style>
 </head>
 <body>
-  <span>
+  <h3>Cluster configuration</h3>
+  <p>
       The following plan was generated for the <%= part.to_s %> node:
-  </span>
+  </p>
   <% if part == :local %>
     <!--
             PLAN FOR LOCAL NODE
@@ -20,33 +26,33 @@
       <li>
         Put the following resources into <i>maintenance mode</i>:
         <ul>
-          <li><b><code><%= group.master.id %></code></b>,</li>
-          <li><b><code><%= group.clone.id %></code></b>,</li>
-          <li><b><code><%= group.vip.id %></code></b>.</li>
+          <li><code><%= group.master.id %></code>,</li>
+          <li><code><%= group.clone.id %></code>,</li>
+          <li><code><%= group.vip.id %></code>.</li>
         </ul>
       </li>
       <li>
         Disable system replication between sites
-        <b><code><%= remote.running_on.site %></code></b> and
-        <b><code><%= local.running_on.site %></code></b>.
+        <code><%= remote.running_on.site %></code> and
+        <code><%= local.running_on.site %></code>.
       </li>
       <% if model.nfs.should_mount? %>
           <li>
             Mount update medium
-            <b><code><%= model.nfs.source %></code></b> on
-            <b><code><%= local.running_on.name %></code></b>.
+            <code><%= model.nfs.source %></code> on
+            <code><%= local.running_on.name %></code>.
           </li>
           <% if model.nfs.copy_medium? %>
               <li>
                 Copy contents of the update medium to
-                <b><code><%= model.nfs.copy_path %></code></b>.
+                <code><%= model.nfs.copy_path %></code>.
               </li>
           <% end %>
       <% end %> <!-- if model.nfs.should_mount? -->
       <li>
         <b>[Manual step]</b>
-        Update SAP HANA on site <b><code><%= local.running_on.site %></code></b>
-        (host <b><code><%= local.running_on.name %></code></b>)
+        Update SAP HANA on site <code><%= local.running_on.site %></code>
+        (host <code><%= local.running_on.name %></code>)
         manually using the preferred update method.
       </li>
     </ol>
@@ -59,42 +65,42 @@
         Stop SAP HANA on local site <code><%= local.running_on.site %></code>.
       </li>
       <li>
-        Register site <b><code><%= local.running_on.site %></code></b>
-        as secondary to <b><code><%= remote.running_on.site %></code></b>.
+        Register site <code><%= local.running_on.site %></code>
+        as secondary to <code><%= remote.running_on.site %></code>.
       </li>
       <li>
-        Start SAP HANA on local site <b><code><%= local.running_on.site %></code></b> and wait until both instances are
+        Start SAP HANA on local site <code><%= local.running_on.site %></code> and wait until both instances are
         in sync.
       </li>
       <li>
-        Take over from site <b><code><%= remote.running_on.site %></code></b> to
-        <b><code><%= local.running_on.site %></code></b>.
+        Take over from site <code><%= remote.running_on.site %></code> to
+        <code><%= local.running_on.site %></code>.
       </li>
       <li>
-        Migrate virtual IP resource <b><code>ip_rsc</code></b> to node
-        <b><code><%= local.running_on.name %></code></b>.
+        Migrate virtual IP resource <code>ip_rsc</code> to node
+        <code><%= local.running_on.name %></code>.
       </li>
       <li>
         Disable system replication on node
-        <b><code><%= remote.running_on.site %></code></b>.
+        <code><%= remote.running_on.site %></code>.
       </li>
       <% if model.nfs.should_mount? %>
           <li>
             Mount update medium
-            <b><code><%= model.nfs.source %></code></b> on
-            <b><code><%= remote.running_on.name %></code></b>.
+            <code><%= model.nfs.source %></code> on
+            <code><%= remote.running_on.name %></code>.
           </li>
           <% if model.nfs.copy_medium? %>
               <li>
                 Copy contents of the update medium to
-                <b><code><%= model.nfs.copy_path %></code></b>.
+                <code><%= model.nfs.copy_path %></code>.
               </li>
           <% end %>
       <% end %> <!-- if model.nfs.should_mount? -->
       <li>
         <b>[Manual step]</b>
-        Update SAP HANA on site <b><code><%= remote.running_on.site %></code></b>
-        (host <b><code><%= remote.running_on.name %></code></b>)
+        Update SAP HANA on site <code><%= remote.running_on.site %></code>
+        (host <code><%= remote.running_on.name %></code>)
         manually using the preferred update method.
       </li>
     </ol>

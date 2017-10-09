@@ -74,15 +74,13 @@ module HANAUpdater
       end
 
       def handle_user_input(input, event)
-        log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input}, event=#{event} ---"
         case input
           when 'revert_cluster_toggle'
-            log.info 'Revert_Cluster was toggled'
             model.revert_cluster = !model.revert_cluster
             content, _help = render
             set_value(:rtext, content)
           else
-            log.error "Unknown input #{input.inspect}"
+            log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input}, event=#{event} ---"
         end
       end
     end
