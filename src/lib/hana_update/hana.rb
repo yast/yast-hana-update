@@ -88,7 +88,7 @@ module HANAUpdater
         NodeLogger.output(out)
         return nil
       end
-      match = /version:\s+(\d+.\d+.\d+)/.match(out)
+      match = /version:\s+(\d+.\d+.\d+.\d+.\d+)/.match(out)
       return nil if match.nil?
       match.captures.first
     end
@@ -162,7 +162,7 @@ module HANAUpdater
     def sr_unregister_secondary(system_id, primary_site, opts={node: :local})
       log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{primary_site}, #{opts})"
       user_name = "#{system_id.downcase}adm"
-      command = 'hdbnsutil', '-sr_unregister', "--site=#{primary_site}"
+      command = 'hdbnsutil', '-sr_unregister'
       out, status = wrap_system_call(command, user_name: user_name, node: opts[:node])
       NodeLogger.log_status(status.exitstatus == 0,
                             "Un-registered secondary site from primary #{primary_site}",
@@ -208,7 +208,7 @@ module HANAUpdater
     private
 
     def wrap_ssh_su_call(user_name, cmd)
-      ['su', '-lc', '"' + cmd.join(' ') + '"', user_name].join(' ')
+      ['su', '-lc', '"' + cmd.join(' ') + '"', user_name]
     end
 
     def wrap_system_call(command, opts={})
@@ -218,7 +218,7 @@ module HANAUpdater
         # FIXME: this can be further simplified!
         out, status = su_exec_get_output(opts[:user_name], *command)
       elsif opts[:node].is_a?(String) && opts[:node].length > 0
-        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], *wrap_ssh_su_call(opts[:user_name], command))
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *wrap_ssh_su_call(opts[:user_name], command))
       else
         raise RuntimeError, 'Required option opts[:node] has to be :local or a valid hostname'
       end

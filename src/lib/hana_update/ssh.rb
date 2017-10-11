@@ -38,7 +38,6 @@ module HANAUpdater
     def initialize
       log.debug "--- #{self.class}.#{__callee__} --- "
       @script_path = Helpers.data_file_path('check_ssh.expect')
-      @ssh_user_dir = File.join(Dir.home, '.ssh')
     end
 
     # Check if we can initiate an SSH connection to the host without a password
@@ -55,30 +54,30 @@ module HANAUpdater
       check_status(stat, host)
     end
 
-    def exec(host, *cmd)
+    def rexec(host, *cmd)
       log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
-      exec_get_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
+      exec_get_status('ssh', '-o', 'StrictHostKeyChecking=no', '-f', "root@#{host}", *cmd)
     end
 
-    def exec_get_output(host, *cmd)
+    def rexec_get_output(host, *cmd)
       log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
-      exec_get_output("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
+      exec_get_output('ssh', '-o', 'StrictHostKeyChecking=no', '-f', "root@#{host}", *cmd)
     end
 
     # Execute command on the host remotely via SSH
     # Wait for the process to finish, return exit status
-    def exec_wait(host, *cmd)
+    def rexec_wait(host, *cmd)
       log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
-      ret = exec_get_status("ssh", "-o", "StrictHostKeyChecking=no", "root@#{host}", *cmd)
+      ret = exec_get_status('ssh', '-o', 'StrictHostKeyChecking=no', "root@#{host}", *cmd)
       log.debug "--- #{self.class}.#{__callee__}: #{host} returned #{ret} ---"
       ret
     end
 
     # Execute command on the host remotely via SSH
     # Wait for the process to finish, return its stderr & stdout and the exit status
-    def exec_wait_get_output(host, *cmd)
+    def rexec_wait_get_output(host, *cmd)
       log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
-      out, ret = exec_get_output("ssh", "-o", "StrictHostKeyChecking=no", "root@#{host}", *cmd)
+      out, ret = exec_get_output('ssh', '-o', 'StrictHostKeyChecking=no', "root@#{host}", *cmd)
       log.debug "--- #{self.class}.#{__callee__}: #{host} returned #{ret}, #{out} ---"
       return out, ret
     end

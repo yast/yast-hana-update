@@ -33,7 +33,7 @@ end
 require 'yast'
 
 def build_service?
-  Etc.getlogin == "abuild"
+  Etc.getlogin == 'abuild'
 end
 
 def user_root?

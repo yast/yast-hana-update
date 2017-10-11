@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <style type="text/css">
+    code {
+      font-family: "Nimbus Mono L", "Monospace", monospace;
+      /*color: #00843E;*/
+      /*font-weight: bold;*/
+      font-size: small;
+    }
+
+    h3, h4 {
+      color: #00843E;
+    }
+
+    table {
+      border-style: none;
+      border-color: #00843E;
+    }
+
+    td, th {
+      padding-left: 5px;
+      padding-right: 7px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+<h3>Update summary</h3>
+<p>
+  The update procedure is finished.
+  Below you can see the changes made to the SAP HANA software, as well as the current cluster state.
+</p>
+<h4>SAP HANA Version</h4>
+<table>
+  <tr>
+    <th>Host</th>
+    <th>Site Name</th>
+    <th>Original SAP HANA version</th>
+    <th>Updated SAP HANA version</th>
+  </tr>
+  <% hana_instances.each do |ins| %>
+      <tr>
+        <td><%= ins[:host] %></td>
+        <td><%= ins[:site] %></td>
+        <td><%= ins[:version_before] %></td>
+        <td><%= ins[:version_after] %></td>
+      </tr>
+  <% end %>
+</table>
+<h4>Cluster State</h4>
+<code>
+  <table>
+    <% attr_output.each_with_index do |line, ix| %>
+        <tr>
+        <% line.each do |td_content| %>
+            <% if ix == 0 %>
+                <th><%= td_content %></th>
+            <% else %>
+                <td><%= td_content%></td>
+            <% end %>
+        <% end %>
+        </tr>
+    <% end %>
+  </table>
+</code>
+</body>
+</html>

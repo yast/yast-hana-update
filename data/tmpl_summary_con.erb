@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+<h1>Update summary</h1>
+<p>The update procedure is finished.</p>
+<p>Below you can see the changes made to the SAP HANA software, as well as the current cluster state.</p>
+<h3>SAP HANA Version</h3>
+<% if hana_instances.nil? %>
+    <b>Could not obtain SAP HANA version information</b>
+<% else %>
+    <pre><%= hana_instances %></pre>
+<% end %>
+<br/>
+
+<h3>Cluster State</h3>
+<% if attr_output.nil? %>
+    <b>Could not obtain SUSE cluster state</b>
+<% else %>
+    <pre><%= attr_output %></pre>
+<% end %>
+<br/>
+
+</body>
+</html>

@@ -46,7 +46,7 @@ module HANAUpdater
                 )
               ),
               TextEntry(Id(:hana_medium), 'NFS share:'),
-              Left(CheckBox(Id(:copy_medium), Opt(:notify), 'Copy update medium to a local path')),
+              Left(CheckBox(Id(:copy_medium), Opt(:notify), 'Copy update medium locally')),
               TextEntry(Id(:copy_path), 'Local path:')
             )
           ),

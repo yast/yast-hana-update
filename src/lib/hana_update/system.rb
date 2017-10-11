@@ -46,6 +46,27 @@ module HANAUpdater
       out, status = exec_get_output(*cmd)
     end
 
+    def saphanasr_attributes(sid)
+      cmd = 'SAPHanaSR-showAttr', "--sid=#{sid}"
+      out, status = exec_get_output(*cmd)
+      return nil if status.exitstatus != 0
+      lines = []
+      start = false
+      out.split("\n").each_with_index do |line, ix|
+        next unless start or line.start_with?('Hosts')
+        start = true
+        unless /\A-+\Z/.match(line)
+          spl = line.split
+          if spl.length < 13
+            spl.insert(4, '')
+          end
+          lines << spl
+        end
+      end
+      lines
+      # out
+    end
+
     # Force resource action
     # @param resource_id [String] resource ID
     # @param action [Symbol] action to force (:start, :stop, :check)
@@ -59,7 +80,7 @@ module HANAUpdater
         log.debug "--- #{self.class}.#{__callee__}: return: status=#{status.exitstatus}, out=#{out} ---"
       else
         log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} on node #{opts[:node]} ---"
-        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], *cmd)
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *cmd)
         log.debug "--- #{self.class}.#{__callee__}: return: status=#{status} ---"
       end
       return out, status
@@ -72,7 +93,7 @@ module HANAUpdater
       else
         tmp_cmd = 'mktemp', '-d'
         log.debug "--- #{self.class}.#{__callee__}: executing command #{tmp_cmd} on node #{opts[:node]} ---"
-        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], *tmp_cmd)
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *tmp_cmd)
         unless status.exitstatus == 0
           log.error 'Could not create a temporary directory for the NFS mount'
           log.error "returned status=#{status}, out=#{out}"
@@ -86,7 +107,7 @@ module HANAUpdater
         out, status = exec_get_output(*cmd)
         log.debug "--- #{self.class}.#{__callee__}: mount retuned with #{out}, #{status} ---"
       else
-        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], *cmd)
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *cmd)
         unless status.exitstatus == 0
           log.error "Could not mount the NFS share on node #{opts[:node]}"
           log.error "returned status=#{status}, out=#{out}"
@@ -114,21 +135,21 @@ module HANAUpdater
         end
         return true
       else
-        status = HANAUpdater::SSH.exec_wait(opts[:node], 'test', '-d', target)
+        status = HANAUpdater::SSH.rexec_wait(opts[:node], 'test', '-d', target)
         unless status.exitstatus == 0
           log.warn "--- #{self.class}.#{__callee__}: target directory #{target} does not exist on node #{opts[:node]} ---"
-          out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], 'mkdir', '-p', target)
+          out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'mkdir', '-p', target)
           unless status.exitstatus == 0
             log.error "Cannot create target directory #{target} on node #{opts[:node]}: status=#{status}, out=#{out}"
             return false
           end
         end
-        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], 'cp', '-far', source_, target)
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'cp', '-far', source_, target)
         unless status.exitstatus == 0
           log.error "Cannot copy update medium #{source_} to #{target}: #{status}, #{out}"
           return false
         end
-        out, status = HANAUpdater::SSH.exec_wait_get_output(opts[:node], 'chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
         unless status.exitstatus == 0
           log.error "Cannot chown copied update medium: status=#{status}, out=#{out}"
           return false

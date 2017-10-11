@@ -43,13 +43,13 @@ module HANAUpdater
         node = resource.running_on
         hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{model.system.hana_sid}/index.html"
         begin
-          content = HANAUpdater::Helpers.render_template('tmpl_update_hana.erb', binding)
+          content = HANAUpdater::Helpers.render_template('update_hana', binding)
         rescue HANAUpdater::Exceptions::TemplateRenderException => e
           log.error "#{e}: #{e.renderer_message}"
           abort
         end
         begin
-          help_msg = HANAUpdater::Helpers.render_template('tmpl_help_update_step.erb', binding)
+          help_msg = HANAUpdater::Helpers.render_template('help_update_step', binding)
         rescue HANAUpdater::Exceptions::TemplateRenderException => e
           log.error "#{e}: #{e.renderer_message}"
           abort

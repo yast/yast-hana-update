@@ -53,12 +53,12 @@ module HANAUpdater
     def validate(mode)
       errors = []
       if @source.start_with? 'nfs:'
-        errors << 'NFS urls are not supported. Please use format "servername:/path/to/share" instead.'
+        errors << 'NFS URLs are not supported. Please use the following format instead: "servername:/path/to/share".'
       end
       if mode == :verbose
-        return errors
+        errors
       else
-        return !errors.empty?
+        !errors.empty?
       end
     end
   end
@@ -88,6 +88,8 @@ module HANAUpdater
         when :nfs_share
           log.debug "-- #{self.class}.#{__callee__}: #{@nfs.inspect}"
           return @nfs.validate(mode)
+        else
+          log.error "Unknown component to validate: #{component.inspect}"
       end
     end
 
@@ -120,6 +122,30 @@ module HANAUpdater
       HANAUpdater::Helpers.itemize_list(l)
     end
 
+    def hana_update_overview
+      instances = []
+      @system.master.primitives.each do |prim|
+        ins = {}
+        if prim.running_on.nil?
+          ins[:host] = '<not running>'
+          ins[:site] = '<N/A>'
+          ins[:version_before] = '<N/A>'
+          ins[:version_after] = '<N/A>'
+        else
+          ins[:host] = prim.running_on.name
+          ins[:site] = prim.running_on.instance_attributes['site']
+          ins[:version_before] = prim.running_on.transient_attributes['version']
+          ins[:version_after] = if prim.running_on.localhost?
+                                  HANAUpdater::Hana.version(@system.hana_sid)
+                                else
+                                  HANAUpdater::Hana.version(@system.hana_sid, node: ins[:host])
+                                end
+        end
+        instances << ins
+      end
+      instances
+    end
+
     def select_hana_system(sid)
       log.debug "--- #{self.class}.#{__callee__}(sid=#{sid.inspect}) --- "
       @system = get_system_by_sid(sid)
@@ -138,7 +164,7 @@ module HANAUpdater
       # check connection to the remote node
       remote_node = @system.master.remote.running_on.name
       begin
-        SSH.check_ssh(remote_node)
+        HANAUpdater::SSH.check_ssh(remote_node)
       rescue HANAUpdater::Exceptions::SSHException => e
         errors << "Could not connect to the remote node: #{e}"
       end

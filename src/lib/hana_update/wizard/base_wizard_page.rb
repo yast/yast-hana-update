@@ -40,7 +40,7 @@ module HANAUpdater
 
       INPUT_WIDGETS = [:InputField, :TextEntry, :Password, :CheckBox, :SelectionBox,
                        :MultiLineEdit].freeze
-      WRAPPING_WIDGETS = { MinWidth: 1, MinHeight: 1, MinSize: 2, Left: 0 }.freeze
+      WRAPPING_WIDGETS = {MinWidth: 1, MinHeight: 1, MinSize: 2, Left: 0}.freeze
 
       # Initialize the Wizard page
       def initialize(model)
@@ -64,7 +64,7 @@ module HANAUpdater
 
       # Refresh model, populating the values from the view
       def update_model
-          log.debug "--- called BaseWizardPage.update_model ---"
+        log.debug '--- called BaseWizardPage.update_model ---'
       end
 
       # Return true if the user can proceed to the next screen
@@ -118,29 +118,29 @@ module HANAUpdater
           log.debug "--- #{self.class}.#{__callee__}: event=#{event} ---"
           input = event['ID']
           case input
-          # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
-          # it should redefine the main_loop
-          when :back, :cancel, :skip
-            update_model
-            return input
-          when :abort
-            return input            
-          when :next
-            log.debug "--- #{self.class}.#{__callee__}: user clicked `Next`"
-            update_model
-            return input if @model.no_validators
-            unless @page_validator.nil?
-              errors = @page_validator.call
-              if errors.nil? or errors.empty?
-                return input
-              else
-                show_dialog_errors(errors)
-                next
+            # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
+            # it should redefine the main_loop
+            when :back, :cancel, :skip
+              update_model
+              return input
+            when :abort
+              return input
+            when :next
+              log.debug "--- #{self.class}.#{__callee__}: user clicked `Next`"
+              update_model
+              return input if @model.no_validators
+              unless @page_validator.nil?
+                errors = @page_validator.call
+                if errors.nil? or errors.empty?
+                  return input
+                else
+                  show_dialog_errors(errors)
+                  next
+                end
               end
-            end
-            return input
-          else
-            handle_user_input(input, event)
+              return input
+            else
+              handle_user_input(input, event)
           end
         end
       end
@@ -155,13 +155,13 @@ module HANAUpdater
       # @param allow_next [Boolean]
       def base_rich_text(title, contents, help, allow_back, allow_next)
         Yast::Wizard.SetContents(
-          title,
-          base_layout(
-            RichText(Id(:rtext), contents)
-          ),
-          help,
-          allow_back,
-          allow_next
+            title,
+            base_layout(
+                RichText(Id(:rtext), contents)
+            ),
+            help,
+            allow_back,
+            allow_next
         )
       end
 
@@ -174,14 +174,14 @@ module HANAUpdater
       # @param allow_next [Boolean]
       def base_list_selection(title, message, list_contents, help, allow_back, allow_next)
         Yast::Wizard.SetContents(
-          title,
-          base_layout_with_label(
-            message,
-            SelectionBox(Id(:selection_box), Opt(:vstretch, :notify), '', list_contents)
-          ),
-          help,
-          allow_back,
-          allow_next
+            title,
+            base_layout_with_label(
+                message,
+                SelectionBox(Id(:selection_box), Opt(:vstretch, :notify), '', list_contents)
+            ),
+            help,
+            allow_back,
+            allow_next
         )
       end
 
@@ -206,9 +206,9 @@ module HANAUpdater
       def base_layout(contents)
         log.debug "--- #{self.class}.#{__callee__} ---"
         HBox(
-          HSpacing(3),
-          contents,
-          HSpacing(3)
+            HSpacing(3),
+            contents,
+            HSpacing(3)
         )
       end
 
@@ -216,14 +216,14 @@ module HANAUpdater
       def base_layout_with_label(label_text, contents)
         log.debug "--- #{self.class}.#{__callee__} ---"
         base_layout(
-          VBox(
-            HSpacing(80),
-            VSpacing(1),
-            Left(Label(label_text)),
-            VSpacing(1),
-            contents,
-            VSpacing(Opt(:vstretch))
-          )
+            VBox(
+                HSpacing(80),
+                VSpacing(1),
+                Left(Label(label_text)),
+                VSpacing(1),
+                contents,
+                VSpacing(Opt(:vstretch))
+            )
         )
       end
 
@@ -235,45 +235,47 @@ module HANAUpdater
       def base_popup(message, validator, *widgets)
         log.debug "--- #{self.class}.#{__callee__} ---"
         Yast::UI.OpenDialog(
-          VBox(
-            Yast::UI.TextMode ? Heading(message) : Label(message),
-            *widgets,
-            Yast::Wizard.CancelOKButtonBox
-          )
+            VBox(
+                Yast::UI.TextMode ? Heading(message) : Label(message),
+                *widgets,
+                Yast::Wizard.CancelOKButtonBox
+            )
         )
         loop do
           ui = Yast::UI.UserInput
           case ui
-          when :ok
-            # create a hash {widget_id: fileld_value} for the input widgets
-            parameters = {}
-            selected_widgets = widgets.select do |w|
-              (INPUT_WIDGETS | WRAPPING_WIDGETS.keys).include? w.value
-            end
-            selected_widgets.each do |w|
-              # if the actual widget is wrapped within a size widget, get the inner widget
-              if WRAPPING_WIDGETS.keys.include? w.value
-                w = w.params[WRAPPING_WIDGETS[w.value]]
+            when :ok
+              # create a hash {widget_id: fileld_value} for the input widgets
+              parameters = {}
+              selected_widgets = widgets.select do |w|
+                (INPUT_WIDGETS | WRAPPING_WIDGETS.keys).include? w.value
               end
-              id = w.params.find do |parameter|
-                parameter.respond_to?(:value) && parameter.value == :id
-              end.params[0]
-              parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
-            end
-            log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
-            if validator && !@model.no_validators
-              # TODO: remove SemanticChecks
-              ret = SemanticChecks.instance.check_popup(validator, parameters)
-              unless ret.empty?
-                show_dialog_errors(ret)
-                next
+              selected_widgets.each do |w|
+                # if the actual widget is wrapped within a size widget, get the inner widget
+                if WRAPPING_WIDGETS.keys.include? w.value
+                  w = w.params[WRAPPING_WIDGETS[w.value]]
+                end
+                id = w.params.find do |parameter|
+                  parameter.respond_to?(:value) && parameter.value == :id
+                end.params[0]
+                parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
               end
-            end
-            Yast::UI.CloseDialog
-            return parameters
-          when :cancel
-            Yast::UI.CloseDialog
-            return nil
+              log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
+              if validator && !@model.no_validators
+                # TODO: remove SemanticChecks
+                ret = SemanticChecks.instance.check_popup(validator, parameters)
+                unless ret.empty?
+                  show_dialog_errors(ret)
+                  next
+                end
+              end
+              Yast::UI.CloseDialog
+              return parameters
+            when :cancel
+              Yast::UI.CloseDialog
+              return nil
+            else
+              raise RuntimeError, "Unexpected user input from Yast::UI.OpenDialog: #{ui.inspect}"
           end
         end
       end
@@ -286,46 +288,46 @@ module HANAUpdater
       def base_popup_new(message, validator, handlers, *widgets)
         log.debug "--- #{self.class}.#{__callee__} ---"
         Yast::UI.OpenDialog(
-          VBox(
-            Yast::UI.TextMode ? Heading(message) : Label(message),
-            *widgets,
-            Yast::Wizard.CancelOKButtonBox
-          )
+            VBox(
+                Yast::UI.TextMode ? Heading(message) : Label(message),
+                *widgets,
+                Yast::Wizard.CancelOKButtonBox
+            )
         )
         loop do
           ui = Yast::UI.UserInput
           case ui
-          when :ok
-            # create a hash {widget_id: fileld_value} for the input widgets
-            parameters = {}
-            selected_widgets = widgets.select do |w|
-              (INPUT_WIDGETS | WRAPPING_WIDGETS.keys).include? w.value
-            end
-            selected_widgets.each do |w|
-              # if the actual widget is wrapped within a size widget, get the inner widget
-              if WRAPPING_WIDGETS.keys.include? w.value
-                w = w.params[WRAPPING_WIDGETS[w.value]]
+            when :ok
+              # create a hash {widget_id: fileld_value} for the input widgets
+              parameters = {}
+              selected_widgets = widgets.select do |w|
+                (INPUT_WIDGETS | WRAPPING_WIDGETS.keys).include? w.value
               end
-              id = w.params.find do |parameter|
-                parameter.respond_to?(:value) && parameter.value == :id
-              end.params[0]
-              parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
-            end
-            log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
-            if validator && !@model.no_validators
-              ret = SemanticChecks.instance.check_popup(validator, parameters)
-              unless ret.empty?
-                show_dialog_errors(ret)
-                next
+              selected_widgets.each do |w|
+                # if the actual widget is wrapped within a size widget, get the inner widget
+                if WRAPPING_WIDGETS.keys.include? w.value
+                  w = w.params[WRAPPING_WIDGETS[w.value]]
+                end
+                id = w.params.find do |parameter|
+                  parameter.respond_to?(:value) && parameter.value == :id
+                end.params[0]
+                parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
               end
-            end
-            Yast::UI.CloseDialog
-            return parameters
-          when :cancel
-            Yast::UI.CloseDialog
-            return nil
-          else
-            handlers[ui].call() if !handlers.nil? && handlers[ui]
+              log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
+              if validator && !@model.no_validators
+                ret = SemanticChecks.instance.check_popup(validator, parameters)
+                unless ret.empty?
+                  show_dialog_errors(ret)
+                  next
+                end
+              end
+              Yast::UI.CloseDialog
+              return parameters
+            when :cancel
+              Yast::UI.CloseDialog
+              return nil
+            else
+              handlers[ui].call if !handlers.nil? && handlers[ui]
           end
         end
       end
@@ -336,10 +338,10 @@ module HANAUpdater
       # @param true_ [Boolean] 'true' option is selected
       def base_true_false_combo(id_, label = '', true_ = true)
         ComboBox(Id(id_), Opt(:hstretch), label,
-          [
-            Item(Id(:true), 'true', true_),
-            Item(Id(:false), 'false', !true_)
-          ]
+                 [
+                     Item(Id(:true), 'true', true_),
+                     Item(Id(:false), 'false', !true_)
+                 ]
         )
       end
 
@@ -348,22 +350,24 @@ module HANAUpdater
       # @param message [String] additional prompt message
       def password_prompt(message)
         Yast::UI.OpenDialog(
-          VBox(
-            Label(message),
-            MinWidth(15, Password(Id(:password), 'Password:', '')),
-            Yast::Wizard.CancelOKButtonBox
-          )
+            VBox(
+                Label(message),
+                MinWidth(15, Password(Id(:password), 'Password:', '')),
+                Yast::Wizard.CancelOKButtonBox
+            )
         )
         ui = Yast::UI.UserInput
         case ui
-        when :cancel
-          Yast::UI.CloseDialog
-          return nil
-        when :ok
-          pass = value(:password)
-          Yast::UI.CloseDialog
-          return nil if pass.empty?
-          pass
+          when :cancel
+            Yast::UI.CloseDialog
+            return nil
+          when :ok
+            pass = value(:password)
+            Yast::UI.CloseDialog
+            return nil if pass.empty?
+            pass
+          else
+            raise RuntimeError, "Unexpected user input from Yast::UI.OpenDialog: #{ui.inspect}"
         end
       end
 
@@ -372,7 +376,7 @@ module HANAUpdater
         html_str = "<p>Configuration is invalid or incomplete and the Wizard
           cannot proceed to the next step.</p><p>Please review the following warnings:</p>\n"
         html_str << "<ul>\n"
-        html_str << error_list.uniq.map { |e| "<li>#{e}</li>" }.join("\n")
+        html_str << error_list.uniq.map {|e| "<li>#{e}</li>"}.join("\n")
         html_str << '</ul>'
         Yast::Popup.LongText(title, RichText(html_str), 60, 17)
       end
@@ -383,9 +387,9 @@ module HANAUpdater
 
       def two_widget_hbox(widget_one, widget_two, spacing = 2)
         HBox(
-          HWeight(1, widget_one),
-          HSpacing(spacing),
-          HWeight(1, widget_two)
+            HWeight(1, widget_one),
+            HSpacing(spacing),
+            HWeight(1, widget_two)
         )
       end
     end

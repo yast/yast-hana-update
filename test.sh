@@ -21,40 +21,24 @@ DB_PORT=30015
 
 function print_help(){
     cat <<-EOF
+YAST2-HANA-UPDATE TESTER
+
 Supported commands:
 
-* HANA
-  ----
-  start       start HANA
-  stop        stop HANA
-  info        show HANA processes
-  version     show HANA version
-  dummy       select DUMMY from the DB using the VIP
-  ctemp       create table ZZZ_MYTEMP
-  stemp       select from table ZZZ_MYTEMP
-  wtemp       insert into table ZZZ_MYTEMP
+- phase1    run this on secondary site
+            checks:
+             - resources are in maintenance mode
+             - HANA is running
+             - SR is disabled for local instance
 
-* HANA system replication
-  -----------------------
-  enable      enable SR on this host
-  register    register this site as secondary
-  disable     disable system replication
-  unregister  unregister secondary
-  state       HANA nameserver state
-  status      show SR status (sync state)
-  takeover    take over to the current node
+- phase2    run this on secondary site
+            checks:
+             - HANA is running
+             - SR is enabled
+             - local site is primary site
+             - vIP is running on local node
+             - SR on node $PRIM_NAME is disabled
 
-* Cluster
-  -------
-  m           run crm_monitor once
-  mm          run crm_mon continuously
-  mon         enable maintenance of RAs
-  moff        disable maintenance of RAs
-  cup         clean up the RAs
-  mig         force migrate vIP resource
-  fip         find vIP resource
-
-# add anything after the command name to suppress exec
 EOF
 }
 
@@ -78,6 +62,24 @@ function echo_yellow(){
     echo -e "\e[1m\e[33m$1\e[0m"
 }
 
+# Yes should be green
+function echo_yes_no1(){
+    if [[ $1 -eq 0 ]]; then
+        echo_green ' Yes'
+    else
+        echo_red ' No'
+    fi
+}
+
+# Yes should be red
+function echo_yes_no2(){
+    if [[ $1 -eq 0 ]]; then
+        echo_red ' Yes'
+    else
+        echo_green ' No'
+    fi
+}
+
 function execute_and_echo(){
     local cmd=${1:-false}
     local mode=${2:-execute}
@@ -90,6 +92,51 @@ function execute_and_echo(){
     fi
     return $rc
 }
+
+function get_maintenance_status(){
+    out=$(crm_resource --resource $1 -m -g maintenance 2>/dev/null)
+    if [[ $out = "true" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+function test_phase1(){
+    echo_green "Test phase 1"
+    echo_yellow "Checking resource maintenance"
+    for rsc_id in $HANA_RSC $HANAT_RSC $VIP_RSC; do
+        echo -n "Resource $rsc_id in maintenance mode?"
+        get_maintenance_status $rsc_id; rc=$?
+        if [[ $rc -eq 0 ]]; then
+            echo_green ' Yes'
+        else
+            echo_red ' No'
+        fi
+    done
+
+    echo_yellow "Is HANA running on local node?"
+    echo -n "checking for process hdb.sap${SID}_HDB${INO}"
+    ps aux | grep "[h]db.sap${SID}_HDB${INO}" >/dev/null; rc=$?
+    echo_yes_no1 $rc
+
+    echo_yellow 'Checking System Replication state'
+    out=$(su -lc 'hdbnsutil -sr_state --sapcontrol=1' $ADMUSER)
+    echo $out | grep 'online=true' &>/dev/null; rc=$?
+    echo -n "Instance is online"
+    echo_yes_no1 $rc
+    echo $out | grep 'mode=none' &>/dev/null; rc=$?
+    echo -n "Replication Mode is None"
+    echo_yes_no1 $rc
+}
+
+
+function test_phase2(){
+    echo_green "Test phase 2"
+
+}
+
 
 function prep_sql(){
     echo "su -lc 'hdbsql -j -u $DB_USER -n ${VIP}:${DB_PORT} -p $DB_PASS \"$1\"' '$ADMUSER'"
@@ -131,15 +178,15 @@ function register_secondary(){
 
 function unregister_secondary(){
     # provide $1 to supress execution
-    # local loc_node
-    # loc_node=$(hostname -s)
-    # local rem_site
-    # if [[ $loc_node == "$PRIM_HNAME" ]]; then
-    #     rem_site=$SEC_NAME
-    # else
-    #     rem_site=$PRIM_NAME
-    # fi
-    execute_and_echo "su -lc 'hdbnsutil -sr_unregister' '$ADMUSER'" "$1"
+    local loc_node
+    loc_node=$(hostname -s)
+    local rem_site
+    if [[ $loc_node == "$PRIM_HNAME" ]]; then
+        rem_site=$SEC_NAME
+    else
+        rem_site=$PRIM_NAME
+    fi
+    execute_and_echo "su -lc 'hdbnsutil -sr_unregister --name=$rem_site' '$ADMUSER'" "$1"
 }
 
 function sr_state(){
@@ -279,74 +326,8 @@ VERB="$1"
 shift
 
 case "$VERB" in
-     enable)
-        enable_primary "$@"
-        ;;
-     disable)
-        disable_primary "$@"
-        ;;
-     register)
-        register_secondary "$@"
-        ;;
-    unregister)
-        unregister_secondary "$@"
-        ;;
-    state)
-        sr_state "$@"
-        ;;
-    status)
-        sr_status "$@"
-        ;;
-    mon)
-        cluster_maintenance on "$@"
-        ;;
-    moff)
-        cluster_maintenance off "$@"
-        ;;
-    m)
-        cluster_monitor_once "$@"
-        ;;
-    mm)
-        cluster_monitor_rec "$@"
-        ;;
-    cup)
-        resource_cleanup "$@"
-        ;;
-    mig)
-        migrate_vip "$@"
-        ;;
-    fip)
-        find_vip "$@"
-        ;;
-    start)
-        hdb_command start "$@"
-        ;;      
-    stop)
-        hdb_command stop "$@"
-        ;;
-    info)
-        hdb_command info "$@"
-        ;;
-    version)
-        hdb_command version "$@"
-        ;;
-    dummy)
-        select_dummy "$@"
-        ;;
-    ctemp)
-        create_temp "$@"
-        ;;
-    stemp)
-        select_temp "$@"
-        ;;
-    wtemp)
-        write_temp "$@"
-        ;;
-    takeover)
-        hana_take_over "$@"
-        ;;
-    su)
-        su - "$ADMUSER"
+     phase1)
+        test_phase1
         ;;
     '-h')
         print_help

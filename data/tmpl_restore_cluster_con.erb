@@ -2,13 +2,6 @@
 <html>
 <head>
   <title></title>
-  <style type="text/css">
-    code {
-      font-family: "Nimbus Mono L", "Monospace", monospace;
-      color: #00843E;
-      font-weight: bold;
-    }
-  </style>
 </head>
 <body>
 <p>The following plan was generated in order to restore the original state of the cluster:</p>
@@ -29,7 +22,7 @@
   <% if model.revert_cluster %>
       <li>
         System Replication will be reverted to its original state.
-        [<a style="color:#00843E;font-weight:bold" href="revert_cluster_toggle">Do not reverse</a>]<br/>
+        [<a href="revert_cluster_toggle">Do not reverse</a>]<br/>
         Site <code><%= remote.running_on.site %></code> will become the new primary instance.
       </li>
       <ul>

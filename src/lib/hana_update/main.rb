@@ -68,10 +68,10 @@ module HANAUpdater
           },
           'restore_cluster_state' => {
               abort: :abort,
-              next: 'finish',
+              next: 'summary',
               back: :back
           },
-          'finish' => {
+          'summary' => {
               abort: :abort,
               cancel: :abort,
               finish: :ws_finish
@@ -79,15 +79,15 @@ module HANAUpdater
       }
 
       @yast_aliases = {
-          'welcome_screen' => -> { welcome_screen },
-          'cluster_overview' => -> { cluster_overview_page },
-          'update_medium' => -> { update_medium_page },
-          'update_plan_local' => -> { update_plan_page(:local) },
-          'update_plan_remote' => -> { update_plan_page(:remote) },
-          'update_site_local' => -> { update_hana_page(:local) },
-          'update_site_remote' => -> { update_hana_page(:remote) },
-          'restore_cluster_state' => -> { update_plan_page(:restore) },
-          'finish' => -> { show_summary }
+          'welcome_screen' => -> {welcome_screen},
+          'cluster_overview' => -> {cluster_overview_page},
+          'update_medium' => -> {update_medium_page},
+          'update_plan_local' => -> {update_plan_page(:local)},
+          'update_plan_remote' => -> {update_plan_page(:remote)},
+          'update_site_local' => -> {update_hana_page(:local)},
+          'update_site_remote' => -> {update_hana_page(:remote)},
+          'restore_cluster_state' => -> {update_plan_page(:restore)},
+          'summary' => -> {show_summary}
       }
 
       @configuration = HANAUpdater::Configuration.new
@@ -151,15 +151,7 @@ module HANAUpdater
     end
 
     def show_summary
-      Yast::Wizard.SetContents(
-          'Summary',
-          RichText('HANA was successfully updated'),
-          '',
-          true, true
-      )
-      Yast::Wizard.DisableBackButton
-      Yast::Wizard.SetNextButton(:finish, '&Finish')
-      Yast::UI.UserInput
+      Wizard::SummaryPage.new(@configuration).run
     end
   end
 end

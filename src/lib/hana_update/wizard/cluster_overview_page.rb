@@ -45,7 +45,7 @@ module HANAUpdater
               ReplacePoint(Id(:rp_content), Empty())
             )
           ),
-          Helpers.load_help('stub'),
+          Helpers.load_help('select_system'),
           true,
           true
         )

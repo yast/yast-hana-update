@@ -57,9 +57,9 @@ module HANAUpdater
         remote = group.master.remote
         file_name = case @part
                       when :local, :remote
-                        'tmpl_update_plan.erb'
+                        'update_plan'
                       when :restore
-                        'tmpl_restore_cluster.erb'
+                        'restore_cluster'
                       else
                         raise ArgumentError, "Unknown part #{@part}"
                     end

@@ -54,19 +54,32 @@ module HANAUpdater
 
     # Render an ERB template by its name
     def render_template(basename, binding)
-      full_path = data_file_path(basename)
-      unless @storage.key? basename
+      file_name = 'tmpl_' + basename + (Yast::UI.TextMode ? '_con' : '') + '.erb'
+      full_path = data_file_path(file_name)
+      unless @storage.key? file_name
         template = ERB.new(read_file(full_path), nil, '-')
-        @storage[basename] = template
+        @storage[file_name] = template
       end
       begin
-        return @storage[basename].result(binding)
+        return @storage[file_name].result(binding)
       rescue StandardError => e
         log.error("Error while rendering template '#{full_path}': #{e.message}")
-        exc = TemplateRenderException.new("Error rendering template '#{basename}'.")
+        exc = TemplateRenderException.new("Error rendering template '#{file_name}'.")
         exc.renderer_message = e.message
         raise exc
       end
+    end
+
+    def array_to_table(lines)
+      max_len = lines.map {|l| l.map {|e| e.length}}.transpose.map {|ln| ln.max}
+      lines.insert(1, max_len.map {|len| '-'*len})
+      lines_just = []
+      lines.each do |ln|
+        a = []
+        ln.each_with_index {|el, ix| a << el.ljust(max_len[ix])}
+        lines_just << a
+      end
+      lines_just.map {|l| l.join(' ')}.join("\n")
     end
 
     # Load the help file by its name
@@ -93,9 +106,9 @@ module HANAUpdater
     def itemize_list(l, use_indices=true)
       require 'yast'
       if use_indices
-        l.each_with_index.map { |e, i| Yast::Term.new(:item, Yast::Term.new(:id, i), *e) }
+        l.each_with_index.map {|e, i| Yast::Term.new(:item, Yast::Term.new(:id, i), *e)}
       else
-        l.each.map { |e| Yast::Term.new(:item, Yast::Term.new(:id, e[0]), *e[1..e.length]) }
+        l.each.map {|e| Yast::Term.new(:item, Yast::Term.new(:id, e[0]), *e[1..e.length])}
       end
     end
 
@@ -157,10 +170,10 @@ module HANAUpdater
       File.read(path)
     rescue Errno::ENOENT => e
       log.error("Could not find file '#{path}': #{e.message}.")
-      raise _('Program data could not be found. Please reinstall the package.')
+      raise _("Program data could not be found (#{path}). Please reinstall the package.")
     rescue Errno::EACCES => e
       log.error("Could not access file '#{path}': #{e.message}.")
-      raise _('Program data could not be accessed. Please reinstall the package.')
+      raise _("Program data could not be accessed (#{path}). Please reinstall the package.")
     end
   end
 

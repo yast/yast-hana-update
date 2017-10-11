@@ -115,7 +115,7 @@ module HANAUpdater
             "<font color=\"\#a6a6a6\">[#{node}]</font> #{message}"
           else
             "<font color=\"\#a6a6a6\">[#{node}] #{time}</font> "\
-            "<font color=\"#{rule[:color]}\"><b>#{level.rjust(6, " ")}</b></font>: #{message}"
+            "<font color=\"#{rule[:color]}\"><b>#{level.rjust(6, ' ')}</b></font>: #{message}"
           end
         else
           line

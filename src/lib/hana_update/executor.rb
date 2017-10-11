@@ -67,7 +67,7 @@ module HANAUpdater
       # break replication
       log.warn '--- Disabling system replication ---'
       Yast::Popup.Feedback('Please wait', 'Disabling system replication') do
-        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, node: :local)
+        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, sap_sys.master.remote.running_on.site, node: :local)
       end
       # start HANA to apply SR settings
       log.warn '--- Starting SAP HANA on local node ---'
@@ -123,7 +123,7 @@ module HANAUpdater
       log.warn '--- Waiting for data to be synchronized ---'
       Yast::Popup.Feedback('Please wait', 'Waiting for data to be synchronized') do
         begin
-          check_system_replication(sap_sys.hana_sid, sap_sys.master.remote.running_on.site,
+          check_system_replication(sap_sys.hana_sid, sap_sys.master.local.running_on.site,
                                    node: sap_sys.master.remote.running_on.name)
         rescue SystemReplicationException => e
           answer = Yast::Popup.AnyQuestion('Error while checking System Replication Status',
@@ -150,7 +150,7 @@ module HANAUpdater
       end
       log.warn "Disabling replication between nodes #{remote_node} and #{local_node}"
       Yast::Popup.Feedback('Please wait', "Disabling replication between nodes #{remote_node} and #{local_node}") do
-        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, node: :local)
+        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, sap_sys.master.remote.running_on.site, node: :local)
         status, _out = HANAUpdater::Hana.sr_disable_primary(sap_sys.hana_sid, node: :local)
         log.info "--- #{self.class}.#{__callee__} : disable system replication on source site #{remote_node}: rc=#{status.exitstatus}"
       end
@@ -184,6 +184,7 @@ module HANAUpdater
       # enable replication on local
       # register remote as secondary to local
       # wait for sync
+
     end
 
     def check_system_replication(system_id, remote_site, opts={node: :local})
@@ -198,6 +199,7 @@ module HANAUpdater
             sleep 10
           when 15
             log.warn '--- systemReplicationStatus.py reports status 15 (Active) (instances are in sync)'
+            return true
           else
             log.error "--- Unexpected status returned from systemReplicationStatus.py: rc=#{rc}"
             raise SystemReplicationException, "Unexpected status returned from systemReplicationStatus.py: rc=#{rc}"
