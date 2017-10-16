@@ -34,7 +34,6 @@ module HANAUpdater
     attr_accessor :source, :copy_path, :mount_path
 
     def initialize
-      # TODO: rename to mount
       @should_mount = false
       @source = ''
       @copy_medium = false
@@ -75,7 +74,7 @@ module HANAUpdater
       @nfs = NFSSettings.new
       @hana_system_list = []
       @system = nil
-      @revert_sync_direction = false  # revert synchronization direction to the initial state
+      @revert_sync_direction = false # revert synchronization direction to the initial state
     end
 
     def debug=(value)
@@ -94,7 +93,6 @@ module HANAUpdater
     end
 
     def hana_sids
-      # HANAUpdater::Cluster.groups.map {|g| "System #{g.hana_sid}, Instance #{g.hana_inst}" }
       l = HANAUpdater::Cluster.groups.map {|g| [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"]}
       HANAUpdater::Helpers.itemize_list(l, false)
     end
@@ -113,7 +111,9 @@ module HANAUpdater
           host_name = prim.running_on.name
           host_name += ' (this host)' if prim.running_on.localhost?
           site_name = prim.running_on.instance_attributes['site']
-          version = prim.running_on.transient_attributes['version'] # TODO: fetch it if not available in the cluster
+          node = prim.running_on.localhost? ? :local : host_name
+          version = prim.running_on.transient_attributes['version'] || HANAUpdater::Hana.version(group.hana_sid,
+                                                                                                 node: node)
         end
         rsc_role = prim.role
         rsc_role += ' (unmanaged)' unless prim.managed?

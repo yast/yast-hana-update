@@ -174,8 +174,8 @@ module HANAUpdater
     # Check status of System Replication
     # Note: should be only called on the primary
     def sr_check_status(system_id, remote_site, opts={node: :local})
-      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{remote_site}, #{opts})"
-      # TODO: apparently, the error is not fatal an can be recovered automatically by HANA
+      log.debug "--- called #{self.class}.#{__callee__}(#{system_id}, #{remote_site}, #{opts})"
+      # apparently, the error is not fatal an can be recovered automatically by HANA
       user_name = "#{system_id.downcase}adm"
       rc_text = {10 => 'No HANA SR', 11 => 'Fatal Error', 12 => 'Unknown',
                         13 => 'Initializing', 14 => 'Syncing', 15 => 'Active'}
@@ -215,7 +215,6 @@ module HANAUpdater
       raise RuntimeError, 'Required option opts[:user_name] was ommitted' if opts[:user_name].nil?
       raise RuntimeError, 'Required option opts[:node] was ommitted' if opts[:node].nil?
       if opts[:node] == :local
-        # FIXME: this can be further simplified!
         out, status = su_exec_get_output(opts[:user_name], *command)
       elsif opts[:node].is_a?(String) && opts[:node].length > 0
         out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *wrap_ssh_su_call(opts[:user_name], command))

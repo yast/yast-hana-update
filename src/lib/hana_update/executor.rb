@@ -27,7 +27,6 @@ require 'hana_update/cluster'
 require 'hana_update/system'
 require 'hana_update/ssh'
 
-
 module HANAUpdater
   class SystemReplicationException < StandardError
   end
@@ -89,11 +88,6 @@ module HANAUpdater
           HANAUpdater::System.recursive_copy(config.nfs.mount_path, config.nfs.copy_path, sap_sys.hana_sid, node: :local)
         end
       end
-      # # TODO: start HANA for update?
-      # # # start HANA on local node, so that the replication can be disabled
-      # Yast::Popup.Feedback('Please wait', 'Stopping SAP HANA on local node') do
-      #   HANAUpdater::Hana.hdb_stop(sap_sys.hana_sid)
-      # end
     end
 
     def execute_remote_update_plan(config)
@@ -105,7 +99,7 @@ module HANAUpdater
         HANAUpdater::Hana.stop(sap_sys.hana_sid)
       end
       log.warn '--- Registering local HANA instance for SR ---'
-      Yast::Popup.Feedback('Please wait', 'Registering local HANA instance for SR') do
+      Yast::Popup.Feedback('Please wait', 'Registering local HANA instance as secondary') do
         HANAUpdater::Hana.sr_register_secondary(
             sap_sys.hana_sid,
             sap_sys.hana_inst,
@@ -133,12 +127,8 @@ module HANAUpdater
           retry if answer
         end
       end
-      log.warn '--- System Replication: Taking over to local site ---'
-      Yast::Popup.Feedback('Please wait', 'Taking over to local site') do
-        HANAUpdater::Hana.sr_takeover(sap_sys.hana_sid)
-      end
       log.warn '--- Migrating the virtual IP ---'
-      Yast::Popup.Feedback('Please wait', 'Migrating the virtual IP') do
+      Yast::Popup.Feedback('Please wait', 'Migrating virtual IP address') do
         out, status = HANAUpdater::System.resource_force(sap_sys.vip.id, :check, node: remote_node)
         log.info "--- #{self.class}.#{__callee__} : check vIP running on remote node #{remote_node}: rc=#{status.exitstatus}"
         if status.exitstatus == 0
@@ -148,12 +138,9 @@ module HANAUpdater
         out, status = HANAUpdater::System.resource_force(sap_sys.vip.id, :start, node: :local)
         log.info "--- #{self.class}.#{__callee__} : start vIP on local node #{local_node}: rc=#{status.exitstatus}, out=#{out}"
       end
-      log.warn "--- Disabling replication between nodes #{remote_node} and #{local_node}"
-      Yast::Popup.Feedback('Please wait', "Disabling replication between nodes #{remote_node} and #{local_node}") do
-        # TODO: log output!
-        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, sap_sys.master.remote.running_on.site, node: :local)
-        status, _out = HANAUpdater::Hana.sr_disable_primary(sap_sys.hana_sid, node: :local)
-        log.info "--- #{self.class}.#{__callee__} : disable system replication on source site #{remote_node}: rc=#{status.exitstatus}"
+      log.warn '--- System Replication: Taking over to local site ---'
+      Yast::Popup.Feedback('Please wait', 'Taking over to the local site') do
+        HANAUpdater::Hana.sr_takeover(sap_sys.hana_sid)
       end
       if config.nfs.should_mount?
         log.warn "--- Mounting update medium '#{config.nfs.source}' on node #{remote_node} ---"
@@ -170,27 +157,100 @@ module HANAUpdater
       end
     end
 
-    def remove_copied_medium(source)
-      # TODO: implement
-    end
-
-    def umount(source)
-      # TODO: implement 
-    end
-
     # Restore original cluster state
     # @param config
     def restore_cluster(config)
       sap_sys = config.system
       remote_node = sap_sys.master.remote.running_on.name
-      log.warn "--- Disabling replication on remote node #{remote_node} ---"
-      Yast::Popup.Feedback('Please wait', "Disabling replication on source system #{remote_node}") do
-
+      local_node = sap_sys.master.local.running_on.name
+      log.warn "--- Stopping HANA instance on remote node #{remote_node} ---"
+      Yast::Popup.Feedback('Please wait', "Stopping remote SAP HANA instance on node #{remote_node}") do
+        HANAUpdater::Hana.stop(sap_sys.hana_sid, node: remote_node)
       end
-      # enable replication on local
-      # register remote as secondary to local
-      # wait for sync
-
+      log.warn "--- Registering remote SAP HANA instance on remote node #{remote_node} ---"
+      Yast::Popup.Feedback('Please wait', "Registering remote SAP HANA instance on remote node #{remote_node}") do
+        HANAUpdater::Hana.sr_register_secondary(
+            sap_sys.hana_sid,
+            sap_sys.hana_inst,
+            sap_sys.master.remote.running_on.site,
+            sap_sys.master.local.running_on.name,
+            sap_sys.master.local.running_on.instance_attributes['srmode'],
+            sap_sys.clone.local.running_on.instance_attributes['op_mode'],
+            node: remote_node
+        )
+      end
+      log.warn "--- Starting HANA instance on remote node #{remote_node} ---"
+      Yast::Popup.Feedback('Please wait', "Starting remote SAP HANA instance on node #{remote_node}") do
+        HANAUpdater::Hana.start(sap_sys.hana_sid, node: remote_node)
+      end
+      log.warn '--- Waiting for data to be synchronized ---'
+      Yast::Popup.Feedback('Please wait', 'Waiting for data to be synchronized') do
+        begin
+          check_system_replication(sap_sys.hana_sid,
+                                   sap_sys.master.remote.running_on.site,
+                                   node: :local)
+        rescue SystemReplicationException => e
+          answer = Yast::Popup.AnyQuestion('Error while checking System Replication Status',
+                                           e.message,
+                                           'Retry', 'Cancel', :focus_yes
+          )
+          retry if answer
+        end
+      end
+      return true unless config.revert_sync_direction
+      log.warn '--- Reverting System Replication to initial direction ---'
+      log.warn '--- Migrating the virtual IP ---'
+      Yast::Popup.Feedback('Please wait', 'Migrating virtual IP address') do
+        out, status = HANAUpdater::System.resource_force(sap_sys.vip.id, :check, node: :local)
+        log.info "--- #{self.class}.#{__callee__} : check vIP running on local node #{local_node}: rc=#{status.exitstatus}"
+        if status.exitstatus == 0
+          out, status = HANAUpdater::System.resource_force(sap_sys.vip.id, :stop, node: :local)
+          log.info "--- #{self.class}.#{__callee__} : stop vIP on local node #{local_node}: rc=#{status.exitstatus}"
+        end
+        out, status = HANAUpdater::System.resource_force(sap_sys.vip.id, :start, node: remote_node)
+        log.info "--- #{self.class}.#{__callee__} : start vIP on remote node #{remote_node}: rc=#{status.exitstatus}, out=#{out}"
+      end
+      log.warn "--- System Replication: Taking over to remote site (node #{remote_node}) ---"
+      Yast::Popup.Feedback('Please wait', 'Taking over to the remote site') do
+        HANAUpdater::Hana.sr_takeover(sap_sys.hana_sid, node: remote_node)
+      end
+      # stop HANA on local node, so that the replication can be enabled
+      log.warn '--- Stopping SAP HANA on local node ---'
+      Yast::Popup.Feedback('Please wait', 'Stopping SAP HANA on local node') do
+        HANAUpdater::Hana.stop(sap_sys.hana_sid, node: :local)
+      end
+      # register local system
+      log.warn '--- Registering local HANA instance for SR ---'
+      Yast::Popup.Feedback('Please wait', 'Registering local HANA instance as secondary') do
+        HANAUpdater::Hana.sr_register_secondary(
+            sap_sys.hana_sid,
+            sap_sys.hana_inst,
+            sap_sys.master.local.running_on.site,
+            sap_sys.master.remote.running_on.name,
+            sap_sys.master.local.running_on.instance_attributes['srmode'],
+            sap_sys.clone.local.running_on.instance_attributes['op_mode'],
+            node: :local
+        )
+      end
+      # start HANA to apply SR settings
+      log.warn '--- Starting SAP HANA on local node ---'
+      Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
+        HANAUpdater::Hana.start(sap_sys.hana_sid, node: :local)
+      end
+      log.warn '--- Cleaning up cluster resources ---'
+      Yast::Popup.Feedback('Please wait', 'Cleaning up cluster resources') do
+        HANAUpdater::System.resource_cleanup(sap_sys.vip.id)
+        HANAUpdater::System.resource_cleanup(sap_sys.clone.id)
+        HANAUpdater::System.resource_cleanup(sap_sys.master.id)
+        sleep 5
+      end
+      log.warn '--- Setting resources to maintenance mode ---'
+      Yast::Popup.Feedback('Please wait', 'Setting resources to maintenance mode') do
+        HANAUpdater::System.resource_maintenance(sap_sys.master.id, :off)
+        HANAUpdater::System.resource_maintenance(sap_sys.clone.id, :off)
+        HANAUpdater::System.resource_maintenance(sap_sys.vip.id, :off)
+        sleep 10
+      end
     end
 
     def check_system_replication(system_id, remote_site, opts={node: :local})

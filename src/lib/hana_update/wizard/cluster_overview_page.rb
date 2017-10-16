@@ -66,7 +66,6 @@ module HANAUpdater
         super
         Yast::UI.ReplaceWidget(Id(:rp_content), hana_systems_table)
         set_value(:hana_systems_list, @model.hana_sids, :Items)
-        # TODO: make a variable for that
         selected_id = value(:hana_systems_list, :CurrentItem)
         log.debug "--- #{self.class}.#{__callee__} :: @model.hana_sids=#{@model.hana_sids.inspect} --- "
         log.debug "--- #{self.class}.#{__callee__} :: selected_id=#{selected_id.inspect} --- "

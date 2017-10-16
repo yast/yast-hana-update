@@ -63,16 +63,12 @@
         in sync.
       </li>
       <li>
-        Take over from site <code><%= remote.running_on.site %></code> to
-        <code><%= local.running_on.site %></code>.
-      </li>
-      <li>
         Migrate virtual IP resource <code>ip_rsc</code> to node
         <code><%= local.running_on.name %></code>.
       </li>
       <li>
-        Disable system replication on node
-        <code><%= remote.running_on.site %></code>.
+        Take over from site <code><%= remote.running_on.site %></code> to
+        <code><%= local.running_on.site %></code>.
       </li>
       <% if model.nfs.should_mount? %>
           <li>

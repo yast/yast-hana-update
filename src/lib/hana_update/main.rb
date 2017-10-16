@@ -96,7 +96,6 @@ module HANAUpdater
     def main
       textdomain('hana-update')
       @configuration.debug = true if WFM.Args.include?('dbg')
-      # TODO: debug parameters, remove from production code!
       if Yast::WFM.Args.include? 'skipto'
         step_ix = Yast::WFM.Args.index('skipto') + 1
         @yast_sequence['ws_start'] = Yast::WFM.Args[step_ix]
@@ -106,7 +105,6 @@ module HANAUpdater
         HANAUpdater::Cluster.update_state
         @configuration.select_hana_system(Yast::WFM.Args[step_ix].upcase)
       end
-      # TODO: end of debug
       Yast::Wizard.CreateDialog
       Yast::Wizard.SetDialogTitle('SUSE SAP HANA Cluster Update')
       begin

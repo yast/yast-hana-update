@@ -1,0 +1,9 @@
+HDB version info:
+  version:             1.00.112.03.1464042351
+  branch:              gol/newdb100_rel
+  git hash:            e0f40240503a2a3398bf7a3eb1571c0fb2eafad4
+  git merge time:      2016-06-24 00:25:51
+  weekstone:           0000.00.0
+  compile date:        2016-06-24 00:44:41
+  compile host:        fdd7274
+  compile type:        rel

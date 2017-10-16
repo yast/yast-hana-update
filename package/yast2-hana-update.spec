@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 
 Name:           yast2-hana-update
-Version:        0.3.0
+Version:        0.9.0
 Release:        0
 BuildArch:      noarch
 
@@ -55,7 +55,7 @@ Summary:        SUSE HANA Cluster Update
 URL:            http://www.suse.com
 
 %description
-A YaST2 module to update SAP HANA system within a SUSE Cluster
+A YaST2 module to update SAP HANA software within a SUSE Cluster
 
 %prep
 %setup -n %{name}-%{version}

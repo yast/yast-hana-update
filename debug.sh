@@ -29,6 +29,7 @@ Supported commands:
   stop        stop HANA
   info        show HANA processes
   version     show HANA version
+  overview    show HANA overview
   dummy       select DUMMY from the DB using the VIP
   ctemp       create table ZZZ_MYTEMP
   stemp       select from table ZZZ_MYTEMP
@@ -40,8 +41,11 @@ Supported commands:
   register    register this site as secondary
   disable     disable system replication
   unregister  unregister secondary
+  cleanup     Force clean-up of SR state (ACHTUNG!)
   state       HANA nameserver state
+  state-c     HANA nameserver state (sapcontrol)
   status      show SR status (sync state)
+  status-c    show SR status (sync state) (sapcontrol)
   takeover    take over to the current node
 
 * Cluster
@@ -92,7 +96,7 @@ function execute_and_echo(){
 }
 
 function prep_sql(){
-    echo "su -lc 'hdbsql -j -u $DB_USER -n ${VIP}:${DB_PORT} -p $DB_PASS \"$1\"' '$ADMUSER'"
+    echo "su -lc 'hdbsql -j -u $DB_USER -n ${VIP}:${DB_PORT} -p $DB_PASS \"$1\"' $ADMUSER"
 }
 
 function enable_primary(){
@@ -105,12 +109,12 @@ function enable_primary(){
     else
         loc_site=$SEC_NAME
     fi
-    execute_and_echo "su -lc 'hdbnsutil -sr_enable --name=${loc_site}' '$ADMUSER'" "$1"
+    execute_and_echo "su -lc 'hdbnsutil -sr_enable --name=${loc_site}' $ADMUSER" "$1"
 }
 
 function disable_primary(){
     # provide $1 to supress execution
-    execute_and_echo "su -lc 'hdbnsutil -sr_disable' '$ADMUSER'" "$1"
+    execute_and_echo "su -lc 'hdbnsutil -sr_disable' $ADMUSER" "$1"
 }
 
 function register_secondary(){
@@ -126,30 +130,38 @@ function register_secondary(){
         loc_site=$SEC_NAME
         rem_node=$PRIM_HNAME
     fi
-    execute_and_echo "su -lc 'hdbnsutil -sr_register --remoteHost=${rem_node} --remoteInstance=${INO} --replicationMode=sync --operationMode=delta_datashipping --name=${loc_site}' '$ADMUSER'" "$1"
+    execute_and_echo "su -lc 'hdbnsutil -sr_register --remoteHost=${rem_node} --remoteInstance=${INO} --replicationMode=sync --operationMode=delta_datashipping --name=${loc_site}' $ADMUSER" "$1"
 }
 
 function unregister_secondary(){
     # provide $1 to supress execution
-    # local loc_node
-    # loc_node=$(hostname -s)
-    # local rem_site
-    # if [[ $loc_node == "$PRIM_HNAME" ]]; then
-    #     rem_site=$SEC_NAME
-    # else
-    #     rem_site=$PRIM_NAME
-    # fi
-    execute_and_echo "su -lc 'hdbnsutil -sr_unregister' '$ADMUSER'" "$1"
+    execute_and_echo "su -lc 'hdbnsutil -sr_unregister' $ADMUSER" "$1"
 }
 
 function sr_state(){
     # provide $1 to supress execution
-    execute_and_echo "su -lc 'hdbnsutil -sr_state' '$ADMUSER'" "$1"
+    execute_and_echo "su -lc 'hdbnsutil -sr_state' $ADMUSER" "$1"
+}
+
+function sr_cleanup(){
+    # provide $1 to supress execution
+    execute_and_echo "su -lc 'hdbnsutil -sr_cleanup --force' $ADMUSER" "$1"
+}
+
+function sr_state_control(){
+    # provide $1 to supress execution
+    local cmd
+    execute_and_echo "su -lc 'hdbnsutil -sr_state --sapcontrol=1' $ADMUSER" "$1"
 }
 
 function sr_status(){
     # provide $1 to supress execution
-    execute_and_echo "su -lc 'HDBSettings.sh systemReplicationStatus.py' '$ADMUSER'" "$1"
+    execute_and_echo "su -lc 'HDBSettings.sh systemReplicationStatus.py' $ADMUSER" "$1"
+}
+
+function sr_status_control(){
+    # provide $1 to supress execution
+    execute_and_echo "su -lc 'HDBSettings.sh systemReplicationStatus.py --sapcontrol=1' $ADMUSER" "$1"
 }
 
 function cluster_maintenance(){
@@ -231,7 +243,7 @@ function find_vip(){
 function hdb_command(){
     # provide $2 to supress execution
     local func=${1:-info}
-    execute_and_echo "su -lc 'HDB $func' '$ADMUSER'" "$2"
+    execute_and_echo "su -lc 'HDB $func' $ADMUSER" "$2"
 }
 
 function select_dummy(){
@@ -264,7 +276,7 @@ function create_temp(){
 
 function hana_take_over(){
     # provide $1 to supress execution
-    execute_and_echo "su -lc 'hdbnsutil -sr_takeover' '$ADMUSER'" "$1"
+    execute_and_echo "su -lc 'hdbnsutil -sr_takeover' $ADMUSER" "$1"
 }
 
 function cluster_monitor_once(){
@@ -273,6 +285,11 @@ function cluster_monitor_once(){
 
 function cluster_monitor_rec(){
     execute_and_echo "crm_mon -r" "$1"
+}
+
+function sys_overview(){
+    # provide $1 to supress execution
+    execute_and_echo "su -lc 'HDBSettings.sh systemOverview.py' '$ADMUSER'" "$1"
 }
 
 VERB="$1"
@@ -291,11 +308,20 @@ case "$VERB" in
     unregister)
         unregister_secondary "$@"
         ;;
-    state)
+    cleanup | c)
+        sr_cleanup "$@"
+        ;;
+    state | s)
         sr_state "$@"
         ;;
-    status)
+    state-c | sc)
+        sr_state_control "$@"
+        ;;
+    status | ss)
         sr_status "$@"
+        ;;
+    status-c | ssc)
+        sr_status_control "$@"
         ;;
     mon)
         cluster_maintenance on "$@"
@@ -327,6 +353,9 @@ case "$VERB" in
     info)
         hdb_command info "$@"
         ;;
+    overview | o)
+        sys_overview "$@"
+        ;;
     version)
         hdb_command version "$@"
         ;;
@@ -347,6 +376,9 @@ case "$VERB" in
         ;;
     su)
         su - "$ADMUSER"
+        ;;
+    fh)
+        SAPHanaSR-showAttr
         ;;
     '-h')
         print_help

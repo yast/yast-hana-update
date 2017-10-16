@@ -206,7 +206,6 @@ module HANAUpdater
     # Read and parse output of cibadmin -Ql
     def get_cib
       out, status = exec_get_output('cibadmin', '-Q', '-l')
-      # TODO: log the output here
       raise "Could not connect to cluster: #{out}" if status.exitstatus != 0
       REXML::Document.new(out)
     end

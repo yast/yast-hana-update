@@ -46,6 +46,11 @@ module HANAUpdater
       out, status = exec_get_output(*cmd)
     end
 
+    def resource_cleanup(resource_id)
+      cmd = 'crm', 'resource', 'cleanup', resource_id
+      out, status = exec_get_output(*cmd)
+    end
+
     def saphanasr_attributes(sid)
       cmd = 'SAPHanaSR-showAttr', "--sid=#{sid}"
       out, status = exec_get_output(*cmd)

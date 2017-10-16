@@ -30,6 +30,19 @@ describe HANAUpdater::SystemClass do
     end
   end
 
+  describe '#resource_cleanup' do
+    it 'cleans up resource status' do
+      expect_syscall(
+          type: :output,
+          cmd: ['crm', 'resource', 'cleanup', const.resources[:vip]],
+          output: '',
+          rc: 0
+      )
+      _, status = HANAUpdater::System.resource_cleanup(const.resources[:vip])
+      expect(status.exitstatus).to eq 0
+    end
+  end
+
   describe '#resource_force' do
     context 'on remote node' do
       it 'forces resource start' do
@@ -124,6 +137,7 @@ describe HANAUpdater::SystemClass do
             rc: 0
         )
         _, status = HANAUpdater::System.mount_nfs('host_name:/path/to/share')
+        expect(status).to eq 0
       end
     end
 
@@ -144,6 +158,7 @@ describe HANAUpdater::SystemClass do
             rc: 0
         )
         _, status = HANAUpdater::System.mount_nfs('host_name:/path/to/share', node: const.remote.host_name)
+        expect(status).to eq 0
       end
     end
   end
@@ -167,12 +182,12 @@ describe HANAUpdater::SystemClass do
             rc: 0
         )
         _, status = HANAUpdater::System.recursive_copy(source_path, destination_path, const.system.id)
+        expect(status).to eq 0
       end
     end
 
     context 'on remote node' do
       it 'copies the update medium' do
-        # TODO: check if dir does not exist
         source_path = '/tmp/hana1'
         destination_path = '/hana/upd'
         expect_syscall(
@@ -196,6 +211,7 @@ describe HANAUpdater::SystemClass do
         )
         _, status = HANAUpdater::System.recursive_copy(source_path, destination_path,
                                                        const.system.id, node: const.remote.host_name)
+        expect(status).to eq 0
       end
     end
   end

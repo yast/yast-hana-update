@@ -1,0 +1,173 @@
+<cib crm_feature_set="3.0.13" validate-with="pacemaker-2.7" epoch="1514" num_updates="1" admin_epoch="0" cib-last-written="Thu Sep 21 18:51:52 2017" update-origin="hana02" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="1084777733">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="maintenance-mode" value="false" id="cib-bootstrap-options-maintenance-mode"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="true"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-4.8-77ea74d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="hacluster"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1505921755"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1084777733" uname="hana01">
+        <instance_attributes id="nodes-1084777733">
+          <nvpair id="nodes-1084777733-hana_prd_vhost" name="hana_prd_vhost" value="hana01"/>
+          <nvpair id="nodes-1084777733-hana_prd_srmode" name="hana_prd_srmode" value="sync"/>
+          <nvpair id="nodes-1084777733-hana_prd_site" name="hana_prd_site" value="NUREMBERG"/>
+          <nvpair id="nodes-1084777733-hana_prd_remoteHost" name="hana_prd_remoteHost" value="hana02"/>
+          <nvpair id="nodes-1084777733-lpa_prd_lpt" name="lpa_prd_lpt" value="1506012703"/>
+        </instance_attributes>
+      </node>
+      <node id="1084777734" uname="hana02">
+        <instance_attributes id="nodes-1084777734">
+          <nvpair id="nodes-1084777734-lpa_prd_lpt" name="lpa_prd_lpt" value="30"/>
+          <nvpair id="nodes-1084777734-hana_prd_vhost" name="hana_prd_vhost" value="hana02"/>
+          <nvpair id="nodes-1084777734-hana_prd_site" name="hana_prd_site" value="PRAGUE"/>
+          <nvpair id="nodes-1084777734-hana_prd_srmode" name="hana_prd_srmode" value="sync"/>
+          <nvpair id="nodes-1084777734-hana_prd_remoteHost" name="hana_prd_remoteHost" value="hana01"/>
+          <nvpair id="nodes-1084777734-hana_prd_op_mode" name="hana_prd_op_mode" value="delta_datashipping"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="stonith-sbd" class="stonith" type="external/sbd"/>
+      <primitive id="rsc_ip_PRD_HDB00" class="ocf" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="rsc_ip_PRD_HDB00-instance_attributes">
+          <nvpair name="ip" value="192.168.101.100" id="rsc_ip_PRD_HDB00-instance_attributes-ip"/>
+          <nvpair name="cidr_netmask" value="24" id="rsc_ip_PRD_HDB00-instance_attributes-cidr_netmask"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" timeout="20" interval="0" id="rsc_ip_PRD_HDB00-start-0"/>
+          <op name="stop" timeout="20" interval="0" id="rsc_ip_PRD_HDB00-stop-0"/>
+          <op name="monitor" interval="10" timeout="20" id="rsc_ip_PRD_HDB00-monitor-10"/>
+        </operations>
+        <meta_attributes id="rsc_ip_PRD_HDB00-meta_attributes">
+          <nvpair id="rsc_ip_PRD_HDB00-meta_attributes-maintenance" name="maintenance" value="true"/>
+        </meta_attributes>
+      </primitive>
+      <master id="msl_SAPHana_PRD_HDB00">
+        <meta_attributes id="msl_SAPHana_PRD_HDB00-meta_attributes">
+          <nvpair name="clone-max" value="2" id="msl_SAPHana_PRD_HDB00-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="msl_SAPHana_PRD_HDB00-meta_attributes-clone-node-max"/>
+          <nvpair name="interleave" value="true" id="msl_SAPHana_PRD_HDB00-meta_attributes-interleave"/>
+          <nvpair id="msl_SAPHana_PRD_HDB00-meta_attributes-maintenance" name="maintenance" value="true"/>
+        </meta_attributes>
+        <primitive id="rsc_SAPHana_PRD_HDB00" class="ocf" provider="suse" type="SAPHana">
+          <instance_attributes id="rsc_SAPHana_PRD_HDB00-instance_attributes">
+            <nvpair name="SID" value="PRD" id="rsc_SAPHana_PRD_HDB00-instance_attributes-SID"/>
+            <nvpair name="InstanceNumber" value="00" id="rsc_SAPHana_PRD_HDB00-instance_attributes-InstanceNumber"/>
+            <nvpair name="PREFER_SITE_TAKEOVER" value="true" id="rsc_SAPHana_PRD_HDB00-instance_attributes-PREFER_SITE_TAKEOVER"/>
+            <nvpair name="AUTOMATED_REGISTER" value="false" id="rsc_SAPHana_PRD_HDB00-instance_attributes-AUTOMATED_REGISTER"/>
+            <nvpair name="DUPLICATE_PRIMARY_TIMEOUT" value="7200" id="rsc_SAPHana_PRD_HDB00-instance_attributes-DUPLICATE_PRIMARY_TIMEOUT"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0" timeout="3600" id="rsc_SAPHana_PRD_HDB00-start-0"/>
+            <op name="stop" interval="0" timeout="3600" id="rsc_SAPHana_PRD_HDB00-stop-0"/>
+            <op name="promote" interval="0" timeout="3600" id="rsc_SAPHana_PRD_HDB00-promote-0"/>
+            <op name="monitor" interval="60" role="Master" timeout="700" id="rsc_SAPHana_PRD_HDB00-monitor-60"/>
+            <op name="monitor" interval="61" role="Slave" timeout="700" id="rsc_SAPHana_PRD_HDB00-monitor-61"/>
+          </operations>
+        </primitive>
+      </master>
+      <clone id="cln_SAPHanaTopology_PRD_HDB00">
+        <meta_attributes id="cln_SAPHanaTopology_PRD_HDB00-meta_attributes">
+          <nvpair name="is-managed" value="true" id="cln_SAPHanaTopology_PRD_HDB00-meta_attributes-is-managed"/>
+          <nvpair name="clone-node-max" value="1" id="cln_SAPHanaTopology_PRD_HDB00-meta_attributes-clone-node-max"/>
+          <nvpair name="interleave" value="true" id="cln_SAPHanaTopology_PRD_HDB00-meta_attributes-interleave"/>
+          <nvpair id="cln_SAPHanaTopology_PRD_HDB00-meta_attributes-maintenance" name="maintenance" value="true"/>
+        </meta_attributes>
+        <primitive id="rsc_SAPHanaTopology_PRD_HDB00" class="ocf" provider="suse" type="SAPHanaTopology">
+          <instance_attributes id="rsc_SAPHanaTopology_PRD_HDB00-instance_attributes">
+            <nvpair name="SID" value="PRD" id="rsc_SAPHanaTopology_PRD_HDB00-instance_attributes-SID"/>
+            <nvpair name="InstanceNumber" value="00" id="rsc_SAPHanaTopology_PRD_HDB00-instance_attributes-InstanceNumber"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="10" timeout="600" id="rsc_SAPHanaTopology_PRD_HDB00-monitor-10"/>
+            <op name="start" interval="0" timeout="600" id="rsc_SAPHanaTopology_PRD_HDB00-start-0"/>
+            <op name="stop" interval="0" timeout="300" id="rsc_SAPHanaTopology_PRD_HDB00-stop-0"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_colocation id="col_saphana_ip_PRD_HDB00" score="2000" rsc="rsc_ip_PRD_HDB00" rsc-role="Started" with-rsc="msl_SAPHana_PRD_HDB00" with-rsc-role="Master"/>
+      <rsc_order id="ord_SAPHana_PRD_HDB00" kind="Optional" first="cln_SAPHanaTopology_PRD_HDB00" then="msl_SAPHana_PRD_HDB00"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair name="resource-stickiness" value="1000" id="rsc-options-resource-stickiness"/>
+        <nvpair name="migration-threshold" value="5000" id="rsc-options-migration-threshold"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op-options">
+        <nvpair name="timeout" value="600" id="op-options-timeout"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status>
+    <node_state id="1084777733" uname="hana01" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1084777733">
+        <instance_attributes id="status-1084777733">
+          <nvpair id="status-1084777733-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1084777733-master-rsc_SAPHana_PRD_HDB00" name="master-rsc_SAPHana_PRD_HDB00" value="150"/>
+          <nvpair id="status-1084777733-hana_prd_version" name="hana_prd_version" value="2.00.010.00.1491294693"/>
+          <nvpair id="status-1084777733-hana_prd_roles" name="hana_prd_roles" value="4:P:master1:master:worker:master"/>
+          <nvpair id="status-1084777733-hana_prd_clone_state" name="hana_prd_clone_state" value="PROMOTED"/>
+          <nvpair id="status-1084777733-hana_prd_sync_state" name="hana_prd_sync_state" value="PRIM"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1084777733">
+        <lrm_resources>
+          <lrm_resource id="stonith-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="stonith-sbd_last_0" operation_key="stonith-sbd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="3:4:0:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;3:4:0:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana01" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1505828400" last-rc-change="1505828400" exec-time="1219" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_ip_PRD_HDB00" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_ip_PRD_HDB00_last_failure_0" operation_key="rsc_ip_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="2:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;2:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana01" call-id="57" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="49" queue-time="0" op-digest="6c4bb32fb31f32492bc0e9f88a7c74bf"/>
+            <lrm_rsc_op id="rsc_ip_PRD_HDB00_last_0" operation_key="rsc_ip_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="2:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;2:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana01" call-id="57" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="49" queue-time="0" op-digest="6c4bb32fb31f32492bc0e9f88a7c74bf"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHana_PRD_HDB00" type="SAPHana" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHana_PRD_HDB00_last_failure_0" operation_key="rsc_SAPHana_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="3:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;3:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana01" call-id="62" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="1992" queue-time="0" op-digest="da2f06e536e701a804e7b0a8c90a1916"/>
+            <lrm_rsc_op id="rsc_SAPHana_PRD_HDB00_last_0" operation_key="rsc_SAPHana_PRD_HDB00_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="9:141:0:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;9:141:0:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana01" call-id="70" rc-code="0" op-status="0" interval="0" last-run="1505921758" last-rc-change="1505921758" exec-time="1242" queue-time="1" op-digest="da2f06e536e701a804e7b0a8c90a1916"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHanaTopology_PRD_HDB00" type="SAPHanaTopology" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHanaTopology_PRD_HDB00_last_failure_0" operation_key="rsc_SAPHanaTopology_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="4:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;4:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana01" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="2294" queue-time="0" op-digest="2d8d79c3726afb91c33d406d5af79b53"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_PRD_HDB00_last_0" operation_key="rsc_SAPHanaTopology_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="4:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;4:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana01" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="2294" queue-time="0" op-digest="2d8d79c3726afb91c33d406d5af79b53"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1084777734" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" uname="hana02" join="member" expected="member">
+      <lrm id="1084777734">
+        <lrm_resources>
+          <lrm_resource id="stonith-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="stonith-sbd_last_0" operation_key="stonith-sbd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="1:2:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:7;1:2:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana02" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1505828349" last-rc-change="1505828349" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_ip_PRD_HDB00" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_ip_PRD_HDB00_last_0" operation_key="rsc_ip_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="5:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:7;5:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana02" call-id="49" rc-code="7" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="46" queue-time="0" op-digest="6c4bb32fb31f32492bc0e9f88a7c74bf"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHana_PRD_HDB00" type="SAPHana" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHana_PRD_HDB00_last_failure_0" operation_key="rsc_SAPHana_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="6:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;6:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana02" call-id="54" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="2420" queue-time="0" op-digest="da2f06e536e701a804e7b0a8c90a1916"/>
+            <lrm_rsc_op id="rsc_SAPHana_PRD_HDB00_last_0" operation_key="rsc_SAPHana_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="6:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;6:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana02" call-id="54" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="2420" queue-time="0" op-digest="da2f06e536e701a804e7b0a8c90a1916"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_SAPHanaTopology_PRD_HDB00" type="SAPHanaTopology" class="ocf" provider="suse">
+            <lrm_rsc_op id="rsc_SAPHanaTopology_PRD_HDB00_last_failure_0" operation_key="rsc_SAPHanaTopology_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="7:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;7:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana02" call-id="59" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="2438" queue-time="0" op-digest="2d8d79c3726afb91c33d406d5af79b53"/>
+            <lrm_rsc_op id="rsc_SAPHanaTopology_PRD_HDB00_last_0" operation_key="rsc_SAPHanaTopology_PRD_HDB00_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.13" transition-key="7:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" transition-magic="0:0;7:140:7:88c8a44f-5425-4f07-9fbc-adf41b4faaac" on_node="hana02" call-id="59" rc-code="0" op-status="0" interval="0" last-run="1505921756" last-rc-change="1505921756" exec-time="2438" queue-time="0" op-digest="2d8d79c3726afb91c33d406d5af79b53"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1084777734">
+        <instance_attributes id="status-1084777734">
+          <nvpair id="status-1084777734-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1084777734-hana_prd_version" name="hana_prd_version" value="2.00.010.00.1491294693"/>
+          <nvpair id="status-1084777734-hana_prd_clone_state" name="hana_prd_clone_state" value="DEMOTED"/>
+          <nvpair id="status-1084777734-master-rsc_SAPHana_PRD_HDB00" name="master-rsc_SAPHana_PRD_HDB00" value="100"/>
+          <nvpair id="status-1084777734-hana_prd_sync_state" name="hana_prd_sync_state" value="SOK"/>
+          <nvpair id="status-1084777734-hana_prd_roles" name="hana_prd_roles" value="4:S:master1:master:worker:master"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

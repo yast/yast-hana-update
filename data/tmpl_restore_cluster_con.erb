@@ -27,11 +27,11 @@
       </li>
       <ul>
         <li>
-          Perform System Replication takeover on site <code><%= remote.running_on.site %></code>.
-        </li>
-        <li>
           Migrate resource <code><%= group.vip.id %></code> to node
           <code><%= remote.running_on.name %></code>;
+        </li>
+        <li>
+          Perform System Replication takeover on site <code><%= remote.running_on.site %></code>.
         </li>
         <li>
           Register site <code><%= local.running_on.site %></code> as secondary to site

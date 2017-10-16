@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<crm_mon version="1.1.16">
+    <summary>
+        <stack type="corosync" />
+        <current_dc present="true" version="1.1.16-4.8-77ea74d" name="hana01" id="1084777733" with_quorum="true" />
+        <last_update time="Fri Sep 22 15:27:24 2017" />
+        <last_change time="Thu Sep 21 18:51:52 2017" user="root" client="crm_resource" origin="hana02" />
+        <nodes_configured number="2" expected_votes="unknown" />
+        <resources_configured number="6" disabled="0" blocked="0" />
+        <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" />
+    </summary>
+    <nodes>
+        <node name="hana01" id="1084777733" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member" />
+        <node name="hana02" id="1084777734" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member" />
+    </nodes>
+    <resources>
+        <resource id="stonith-sbd" resource_agent="stonith:external/sbd" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
+            <node name="hana01" id="1084777733" cached="false"/>
+        </resource>
+        <resource id="rsc_ip_PRD_HDB00" resource_agent="ocf::heartbeat:IPaddr2" role="Started" active="true" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1" >
+            <node name="hana01" id="1084777733" cached="false"/>
+        </resource>
+        <clone id="msl_SAPHana_PRD_HDB00" multi_state="true" unique="false" managed="false" failed="false" failure_ignored="false" >
+            <resource id="rsc_SAPHana_PRD_HDB00" resource_agent="ocf::suse:SAPHana" role="Master" active="true" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1" >
+                <node name="hana01" id="1084777733" cached="false"/>
+            </resource>
+            <resource id="rsc_SAPHana_PRD_HDB00" resource_agent="ocf::suse:SAPHana" role="Slave" active="true" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1" >
+                <node name="hana02" id="1084777734" cached="false"/>
+            </resource>
+        </clone>
+        <clone id="cln_SAPHanaTopology_PRD_HDB00" multi_state="false" unique="false" managed="false" failed="false" failure_ignored="false" >
+            <resource id="rsc_SAPHanaTopology_PRD_HDB00" resource_agent="ocf::suse:SAPHanaTopology" role="Started" active="true" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1" >
+                <node name="hana01" id="1084777733" cached="false"/>
+            </resource>
+            <resource id="rsc_SAPHanaTopology_PRD_HDB00" resource_agent="ocf::suse:SAPHanaTopology" role="Started" active="true" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1" >
+                <node name="hana02" id="1084777734" cached="false"/>
+            </resource>
+        </clone>
+    </resources>
+    <node_attributes>
+        <node name="hana01">
+            <attribute name="hana_prd_clone_state" value="PROMOTED" />
+            <attribute name="hana_prd_remoteHost" value="hana02" />
+            <attribute name="hana_prd_roles" value="4:P:master1:master:worker:master" />
+            <attribute name="hana_prd_site" value="NUREMBERG" />
+            <attribute name="hana_prd_srmode" value="sync" />
+            <attribute name="hana_prd_sync_state" value="PRIM" />
+            <attribute name="hana_prd_version" value="2.00.010.00.1491294693" />
+            <attribute name="hana_prd_vhost" value="hana01" />
+            <attribute name="lpa_prd_lpt" value="1506012703" />
+            <attribute name="master-rsc_SAPHana_PRD_HDB00" value="150" />
+        </node>
+        <node name="hana02">
+            <attribute name="hana_prd_clone_state" value="DEMOTED" />
+            <attribute name="hana_prd_op_mode" value="delta_datashipping" />
+            <attribute name="hana_prd_remoteHost" value="hana01" />
+            <attribute name="hana_prd_roles" value="4:S:master1:master:worker:master" />
+            <attribute name="hana_prd_site" value="PRAGUE" />
+            <attribute name="hana_prd_srmode" value="sync" />
+            <attribute name="hana_prd_sync_state" value="SOK" />
+            <attribute name="hana_prd_version" value="2.00.010.00.1491294693" />
+            <attribute name="hana_prd_vhost" value="hana02" />
+            <attribute name="lpa_prd_lpt" value="30" />
+            <attribute name="master-rsc_SAPHana_PRD_HDB00" value="100" />
+        </node>
+    </node_attributes>
+    <node_history>
+        <node name="hana01">
+            <resource_history id="stonith-sbd" orphan="false" migration-threshold="5000">
+                <operation_history call="20" task="start" last-rc-change="Tue Sep 19 15:40:00 2017" last-run="Tue Sep 19 15:40:00 2017" exec-time="1219ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_ip_PRD_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="57" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="49ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="57" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="49ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="62" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="1992ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="70" task="promote" last-rc-change="Wed Sep 20 17:35:58 2017" last-run="Wed Sep 20 17:35:58 2017" exec-time="1242ms" queue-time="1ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_SAPHanaTopology_PRD_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="67" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="2294ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="67" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="2294ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+        </node>
+        <node name="hana02">
+            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="54" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="2420ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="54" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="2420ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_SAPHanaTopology_PRD_HDB00" orphan="false" migration-threshold="5000">
+                <operation_history call="59" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="2438ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="59" task="probe" last-rc-change="Wed Sep 20 17:35:56 2017" last-run="Wed Sep 20 17:35:56 2017" exec-time="2438ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+        </node>
+    </node_history>
+    <tickets>
+    </tickets>
+    <bans>
+    </bans>
+</crm_mon>
