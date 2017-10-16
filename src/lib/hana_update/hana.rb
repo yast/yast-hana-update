@@ -177,17 +177,17 @@ module HANAUpdater
       log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{remote_site}, #{opts})"
       # TODO: apparently, the error is not fatal an can be recovered automatically by HANA
       user_name = "#{system_id.downcase}adm"
-      rc_explanation = {10 => 'No HANA SR', 11 => 'Fatal Error', 12 => 'Unknown',
+      rc_text = {10 => 'No HANA SR', 11 => 'Fatal Error', 12 => 'Unknown',
                         13 => 'Initializing', 14 => 'Syncing', 15 => 'Active'}
       command = 'HDBSettings.sh', 'systemReplicationStatus.py', "--site=#{remote_site}"
       out, status = wrap_system_call(command, user_name: user_name, node: opts[:node])
       # # TODO: shall we return simply TRUE here or the actual exit status?
       NodeLogger.log_status(status.exitstatus == 15,
                             'SAP HANA System Replication status: instances are in sync (rc=15)',
-                            "SAP HANA System Replication status: #{rc_explanation[status]} (rc=#{status.exitstatus})",
+                            "SAP HANA System Replication status: #{rc_text[status]} (rc=#{status.exitstatus})",
                             out
       )
-      return status.exitstatus, rc_explanation[status.exitstatus]
+      return status.exitstatus, rc_text[status.exitstatus]
     end
 
     # Perform HANA SR take-over to the secondary instance

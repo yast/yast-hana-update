@@ -18,6 +18,5 @@ describe HANAUpdater::Configuration do
       conf.select_hana_system('ZZZ')
       expect(conf.system).to be_nil
     end
-
   end
 end

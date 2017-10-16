@@ -44,8 +44,16 @@ def test_file(name)
   File.read("#{File.dirname(__FILE__)}/data/#{name}")
 end
 
+def expect_syscall(opts={type: :status})
+  raise ArgumentError, 'You have to specify :cmd to test_syscall' if opts[:cmd].nil?
+  raise ArgumentError, ':type should be either :status or :output' unless [:status, :output].include? opts[:type]
+  method = (opts[:type] == :status) ? :popen3 : :capture2e
+  expect(Open3).to receive(method).with(*opts[:cmd]).and_return([opts[:output], double('ExitStatus', exitstatus: opts[:rc])])
+end
+
 class Constants
   attr_reader :system, :local, :remote, :replication_modes, :operation_modes
+
   def initialize
     @system = OpenStruct.new(id: 'PRD', instance: '00', user: 'prdadm')
     @local = OpenStruct.new(host_name: 'hana01', site_name: 'NUREMBERG')
