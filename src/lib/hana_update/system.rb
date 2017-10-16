@@ -72,8 +72,8 @@ module HANAUpdater
     # @param action [Symbol] action to force (:start, :stop, :check)
     # @param opts [Hash] {node: :local} or {node: 'uname01'}
     def resource_force(resource_id, action, opts={node: :local})
-      raise RuntimeError, "#{self.class}.#{__callee__}: Action #{action} is not supported" unless [:start, :stop, :check].include?(action)
-      cmd = '/usr/sbin/crm_resource', "--force-#{action.to_s}", '--resource', resource_id
+      raise ArgumentError, "#{self.class}.#{__callee__}: Action #{action} is not supported" unless [:start, :stop, :check].include?(action)
+      cmd = 'crm_resource', "--force-#{action.to_s}", '--resource', resource_id
       if opts[:node] == :local
         log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} ---"
         out, status = exec_get_output(*cmd)

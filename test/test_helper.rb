@@ -47,12 +47,21 @@ end
 def expect_syscall(opts={type: :status})
   raise ArgumentError, 'You have to specify :cmd to test_syscall' if opts[:cmd].nil?
   raise ArgumentError, ':type should be either :status or :output' unless [:status, :output].include? opts[:type]
-  method = (opts[:type] == :status) ? :popen3 : :capture2e
-  expect(Open3).to receive(method).with(*opts[:cmd]).and_return([opts[:output], double('ExitStatus', exitstatus: opts[:rc])])
+  case opts[:type]
+    when :status
+      method = :popen3
+      ret = double('ExitStatus', exitstatus: opts[:rc])
+    when :output
+      method = :capture2e
+      ret = [opts[:output] || '', double('ExitStatus', exitstatus: opts[:rc])]
+    else
+      raise ArgumentError
+  end
+  expect(Open3).to receive(method).with(*opts[:cmd]).and_return(ret)
 end
 
 class Constants
-  attr_reader :system, :local, :remote, :replication_modes, :operation_modes
+  attr_reader :system, :local, :remote, :replication_modes, :operation_modes, :resources
 
   def initialize
     @system = OpenStruct.new(id: 'PRD', instance: '00', user: 'prdadm')
@@ -62,5 +71,6 @@ class Constants
     # @operation_modes = {delta: 'delta_datashipping', log: 'logreplay', logr: 'logreplay_readaccess'}
     @replication_modes = %w(syncmem sync async)
     # @replication_modes = {sm: 'syncmem', s: 'sync', a: 'async'}
+    @resources = {msl: 'msl_SAPHana_PRD_HDB00', cln: 'cln_SAPHanaTopology_PRD_HDB00', vip: 'rsc_ip_PRD_HDB00'}
   end
 end

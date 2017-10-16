@@ -67,7 +67,7 @@ module HANAUpdater
   class Configuration
     include Yast::Logger
     attr_reader :no_validators, :system
-    attr_accessor :nfs_share, :hana_instance, :hana_system, :revert_cluster
+    attr_accessor :nfs_share, :hana_instance, :hana_system, :revert_sync_direction
     attr_reader :nfs
 
     def initialize
@@ -75,7 +75,7 @@ module HANAUpdater
       @nfs = NFSSettings.new
       @hana_system_list = []
       @system = nil
-      @revert_cluster = false
+      @revert_sync_direction = false  # revert synchronization direction to the initial state
     end
 
     def debug=(value)

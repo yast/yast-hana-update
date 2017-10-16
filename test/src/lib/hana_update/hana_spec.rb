@@ -210,9 +210,6 @@ describe HANAUpdater::HanaClass do
                        output: '',
                        rc: 0
         )
-        # expect(HANAUpdater::SSH).to receive(:rexec_wait_get_output)
-        #                                 .with(const.remote.host_name, "su -lc \"hdbnsutil -sr_enable --name=#{const.local.site_name}\" #{const.system.user}")
-        #                                 .and_return(['', good_exit])
         result = HANAUpdater::Hana.sr_enable_primary(const.system.id, const.local.site_name, node: const.remote.host_name)
         expect(result).to eq true
       end
@@ -227,9 +224,6 @@ describe HANAUpdater::HanaClass do
                        output: '',
                        rc: 0
         )
-        # expect(HANAUpdater::Hana).to receive(:su_exec_get_output)
-        #                                  .with(const.system.user, 'hdbnsutil', '-sr_disable')
-        #                                  .and_return(['', good_exit])
         result = HANAUpdater::Hana.sr_disable_primary(const.system.id)
         expect(result).to eq true
         expect_syscall(type: :output,
@@ -237,9 +231,6 @@ describe HANAUpdater::HanaClass do
                        output: '',
                        rc: 0
         )
-        # expect(HANAUpdater::Hana).to receive(:su_exec_get_output)
-        #                                  .with(const.system.user, 'hdbnsutil', '-sr_disable')
-        #                                  .and_return(['', good_exit])
         result = HANAUpdater::Hana.sr_disable_primary(const.system.id, node: :local)
         expect(result).to eq true
       end
@@ -341,12 +332,63 @@ describe HANAUpdater::HanaClass do
   end
 
   describe '#sr_check_status' do
-    # TODO
+    context 'on local node' do
+      it 'checks the SR status' do
+        expect_syscall(type: :output,
+                       cmd: ['su', '-lc',
+                             "HDBSettings.sh systemReplicationStatus.py --site=#{const.remote.site_name}",
+                             const.system.user],
+                       output: '',
+                       rc: 15
+        )
+        rc, explanation = HANAUpdater::Hana.sr_check_status(const.system.id, const.remote.site_name)
+        expect(rc).to eq 15
+        expect(explanation).to eq 'Active'
+      end
+    end
+
+    context 'on remote node' do
+      it 'checks the SR status' do
+        expect_syscall(type: :output,
+                       cmd: ['ssh', '-o', 'StrictHostKeyChecking=no', "root@#{const.remote.host_name}", 'su', '-lc',
+                             "\"HDBSettings.sh systemReplicationStatus.py --site=#{const.remote.site_name}\"",
+                             const.system.user],
+                       output: '',
+                       rc: 15
+        )
+        rc, explanation = HANAUpdater::Hana.sr_check_status(const.system.id, const.remote.site_name,
+                                                            node: const.remote.host_name)
+        expect(rc).to eq 15
+        expect(explanation).to eq 'Active'
+      end
+    end
   end
 
   describe '#sr_takeover' do
-    # TODO
+    context 'on local node' do
+      it 'takes over to the local instance' do
+        expect_syscall(type: :output,
+                       cmd: ['su', '-lc',
+                             "hdbnsutil -sr_takeover",
+                             const.system.user],
+                       output: '',
+                       rc: 0
+        )
+        HANAUpdater::Hana.sr_takeover(const.system.id)
+      end
+    end
+
+    context 'on remote node' do
+      it 'takes over to the local instance' do
+        expect_syscall(type: :output,
+                       cmd: ['ssh', '-o', 'StrictHostKeyChecking=no', "root@#{const.remote.host_name}", 'su', '-lc',
+                             "\"hdbnsutil -sr_takeover\"",
+                             const.system.user],
+                       output: '',
+                       rc: 0
+        )
+        HANAUpdater::Hana.sr_takeover(const.system.id, node: const.remote.host_name)
+      end
+    end
   end
-
-
 end

@@ -24,7 +24,7 @@ require 'yast'
 
 module HANAUpdater
   module Wizard
-    # Simple RichText page
+    # Cluster Update Page
     class UpdatePlanPage < BaseWizardPage
       attr_accessor :part
       def initialize(config, part)
@@ -75,8 +75,8 @@ module HANAUpdater
 
       def handle_user_input(input, event)
         case input
-          when 'revert_cluster_toggle'
-            model.revert_cluster = !model.revert_cluster
+          when 'revert_sync_direction'
+            model.revert_sync_direction = !model.revert_sync_direction
             content, _help = render
             set_value(:rtext, content)
           else

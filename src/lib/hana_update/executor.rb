@@ -148,8 +148,9 @@ module HANAUpdater
         out, status = HANAUpdater::System.resource_force(sap_sys.vip.id, :start, node: :local)
         log.info "--- #{self.class}.#{__callee__} : start vIP on local node #{local_node}: rc=#{status.exitstatus}, out=#{out}"
       end
-      log.warn "Disabling replication between nodes #{remote_node} and #{local_node}"
+      log.warn "--- Disabling replication between nodes #{remote_node} and #{local_node}"
       Yast::Popup.Feedback('Please wait', "Disabling replication between nodes #{remote_node} and #{local_node}") do
+        # TODO: log output!
         HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid, sap_sys.master.remote.running_on.site, node: :local)
         status, _out = HANAUpdater::Hana.sr_disable_primary(sap_sys.hana_sid, node: :local)
         log.info "--- #{self.class}.#{__callee__} : disable system replication on source site #{remote_node}: rc=#{status.exitstatus}"
@@ -180,7 +181,12 @@ module HANAUpdater
     # Restore original cluster state
     # @param config
     def restore_cluster(config)
-      # TODO: implement
+      sap_sys = config.system
+      remote_node = sap_sys.master.remote.running_on.name
+      log.warn "--- Disabling replication on remote node #{remote_node} ---"
+      Yast::Popup.Feedback('Please wait', "Disabling replication on source system #{remote_node}") do
+
+      end
       # enable replication on local
       # register remote as secondary to local
       # wait for sync

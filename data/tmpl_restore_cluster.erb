@@ -26,10 +26,10 @@
     <code><%= remote.running_on.site %></code>
     and wait until the secondary instance is synchronized.
   </li>
-  <% if model.revert_cluster %>
+  <% if model.revert_sync_direction %>
       <li>
         System Replication will be reverted to its original state.
-        [<a style="color:#00843E;font-weight:bold" href="revert_cluster_toggle">Do not reverse</a>]<br/>
+        [<a style="color:#00843E;font-weight:bold" href="revert_sync_direction">Do not reverse</a>]<br/>
         Site <code><%= remote.running_on.site %></code> will become the new primary instance.
       </li>
       <ul>
@@ -49,7 +49,7 @@
   <% else %>
       <li>
         Synchronization will not be reverted to its original state.
-        [<a style="color:#00843E;font-weight:bold" href="revert_cluster_toggle">Reverse</a>]<br/>
+        [<a style="color:#00843E;font-weight:bold" href="revert_sync_direction">Reverse</a>]<br/>
         Site <code><%= local.running_on.site %></code> will stay the new primary instance.
       </li>
   <% end %>
