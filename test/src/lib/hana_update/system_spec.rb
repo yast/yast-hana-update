@@ -136,8 +136,8 @@ describe HANAUpdater::SystemClass do
             output: '',
             rc: 0
         )
-        _, status = HANAUpdater::System.mount_nfs('host_name:/path/to/share')
-        expect(status).to eq 0
+        local_path = HANAUpdater::System.mount_nfs('host_name:/path/to/share')
+        expect(local_path).to eq '/tmp/hana1'
       end
     end
 
@@ -157,8 +157,8 @@ describe HANAUpdater::SystemClass do
             output: "/tmp/hana1\n",
             rc: 0
         )
-        _, status = HANAUpdater::System.mount_nfs('host_name:/path/to/share', node: const.remote.host_name)
-        expect(status).to eq 0
+        local_path = HANAUpdater::System.mount_nfs('host_name:/path/to/share', node: const.remote.host_name)
+        expect(local_path).to eq '/tmp/hana1'
       end
     end
   end
@@ -181,8 +181,8 @@ describe HANAUpdater::SystemClass do
             output: '',
             rc: 0
         )
-        _, status = HANAUpdater::System.recursive_copy(source_path, destination_path, const.system.id)
-        expect(status).to eq 0
+        status = HANAUpdater::System.recursive_copy(source_path, destination_path, const.system.id)
+        expect(status).to eq true
       end
     end
 
@@ -209,9 +209,9 @@ describe HANAUpdater::SystemClass do
             output: '',
             rc: 0
         )
-        _, status = HANAUpdater::System.recursive_copy(source_path, destination_path,
+        status = HANAUpdater::System.recursive_copy(source_path, destination_path,
                                                        const.system.id, node: const.remote.host_name)
-        expect(status).to eq 0
+        expect(status).to eq true
       end
     end
   end
