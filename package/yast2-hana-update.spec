@@ -17,7 +17,7 @@
 
 
 Name:           yast2-hana-update
-Version:        0.9.0
+Version:        1.0.0
 Release:        0
 BuildArch:      noarch
 
@@ -30,9 +30,9 @@ Requires:       yast2-ruby-bindings
 Requires:       xdg-utils
 # for handling the SSH client
 Requires:       SAPHanaSR
+Requires:       crmsh
 Requires:       expect
 Requires:       openssh
-Requires:       crmsh
 
 BuildRequires:  update-desktop-files
 BuildRequires:  yast2

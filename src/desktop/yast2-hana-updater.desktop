@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=HANA Updater
+Name=SUSE HANA Cluster Update
 GenericName=SUSE HANA Cluster Update
 Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-High_Availability;
 Icon=yast-high_availability

@@ -1,2 +1,4 @@
 package/*.tar.*
 doc/*.html
+.idea
+**/coverage

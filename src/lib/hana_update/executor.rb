@@ -53,7 +53,7 @@ module HANAUpdater
       sap_sys = config.system
       # put resources to maintenance mode
       log.warn '--- Setting resources to maintenance mode ---'
-      Yast::Popup.Feedback('Please wait', 'Setting resources to maintenance mode') do
+      Yast::Popup.Feedback('Please wait', 'Enabling maintenance mode for cluster resources') do
         HANAUpdater::System.resource_maintenance(sap_sys.master.id, :on)
         HANAUpdater::System.resource_maintenance(sap_sys.clone.id, :on)
         HANAUpdater::System.resource_maintenance(sap_sys.vip.id, :on)
@@ -245,7 +245,7 @@ module HANAUpdater
         sleep 5
       end
       log.warn '--- Setting resources to maintenance mode ---'
-      Yast::Popup.Feedback('Please wait', 'Setting resources to maintenance mode') do
+      Yast::Popup.Feedback('Please wait', 'Disabling maintenance mode for cluster resources') do
         HANAUpdater::System.resource_maintenance(sap_sys.master.id, :off)
         HANAUpdater::System.resource_maintenance(sap_sys.clone.id, :off)
         HANAUpdater::System.resource_maintenance(sap_sys.vip.id, :off)

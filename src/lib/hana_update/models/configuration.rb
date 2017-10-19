@@ -51,6 +51,8 @@ module HANAUpdater
 
     def validate(mode)
       errors = []
+      errors << 'NFS share path cannot be empty' if @source.empty? and @should_mount
+      errors << 'Copy path cannot be empty' if @copy_path.empty? and @copy_medium
       if @source.start_with? 'nfs:'
         errors << 'NFS URLs are not supported. Please use the following format instead: "servername:/path/to/share".'
       end
