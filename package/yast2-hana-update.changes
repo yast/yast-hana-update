@@ -2,4 +2,5 @@
 Thu Oct 19 14:56:02 UTC 2017 - imanyugin@suse.com
 
 - Version 1.0.0
-- FATE#320368: Allow easy update of SAP HANA software when operated within a SUSE HA cluster
+- Initial release, fate#320368, bsc#1064732
+
