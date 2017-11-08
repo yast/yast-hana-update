@@ -79,7 +79,7 @@ module HANAUpdater
       log.info "--- called #{self.class}.#{__callee__}(#{host}, #{cmd}) ---"
       out, ret = exec_get_output('ssh', '-o', 'StrictHostKeyChecking=no', "root@#{host}", *cmd)
       log.debug "--- #{self.class}.#{__callee__}: #{host} returned #{ret}, #{out} ---"
-      return out, ret
+      [out, ret]
     end
 
     private
@@ -87,31 +87,32 @@ module HANAUpdater
     # Check the status and react accordingly
     def check_status(stat, host)
       case stat.exitstatus
-        when 0
-          return true
-        when 5 # timeout
-          raise SSHException, "Could not connect to #{host}: Connection time out"
-        when 10
-          raise SSHAuthException, "Could not execute a command on the remote node #{host}: Password is required"
-        when 11
-          raise SSHPassException, "Could not execute a command on the remote node #{host}: Password is incorrect"
-        when 51
-          raise SSHException, "Could not connect to #{host}: Remote host reset the connection"
-        when 52
-          raise SSHException, "Could not connect to #{host}: Cannot resolve the host"
-        when 53
-          raise SSHException, "Could not connect to #{host}: No route to host"
-        when 54
-          raise SSHException, "Could not connect to #{host}: Connection refused"
-        when 55
-          raise SSHException, "Could not connect to #{host}: Unknown connection error."
-        else
-          log.error "Could not connect to #{host}: check_ssh returned rc=#{stat.exitstatus}"
-          raise SSHException, "Could not connect to #{host} (rc=#{stat.exitstatus})."
+      when 0
+        return true
+      when 5 # timeout
+        raise SSHException, "Could not connect to #{host}: Connection time out"
+      when 10
+        raise SSHAuthException, "Could not execute a command on the remote node #{host}:"\
+                                " Password is required"
+      when 11
+        raise SSHPassException, "Could not execute a command on the remote node #{host}:"\
+                                " Password is incorrect"
+      when 51
+        raise SSHException, "Could not connect to #{host}: Remote host reset the connection"
+      when 52
+        raise SSHException, "Could not connect to #{host}: Cannot resolve the host"
+      when 53
+        raise SSHException, "Could not connect to #{host}: No route to host"
+      when 54
+        raise SSHException, "Could not connect to #{host}: Connection refused"
+      when 55
+        raise SSHException, "Could not connect to #{host}: Unknown connection error."
+      else
+        log.error "Could not connect to #{host}: check_ssh returned rc=#{stat.exitstatus}"
+        raise SSHException, "Could not connect to #{host} (rc=#{stat.exitstatus})."
       end
     end
   end
 
   SSH = SSHClass.instance
-
 end

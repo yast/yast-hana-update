@@ -27,6 +27,7 @@ require 'hana_update/ssh'
 require 'hana_update/exceptions'
 
 module HANAUpdater
+  # Class holding settings for the NFS share
   class NFSSettings
     attr_writer :should_mount, :copy_medium
     attr_accessor :source, :copy_path, :mount_path
@@ -52,7 +53,8 @@ module HANAUpdater
       errors << 'NFS share path cannot be empty' if @source.empty? && @should_mount
       errors << 'Copy path cannot be empty' if @copy_path.empty? && @copy_medium
       if @source.start_with? 'nfs:'
-        errors << 'NFS URLs are not supported. Please use the following format instead: "servername:/path/to/share".'
+        errors << 'NFS URLs are not supported. Please use the following format instead:'\
+                  ' "servername:/path/to/share".'
       elsif !@source.include? ':'
         errors << 'Please use the following path format: "servername:/path/to/share".'
       end
@@ -95,7 +97,9 @@ module HANAUpdater
     end
 
     def hana_sids
-      l = HANAUpdater::Cluster.groups.map { |g| [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"] }
+      l = HANAUpdater::Cluster.groups.map do |g|
+        [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"]
+      end
       HANAUpdater::Helpers.itemize_list(l, false)
     end
 
@@ -115,8 +119,8 @@ module HANAUpdater
           host_name += ' (this host)' if prim.running_on.localhost?
           site_name = prim.running_on.instance_attributes['site']
           node = prim.running_on.localhost? ? :local : host_name
-          version = prim.running_on.transient_attributes['version'] || HANAUpdater::Hana.version(group.hana_sid,
-            node: node)
+          version = prim.running_on.transient_attributes['version'] ||
+            HANAUpdater::Hana.version(group.hana_sid, node: node)
         end
         rsc_role = prim.role
         rsc_role += ' (unmanaged)' unless prim.managed?
@@ -163,10 +167,12 @@ module HANAUpdater
       end
       if !@system.all_managed?
         errors << 'Some resources belonging to the SAP HANA SR group are not managed'
-        errors << 'This wizard can only handle active (i.e., running and managed) SAP HANA instances'
+        errors << 'This wizard can only handle active (i.e., running and managed)'\
+                  ' SAP HANA instances'
       elsif !@system.all_running?
         errors << 'Some resources belonging to the SAP HANA SR group are not started'
-        errors << 'This wizard can only handle active (i.e., running and managed) SAP HANA instances'
+        errors << 'This wizard can only handle active (i.e., running and managed)'\
+                  ' SAP HANA instances'
       elsif @system.master.local.role != 'Slave'
         errors << 'This wizard has to be run on the secondary SAP HANA node'
       end

@@ -21,7 +21,7 @@
 
 module HANAUpdater
   module Exceptions
-
+    # Base Exception class
     class BaseException < StandardError
     end
 
@@ -33,7 +33,7 @@ module HANAUpdater
       CRITICAL = 4
 
       def initialize(msg, level = ERROR)
-        prefix = {2 => 'Warning', 3 => 'Error', 4 => 'Critical'}.fetch(level, 'Info')
+        prefix = { 2 => 'Warning', 3 => 'Error', 4 => 'Critical' }.fetch(level, 'Info')
         my_msg = "#{prefix}: #{msg}"
         super(my_msg)
         @level = level
@@ -50,6 +50,7 @@ module HANAUpdater
       end
     end
 
+    # Exception that passes the ERB renderer error text
     class TemplateRenderException < StandardError
       attr_accessor :renderer_message
     end

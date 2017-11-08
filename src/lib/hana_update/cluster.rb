@@ -80,7 +80,8 @@ module HANAUpdater
     attr_reader :mon_attr, :instance_attributes, :id, :running_on
 
     def initialize(sid, mon_xml_node, cib_xml_node)
-      log.debug "--- #{self.class}.#{__callee__}(sid=#{sid},mon_xml_node=...,cib_xml_node=...,) --- "
+      log.debug "--- #{self.class}.#{__callee__}"\
+                "(sid=#{sid},mon_xml_node=...,cib_xml_node=...,) --- "
       @mon_attr = Hash[mon_xml_node.attributes.map { |k, v| [k, v] }]
       @id = @mon_attr['id']
       # only primitives can be running
@@ -115,7 +116,8 @@ module HANAUpdater
 
     def initialize(sid, mon_xml_node, cib_xml_node)
       super
-      log.debug "--- #{self.class}.#{__callee__}(sid=#{sid},mon_xml_node=...,cib_xml_node=...,) --- "
+      log.debug "--- #{self.class}.#{__callee__}"\
+                "(sid=#{sid},mon_xml_node=...,cib_xml_node=...,) --- "
       @primitives = mon_xml_node.get_elements('resource').map do |rsc|
         primitive_cib = cib_xml_node.get_elements('primitive').first
         PrmResource.new(sid, rsc, primitive_cib)
@@ -136,7 +138,8 @@ module HANAUpdater
   class MslResource < ClnResource
     def initialize(sid, mon_xml_node, cib_xml_node)
       super
-      log.debug "--- #{self.class}.#{__callee__}(sid=#{sid},mon_xml_node=...,cib_xml_node=...,) --- "
+      log.debug "--- #{self.class}.#{__callee__}"\
+                "(sid=#{sid},mon_xml_node=...,cib_xml_node=...,) --- "
     end
 
     def master
@@ -165,18 +168,21 @@ module HANAUpdater
       cln_cib = REXML::XPath.first(cib_xml,
         '//cib/configuration/resources/clone[./primitive/instance_attributes'\
              '/nvpair[@name="SID" and @value=$sid]]', nil, 'sid' => sid)
-      raise Exceptions::ClusterConfigurationError, "Could not find the SAPHanaTopology resource agent for SID #{sid}" if cln_cib.nil?
+      raise Exceptions::ClusterConfigurationError,
+        "Could not find the SAPHanaTopology resource agent for SID #{sid}" if cln_cib.nil?
       cln_mon = REXML::XPath.first(mon_xml,
         '//crm_mon/resources/clone[@id = $sid]',
         nil, 'sid' => cln_cib.attributes['id'])
-      raise Exceptions::ClusterConfigurationError, "Could not find the SAPHanaTopology resource agent for SID #{sid}" if cln_mon.nil?
+      raise Exceptions::ClusterConfigurationError,
+        "Could not find the SAPHanaTopology resource agent for SID #{sid}" if cln_mon.nil?
       @clone = ClnResource.new(sid, cln_mon, cln_cib)
       @master = MslResource.new(sid, msl_mon, msl_cib)
       vip_colocation = REXML::XPath.first(cib_xml,
         '/cib/configuration/constraints/rsc_colocation[@with-rsc=$msl_id '\
               'and @with-rsc-role="Master"]',
         nil, 'msl_id' => msl_mon.attributes['id'])
-      raise Exceptions::ClusterConfigurationError, "Could not find colocation rule for virtual IP" if vip_colocation.nil?
+      raise Exceptions::ClusterConfigurationError,
+        "Could not find colocation rule for virtual IP" if vip_colocation.nil?
       vip_id = vip_colocation.attributes['rsc']
       vip_mon = REXML::XPath.first(mon_xml,
         '//crm_mon/resources/resource[@id=$vip_id]',
@@ -184,7 +190,8 @@ module HANAUpdater
       vip_cib = REXML::XPath.first(cib_xml,
         '//cib/configuration/resources/primitive[@id=$vip_id]',
         nil, 'vip_id' => vip_id)
-      raise Exceptions::ClusterConfigurationError, "Could not find virtual IP resource" if vip_cib.nil? || vip_mon.nil?
+      raise Exceptions::ClusterConfigurationError,
+        "Could not find virtual IP resource" if vip_cib.nil? || vip_mon.nil?
       @vip = PrmResource.new(sid, vip_mon, vip_cib)
       @hana_sid = sid
       @hana_inst = @master.primitives.first.instance_attributes['InstanceNumber']
@@ -196,7 +203,7 @@ module HANAUpdater
 
     def all_running?
       [!@vip.running_on.nil?, *@master.primitives.map { |p| !p.running_on.nil? },
-        *@clone.primitives.map { |p| !p.running_on.nil? }].all?
+       *@clone.primitives.map { |p| !p.running_on.nil? }].all?
     end
   end
 
@@ -223,13 +230,14 @@ module HANAUpdater
         '//crm_mon/resources/clone[./resource'\
               '[@resource_agent=$ra_type and @orphaned="false"]]',
         {}, 'ra_type' => MSL_RESOURCE_TYPE)
-      raise Exceptions::ClusterConfigurationError, "Could not find any SAP HANA resources in the cluster" if msl_mons.empty?
+      raise Exceptions::ClusterConfigurationError,
+        "Could not find any SAP HANA resources in the cluster" if msl_mons.empty?
       log.error "--- #{self.class}.#{__callee__}: msl_mons=#{msl_mons}"
       @groups = msl_mons.map do |msl_mon|
         begin
           ResourceGroup.new(crm_mon, cib_status, msl_mon)
         rescue Exceptions::ClusterConfigurationError => e
-          msg = "Error processing resource #{msl_mon.attributes['id']}, it will be skipped"
+          msg = "Error processing resource #{msl_mon.attributes["id"]}, it will be skipped"
           @warnings << msg
           log.error "--- #{self.class}.#{__callee__}: #{msg}"
           msg = "Exception was: #{e}"
@@ -258,18 +266,20 @@ module HANAUpdater
     private
 
     # Read and parse output of crm_mon
-    def get_crm_mon
+    def get_crm_mon # rubocop:disable Style/AccessorMethodName
       log.debug "--- #{self.class}.#{__callee__} --- "
       out, status = exec_get_output('crm_mon', '-r', '--as-xml')
-      raise Exceptions::ClusterConfigurationError, "Could not connect to cluster: #{out}" if status.exitstatus != 0
+      raise Exceptions::ClusterConfigurationError,
+        "Could not connect to cluster: #{out}" if status.exitstatus != 0
       REXML::Document.new(out)
     end
 
     # Read and parse output of cibadmin -Ql
-    def get_cib
+    def get_cib # rubocop:disable Style/AccessorMethodName
       log.debug "--- #{self.class}.#{__callee__} --- "
       out, status = exec_get_output('cibadmin', '-Q', '-l')
-      raise Exceptions::ClusterConfigurationError, "Could not connect to cluster: #{out}" if status.exitstatus != 0
+      raise Exceptions::ClusterConfigurationError,
+        "Could not connect to cluster: #{out}" if status.exitstatus != 0
       REXML::Document.new(out)
     end
   end

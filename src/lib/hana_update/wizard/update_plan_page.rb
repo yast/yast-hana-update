@@ -33,15 +33,16 @@ module HANAUpdater
       end
 
       def set_contents
-        step_no = {local: 3, remote: 5, restore: 7}[@part] || '?'
-        short_descr = {local: 'local node', remote: 'remote node', restore: 'restore cluster state'}[@part] || '?'
+        step_no = { local: 3, remote: 5, restore: 7 }[@part] || '?'
+        short_descr = { local: 'local node', remote: 'remote node',
+          restore: 'restore cluster state' }[@part] || '?'
         content, help = render
         base_rich_text(
-            "Step #{step_no} of 7. Update plan (#{short_descr})",
-            content,
-            help,
-            true,
-            true
+          "Step #{step_no} of 7. Update plan (#{short_descr})",
+          content,
+          help,
+          true,
+          true
         )
         Yast::Wizard.SetBackButton(:skip, '&Skip')
       end
@@ -56,12 +57,12 @@ module HANAUpdater
         local = group.master.local
         remote = group.master.remote
         file_name = case @part
-                      when :local, :remote
-                        'update_plan'
-                      when :restore
-                        'restore_cluster'
-                      else
-                        raise ArgumentError, "Unknown part #{@part}"
+                    when :local, :remote
+                      'update_plan'
+                    when :restore
+                      'restore_cluster'
+                    else
+                      raise ArgumentError, "Unknown part #{@part}"
                     end
         begin
           content = HANAUpdater::Helpers.render_template(file_name, binding)
@@ -70,17 +71,18 @@ module HANAUpdater
           abort
         end
         help = Helpers.load_help('update_plan')
-        return content, help
+        [content, help]
       end
 
       def handle_user_input(input, event)
         case input
-          when 'revert_sync_direction'
-            model.revert_sync_direction = !model.revert_sync_direction
-            content, _help = render
-            set_value(:rtext, content)
-          else
-            log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input}, event=#{event} ---"
+        when 'revert_sync_direction'
+          model.revert_sync_direction = !model.revert_sync_direction
+          content, _help = render
+          set_value(:rtext, content)
+        else
+          log.warn "--- #{self.class}.#{__callee__}:"\
+                   " Unexpected user input=#{input}, event=#{event} ---"
         end
       end
     end

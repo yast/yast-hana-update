@@ -40,64 +40,71 @@ module HANAUpdater
       log.debug "--- #{self.class}.#{__callee__} --- "
     end
 
-    def resource_maintenance(resource_id, action=:on)
-      raise RuntimeError, "#{self.class}.#{__callee__}: Action #{action} is not supported" unless [:on, :off].include?(action)
+    # Set resource maintenance on or off
+    # @returns stdout and stderr in one string, process exit status
+    def resource_maintenance(resource_id, action = :on)
+      raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
+        unless [:on, :off].include?(action)
       cmd = 'crm', 'resource', 'maintenance', resource_id, action.to_s
-      out, status = exec_get_output(*cmd)
+      exec_get_output(*cmd)
     end
 
+    # Cleanup resource errors
+    # @returns stdout and stderr in one string, process exit status
     def resource_cleanup(resource_id)
       cmd = 'crm', 'resource', 'cleanup', resource_id
-      out, status = exec_get_output(*cmd)
+      exec_get_output(*cmd)
     end
 
+    # Execute SAPHanaSR-showAttr and parse its output
     def saphanasr_attributes(sid)
       cmd = 'SAPHanaSR-showAttr', "--sid=#{sid}"
       out, status = exec_get_output(*cmd)
       return nil if status.exitstatus != 0
       lines = []
       start = false
-      out.split("\n").each_with_index do |line, ix|
-        next unless start or line.start_with?('Hosts')
+      out.split("\n").each_with_index do |line, _ix|
+        next unless start || line.start_with?('Hosts')
         start = true
-        unless /\A-+\Z/.match(line)
+        unless /\A-+\Z/ =~ line # rubocop:disable Style/Next
           spl = line.split
-          if spl.length < 13
-            spl.insert(4, '')
-          end
+          spl.insert(4, '') if spl.length < 13
           lines << spl
         end
       end
       lines
-      # out
     end
 
     # Force resource action
     # @param resource_id [String] resource ID
     # @param action [Symbol] action to force (:start, :stop, :check)
     # @param opts [Hash] {node: :local} or {node: 'uname01'}
-    def resource_force(resource_id, action, opts={node: :local})
-      raise ArgumentError, "#{self.class}.#{__callee__}: Action #{action} is not supported" unless [:start, :stop, :check].include?(action)
-      cmd = 'crm_resource', "--force-#{action.to_s}", '--resource', resource_id
+    def resource_force(resource_id, action, opts = { node: :local })
+      raise ArgumentError, "#{self.class}.#{__callee__}: Action #{action} is not supported" \
+        unless [:start, :stop, :check].include?(action)
+      cmd = 'crm_resource', "--force-#{action}", '--resource', resource_id
       if opts[:node] == :local
         log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} ---"
         out, status = exec_get_output(*cmd)
-        log.debug "--- #{self.class}.#{__callee__}: return: status=#{status.exitstatus}, out=#{out} ---"
+        log.debug "--- #{self.class}.#{__callee__}: return:"\
+                  " status=#{status.exitstatus}, out=#{out} ---"
       else
-        log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} on node #{opts[:node]} ---"
+        log.debug "--- #{self.class}.#{__callee__}: executing command"\
+                  " #{cmd} on node #{opts[:node]} ---"
         out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *cmd)
         log.debug "--- #{self.class}.#{__callee__}: return: status=#{status} ---"
       end
-      return out, status
+      [out, status]
     end
 
-    def mount_nfs(source, opts={node: :local})
+    def mount_nfs(source, opts = { node: :local })
       log.debug "--- called #{self.class}.#{__callee__}(#{source}, #{opts}) ---"
       if opts[:node] == :local
         local = Dir.mktmpdir('hana')
       else
         tmp_cmd = 'mktemp', '-d'
-        log.debug "--- #{self.class}.#{__callee__}: executing command #{tmp_cmd} on node #{opts[:node]} ---"
+        log.debug "--- #{self.class}.#{__callee__}: executing command"\
+                  " #{tmp_cmd} on node #{opts[:node]} ---"
         out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *tmp_cmd)
         unless status.exitstatus == 0
           log.error 'Could not create a temporary directory for the NFS mount'
@@ -122,18 +129,19 @@ module HANAUpdater
       local
     end
 
-    def recursive_copy(source, target, hana_sid, opts={node: :local})
+    def recursive_copy(source, target, hana_sid, opts = { node: :local })
       log.debug "--- called #{self.class}.#{__callee__}(#{source}, #{target}, #{opts}) ---"
       source_ = File.join(source, '.')
       if opts[:node] == :local
-        FileUtils.mkdir_p(target) unless Dir.exists?(target)
+        FileUtils.mkdir_p(target) unless Dir.exist?(target)
         # FileUtils.cp_r(source_, target) :: takes way too long, make a system call instead
         out, status = HANAUpdater::System.exec_get_output('cp', '-far', source_, target)
         unless status.exitstatus == 0
           log.error "Cannot copy update medium: status=#{status}, out=#{out}"
           return false
         end
-        out, status = HANAUpdater::System.exec_get_output('chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
+        out, status = HANAUpdater::System.exec_get_output('chown', '-R',
+          "#{hana_sid.downcase}adm:sapsys", target)
         unless status.exitstatus == 0
           log.error "Cannot chown copied update medium: status=#{status}, out=#{out}"
           return false
@@ -142,19 +150,23 @@ module HANAUpdater
       else
         status = HANAUpdater::SSH.rexec_wait(opts[:node], 'test', '-d', target)
         unless status.exitstatus == 0
-          log.warn "--- #{self.class}.#{__callee__}: target directory #{target} does not exist on node #{opts[:node]} ---"
+          log.warn "--- #{self.class}.#{__callee__}: target directory "\
+                   "#{target} does not exist on node #{opts[:node]} ---"
           out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'mkdir', '-p', target)
           unless status.exitstatus == 0
-            log.error "Cannot create target directory #{target} on node #{opts[:node]}: status=#{status}, out=#{out}"
+            log.error "Cannot create target directory #{target} on node"\
+                      " #{opts[:node]}: status=#{status}, out=#{out}"
             return false
           end
         end
-        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'cp', '-far', source_, target)
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'cp',
+          '-far', source_, target)
         unless status.exitstatus == 0
           log.error "Cannot copy update medium #{source_} to #{target}: #{status}, #{out}"
           return false
         end
-        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'chown', '-R', "#{hana_sid.downcase}adm:sapsys", target)
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], 'chown', '-R',
+          "#{hana_sid.downcase}adm:sapsys", target)
         unless status.exitstatus == 0
           log.error "Cannot chown copied update medium: status=#{status}, out=#{out}"
           return false

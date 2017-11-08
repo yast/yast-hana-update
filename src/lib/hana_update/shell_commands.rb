@@ -52,20 +52,19 @@ module HANAUpdater
       log.debug "--- called #{self.class}.#{__callee__}(#{params}) ---"
       log.info "Executing command #{params}"
       out, status = Open3.capture2e(*params)
-      out.split("\n").each { |ln| log.debug "--- OUT: #{ln}"}
+      out.split("\n").each { |ln| log.debug "--- OUT: #{ln}" }
       log.debug "--- called #{self.class}.#{__callee__}: command returned '#{status}' ---"
       return out, status
     rescue SystemCallError => e
       return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
     end
 
-
     # Execute command as user _user_name_ and return its output (stdout & stderr) and status
     # @return [[String, String]] [stdout_and_stderr, status]
     def su_exec_get_output(user_name, *params)
       log.info "Executing #{params} as user #{user_name}"
       out, status = Open3.capture2e('su', '-lc', params.join(' '), user_name)
-      out.split("\n").each { |ln| log.debug "--- OUT: #{ln}"}
+      out.split("\n").each { |ln| log.debug "--- OUT: #{ln}" }
       log.debug "--- called #{self.class}.#{__callee__}: command returned '#{status}' ---"
       return out, status
     rescue SystemCallError => e

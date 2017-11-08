@@ -44,18 +44,19 @@ def test_file(name)
   File.read("#{File.dirname(__FILE__)}/data/#{name}")
 end
 
-def expect_syscall(opts={type: :status})
+def expect_syscall(opts = { type: :status })
   raise ArgumentError, 'You have to specify :cmd to test_syscall' if opts[:cmd].nil?
-  raise ArgumentError, ':type should be either :status or :output' unless [:status, :output].include? opts[:type]
+  raise ArgumentError, ':type should be either :status or :output' \
+    unless [:status, :output].include? opts[:type]
   case opts[:type]
-    when :status
-      method = :popen3
-      ret = double('ExitStatus', exitstatus: opts[:rc])
-    when :output
-      method = :capture2e
-      ret = [opts[:output] || '', double('ExitStatus', exitstatus: opts[:rc])]
-    else
-      raise ArgumentError
+  when :status
+    method = :popen3
+    ret = double('ExitStatus', exitstatus: opts[:rc])
+  when :output
+    method = :capture2e
+    ret = [opts[:output] || '', double('ExitStatus', exitstatus: opts[:rc])]
+  else
+    raise ArgumentError
   end
   expect(Open3).to receive(method).with(*opts[:cmd]).and_return(ret)
 end
@@ -68,9 +69,11 @@ class Constants
     @local = OpenStruct.new(host_name: 'hana01', site_name: 'NUREMBERG')
     @remote = OpenStruct.new(host_name: 'hana02', site_name: 'PRAGUE')
     @operation_modes = %w(delta_datashipping logreplay logreplay_readaccess)
-    # @operation_modes = {delta: 'delta_datashipping', log: 'logreplay', logr: 'logreplay_readaccess'}
+    # @operation_modes = {delta: 'delta_datashipping', log: 'logreplay',
+    #  logr: 'logreplay_readaccess'}
     @replication_modes = %w(syncmem sync async)
     # @replication_modes = {sm: 'syncmem', s: 'sync', a: 'async'}
-    @resources = {msl: 'msl_SAPHana_PRD_HDB00', cln: 'cln_SAPHanaTopology_PRD_HDB00', vip: 'rsc_ip_PRD_HDB00'}
+    @resources = { msl: 'msl_SAPHana_PRD_HDB00', cln: 'cln_SAPHanaTopology_PRD_HDB00',
+      vip: 'rsc_ip_PRD_HDB00' }
   end
 end

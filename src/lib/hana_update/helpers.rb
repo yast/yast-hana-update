@@ -71,15 +71,15 @@ module HANAUpdater
     end
 
     def array_to_table(lines)
-      max_len = lines.map {|l| l.map {|e| e.length}}.transpose.map {|ln| ln.max}
-      lines.insert(1, max_len.map {|len| '-'*len})
+      max_len = lines.map { |l| l.map(&:length) }.transpose.map(&:max)
+      lines.insert(1, max_len.map { |len| '-' * len })
       lines_just = []
       lines.each do |ln|
         a = []
-        ln.each_with_index {|el, ix| a << el.ljust(max_len[ix])}
+        ln.each_with_index { |el, ix| a << el.ljust(max_len[ix]) }
         lines_just << a
       end
-      lines_just.map {|l| l.join(' ')}.join("\n")
+      lines_just.map { |l| l.join(' ') }.join("\n")
     end
 
     # Load the help file by its name
@@ -103,12 +103,12 @@ module HANAUpdater
       File.join(@var_path, basename)
     end
 
-    def itemize_list(l, use_indices=true)
+    def itemize_list(l, use_indices = true)
       require 'yast'
       if use_indices
-        l.each_with_index.map {|e, i| Yast::Term.new(:item, Yast::Term.new(:id, i), *e)}
+        l.each_with_index.map { |e, i| Yast::Term.new(:item, Yast::Term.new(:id, i), *e) }
       else
-        l.each.map {|e| Yast::Term.new(:item, Yast::Term.new(:id, e[0]), *e[1..e.length])}
+        l.each.map { |e| Yast::Term.new(:item, Yast::Term.new(:id, e[0]), *e[1..e.length]) }
       end
     end
 
@@ -152,13 +152,14 @@ module HANAUpdater
       return basename if timestamp.nil?
       ext = File.extname(basename)
       name = File.basename(basename, ext)
-      basename = "#{name}_#{Time.now.strftime('%Y%m%d_%H%M%S')}#{ext}"
+      "#{name}_#{Time.now.strftime("%Y%m%d_%H%M%S")}#{ext}"
     end
 
     def version_comparison(version_target, version_current, cmp = '>=')
       Gem::Dependency.new('', cmp + version_target).match?('', version_current)
     rescue StandardError => e
-      log.error "HANA version comparison failed: target=#{version_target}, current=#{version_current}, cmp=#{cmp}."
+      log.error "HANA version comparison failed: target=#{version_target},"\
+                " current=#{version_current}, cmp=#{cmp}."
       log.error "Gem::Dependency.match? :: #{e.message}"
       return false
     end

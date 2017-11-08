@@ -59,8 +59,9 @@ module HANAUpdater
           rescue Exceptions::ClusterConfigurationError => e
             raise AbortGUILoop.new(e.message, :abort)
           end
-          if HANAUpdater::Cluster.warnings.length > 0
-            html_message = "<ul>" + HANAUpdater::Cluster.warnings.uniq.map {|e| "<li>#{e}</li>"}.join("\n") + "</ul>"
+          if !HANAUpdater::Cluster.warnings.empty?
+            html_message = "<ul>" +
+              HANAUpdater::Cluster.warnings.uniq.map { |el| "<li>#{el}</li>" }.join("\n") + "</ul>"
             show_message(html_message, 'Warning')
           end
         end
@@ -71,7 +72,8 @@ module HANAUpdater
         Yast::UI.ReplaceWidget(Id(:rp_content), hana_systems_table)
         set_value(:hana_systems_list, @model.hana_sids, :Items)
         selected_id = value(:hana_systems_list, :CurrentItem)
-        log.debug "--- #{self.class}.#{__callee__} :: @model.hana_sids=#{@model.hana_sids.inspect} --- "
+        log.debug "--- #{self.class}.#{__callee__}: "\
+                  " @model.hana_sids=#{@model.hana_sids.inspect} --- "
         log.debug "--- #{self.class}.#{__callee__} :: selected_id=#{selected_id.inspect} --- "
         sys = @model.get_system_by_sid(selected_id)
         set_value(:hana_system_table, @model.hana_sys_table_items(sys), :Items)
@@ -86,8 +88,7 @@ module HANAUpdater
               'Available SAP HANA Systems:',
               []
             )
-          ),
-          # MinSize(55, 1, Label(Id(:sys_descr), ''))
+                   ),
           Left(Label('Selected System:')),
           MinHeight(10,
             Table(
@@ -95,8 +96,8 @@ module HANAUpdater
               Opt(:keepSorting, :notify, :immediate),
               Header('Host Name', 'Site Name', 'SAP HANA Version', 'Resource Role'),
               []
-              )
-          )
+            )
+                   )
         )
       end
 

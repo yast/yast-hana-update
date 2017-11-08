@@ -13,10 +13,6 @@
 # StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#lintendalignment
 #  AlignWith: variable
 
-Metrics/AbcSize:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#metricsabcsize
-  Max: 30
-
 Metrics/LineLength:
   StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#metricslinelength
   Max: 100
@@ -89,9 +85,26 @@ Style/CaseIndentation:
 Style/NegatedIf:
   Enabled: false
 
-# allow more than 10 lines for methods
-Metrics/MethodLength:
-  Max: 30
 
+################################################################################
+#
+# Settings specific to the yast-hana-update module
+#
+################################################################################
+
+# Edited for yast-hana-update
+Metrics/MethodLength:
+  Max: 50
+
+# Edited for yast-hana-update
 Metrics/ClassLength:
-  Max: 250
+  Max: 400
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false

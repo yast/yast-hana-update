@@ -26,16 +26,14 @@ module HANAUpdater
   module Wizard
     # Simple RichText page
     class RichText < BaseWizardPage
-      def initialize(opts={})
+      def initialize(opts = {})
         super(nil)
         @allow_skip = opts[:allow_skip] || false
       end
 
-      def run(title, contents, help, allow_back=true, allow_next=true)
+      def run(title, contents, help, allow_back = true, allow_next = true)
         base_rich_text(title, contents, help, allow_back, allow_next)
-        if @allow_skip
-          Yast::Wizard.SetBackButton(:skip, '&Skip')
-        end
+        Yast::Wizard.SetBackButton(:skip, '&Skip') if @allow_skip
         input = Yast::UI.UserInput
         # Restore the "back button"
         Yast::Wizard.SetBackButton(:back, '&Back') if @allow_skip

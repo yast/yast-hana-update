@@ -35,7 +35,7 @@ module HANAUpdater
         attr_output = HANAUpdater::System.saphanasr_attributes(@model.system.hana_sid)
         if Yast::UI.TextMode
           unless hana_instances.nil?
-            hana_instances = hana_instances.map {|line| line.values}
+            hana_instances = hana_instances.map(&:values)
             hana_instances.insert(0, ['Host Name', 'Site Name', 'Original Version', 'New Version'])
             hana_instances = HANAUpdater::Helpers.array_to_table(hana_instances)
           end

@@ -29,7 +29,7 @@ module HANAUpdater
     class MediaSelectionPage < BaseWizardPage
       def initialize(model)
         super(model)
-        @page_validator = lambda { model.validate(:nfs_share, :verbose) }
+        @page_validator = -> { model.validate(:nfs_share, :verbose) }
       end
 
       def set_contents
@@ -41,10 +41,12 @@ module HANAUpdater
             VBox(
               RadioButtonGroup(Id(:rbg),
                 VBox(
-                  Left(RadioButton(Id(:rb_manual), Opt(:notify), 'Do not mount an update medium', true)),
-                  Left(RadioButton(Id(:rb_auto), Opt(:notify), 'Mount an update medium on all hosts', false))
+                  Left(RadioButton(Id(:rb_manual), Opt(:notify),
+                    'Do not mount an update medium', true)),
+                  Left(RadioButton(Id(:rb_auto), Opt(:notify),
+                    'Mount an update medium on all hosts', false))
                 )
-              ),
+                              ),
               TextEntry(Id(:hana_medium), 'NFS share:'),
               Left(CheckBox(Id(:copy_medium), Opt(:notify), 'Copy update medium locally')),
               TextEntry(Id(:copy_path), 'Local path:')
@@ -84,7 +86,8 @@ module HANAUpdater
       end
 
       def handle_user_input(input, event)
-        log.info "--- #{self.class}.#{__callee__} : Handling user input=#{input.inspect}, event=#{event.inspect} ---"
+        log.info "--- #{self.class}.#{__callee__}:"\
+                 " Handling user input=#{input.inspect}, event=#{event.inspect} ---"
         case input
         when :rb_manual
           set_value(:hana_medium, false, :Enabled)
@@ -97,7 +100,8 @@ module HANAUpdater
         when :copy_medium
           set_value(:copy_path, value(:copy_medium), :Enabled)
         else
-          log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
+          log.warn "--- #{self.class}.#{__callee__}:"\
+                   " Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
         end
       end
     end

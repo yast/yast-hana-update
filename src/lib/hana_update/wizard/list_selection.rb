@@ -31,6 +31,7 @@ module HANAUpdater
         super(nil)
       end
 
+      # rubocop:disable Metrics/ParameterLists
       def run(title, message, list_contents, help, allow_back, allow_next)
         base_list_selection(title, message, list_contents, help, allow_back, allow_next)
         ret = Yast::UI.WaitForEvent

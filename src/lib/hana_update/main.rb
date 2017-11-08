@@ -20,6 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 module HANAUpdater
+  # Main Yast client class
   class HanaUpdaterClass < Yast::Client
     Yast.import 'UI'
     Yast.import 'Wizard'
@@ -29,66 +30,66 @@ module HANAUpdater
     include Yast::Logger
     # include HANAUpdater::Exceptions
 
-    def initialize
+    def initialize # rubocop:disable Metrics/MethodLength
       @yast_sequence = {
-          'ws_start' => 'welcome_screen',
-          'welcome_screen' => {
-              abort: :abort,
-              next: 'cluster_overview',
-              back: :back
-          },
-          'cluster_overview' => {
-              abort: :abort,
-              next: 'update_medium',
-              back: :back
-          },
-          'update_medium' => {
-              abort: :abort,
-              next: 'update_plan_local',
-              back: :back
-          },
-          'update_plan_local' => {
-              abort: :abort,
-              next: 'update_site_local',
-              back: :back
-          },
-          'update_site_local' => {
-              abort: :abort,
-              next: 'update_plan_remote',
-              back: :back
-          },
-          'update_plan_remote' => {
-              abort: :abort,
-              next: 'update_site_remote',
-              back: :back
-          },
-          'update_site_remote' => {
-              abort: :abort,
-              next: 'restore_cluster_state',
-              back: :back
-          },
-          'restore_cluster_state' => {
-              abort: :abort,
-              next: 'summary',
-              back: :back
-          },
-          'summary' => {
-              abort: :abort,
-              cancel: :abort,
-              finish: :ws_finish
-          }
+        'ws_start'              => 'welcome_screen',
+        'welcome_screen'        => {
+          abort: :abort,
+          next:  'cluster_overview',
+          back:  :back
+        },
+        'cluster_overview'      => {
+          abort: :abort,
+          next:  'update_medium',
+          back:  :back
+        },
+        'update_medium'         => {
+          abort: :abort,
+          next:  'update_plan_local',
+          back:  :back
+        },
+        'update_plan_local'     => {
+          abort: :abort,
+          next:  'update_site_local',
+          back:  :back
+        },
+        'update_site_local'     => {
+          abort: :abort,
+          next:  'update_plan_remote',
+          back:  :back
+        },
+        'update_plan_remote'    => {
+          abort: :abort,
+          next:  'update_site_remote',
+          back:  :back
+        },
+        'update_site_remote'    => {
+          abort: :abort,
+          next:  'restore_cluster_state',
+          back:  :back
+        },
+        'restore_cluster_state' => {
+          abort: :abort,
+          next:  'summary',
+          back:  :back
+        },
+        'summary'               => {
+          abort:  :abort,
+          cancel: :abort,
+          finish: :ws_finish
+        }
       }
 
       @yast_aliases = {
-          'welcome_screen' => -> {welcome_screen},
-          'cluster_overview' => -> {cluster_overview_page},
-          'update_medium' => -> {update_medium_page},
-          'update_plan_local' => -> {update_plan_page(:local)},
-          'update_plan_remote' => -> {update_plan_page(:remote)},
-          'update_site_local' => -> {update_hana_page(:local)},
-          'update_site_remote' => -> {update_hana_page(:remote)},
-          'restore_cluster_state' => -> {update_plan_page(:restore)},
-          'summary' => -> {show_summary}
+        'welcome_screen'        => -> { welcome_screen },
+        'cluster_overview'      => -> { cluster_overview_page },
+        'update_medium'         => -> { update_medium_page },
+        'update_plan_local'     => -> { update_plan_page(:local) },
+        'update_plan_remote'    => -> { update_plan_page(:remote) },
+        'update_site_local'     => -> { update_hana_page(:local) },
+        'update_site_remote'    => -> { update_hana_page(:remote) },
+        'restore_cluster_state' => -> { update_plan_page(:restore) },
+        'summary'               => -> { show_summary }
       }
 
       @configuration = HANAUpdater::Configuration.new
@@ -117,11 +118,11 @@ module HANAUpdater
 
     def welcome_screen
       Wizard::RichText.new.run(
-          'Welcome',
-          HANAUpdater::Helpers.load_help('welcome_note'),
-          '',
-          false,
-          true
+        'Welcome',
+        HANAUpdater::Helpers.load_help('welcome_note'),
+        '',
+        false,
+        true
       )
     end
 
