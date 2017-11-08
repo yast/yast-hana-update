@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<crm_mon version="1.1.16">
+    <summary>
+        <stack type="corosync" />
+        <current_dc present="true" version="1.1.16-4.8-77ea74d" name="plain1" id="1" with_quorum="true" />
+        <last_update time="Mon Nov  6 15:09:18 2017" />
+        <last_change time="Mon Nov  6 15:08:59 2017" user="root" client="cibadmin" origin="plain1" />
+        <nodes_configured number="2" expected_votes="unknown" />
+        <resources_configured number="0" disabled="0" blocked="0" />
+        <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" />
+    </summary>
+    <nodes>
+        <node name="plain1" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="0" type="member" />
+        <node name="plain2" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member" />
+    </nodes>
+    <resources/>
+    <node_attributes>
+        <node name="plain1">
+            <attribute name="hana_prd_roles" value="1:-:-:-:-:-" />
+        </node>
+        <node name="plain2">
+            <attribute name="hana_prd_roles" value="1:-:-:-:-:-" />
+        </node>
+    </node_attributes>
+    <node_history>
+        <node name="plain1">
+        </node>
+        <node name="plain2">
+        </node>
+    </node_history>
+    <tickets>
+    </tickets>
+    <bans>
+    </bans>
+</crm_mon>

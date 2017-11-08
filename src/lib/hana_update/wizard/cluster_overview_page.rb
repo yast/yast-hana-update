@@ -32,7 +32,6 @@ module HANAUpdater
         @show_errors = true
         @can_continue = true
         @page_validator = model.method(:validate_system)
-        # HANAUpdater::Cluster.update_state
       end
 
       def set_contents
@@ -57,8 +56,13 @@ module HANAUpdater
             HANAUpdater::Cluster.update_state
           rescue RuntimeError => e
             raise AbortGUILoop.new(e.message, :abort)
+          rescue Exceptions::ClusterConfigurationError => e
+            raise AbortGUILoop.new(e.message, :abort)
           end
-
+          if HANAUpdater::Cluster.warnings.length > 0
+            html_message = "<ul>" + HANAUpdater::Cluster.warnings.uniq.map {|e| "<li>#{e}</li>"}.join("\n") + "</ul>"
+            show_message(html_message, 'Warning')
+          end
         end
       end
 

@@ -50,7 +50,7 @@ module HANAUpdater
               TextEntry(Id(:copy_path), 'Local path:')
             )
           ),
-          Helpers.load_help('media_selection'), # TODO: write help
+          Helpers.load_help('media_selection'),
           true,
           true
         )
@@ -62,10 +62,7 @@ module HANAUpdater
 
       def refresh_view
         super
-        log.debug "Refreshing MediaSelectionPage: :rb_auto is #{value(:rb_auto)}"
-        # handle radiobuttons and stuff
         log.debug "--- #{self.class}.#{__callee__} : refresh, params #{model.nfs_share} ---"
-        
         flag = model.nfs.should_mount?
         set_value(:rb_manual, !flag)
         set_value(:rb_auto, flag)
@@ -99,10 +96,8 @@ module HANAUpdater
           set_value(:copy_path, value(:copy_medium), :Enabled)
         when :copy_medium
           set_value(:copy_path, value(:copy_medium), :Enabled)
-        when :hana_medium
-          log.info "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
         else
-        log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
+          log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
         end
       end
     end

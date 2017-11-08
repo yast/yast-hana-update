@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<crm_mon version="1.1.16">
+    <summary>
+        <stack type="corosync" />
+        <current_dc present="true" version="1.1.16-4.8-77ea74d" name="plain1" id="1" with_quorum="true" />
+        <last_update time="Mon Nov  6 15:32:18 2017" />
+        <last_change time="Mon Nov  6 15:31:42 2017" user="root" client="cibadmin" origin="plain1" />
+        <nodes_configured number="2" expected_votes="unknown" />
+        <resources_configured number="3" disabled="0" blocked="0" />
+        <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" />
+    </summary>
+    <nodes>
+        <node name="plain1" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="1" type="member" />
+        <node name="plain2" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member" />
+    </nodes>
+    <resources>
+        <resource id="rsc_ip_PRD_HDB00" resource_agent="ocf::heartbeat:IPaddr2" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
+            <node name="plain1" id="1" cached="false"/>
+        </resource>
+        <clone id="msl_SAPHana_PRD_HDB00" multi_state="true" unique="false" managed="true" failed="false" failure_ignored="false" >
+            <resource id="rsc_SAPHana_PRD_HDB00" resource_agent="ocf::suse:SAPHana" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0" />
+            <resource id="rsc_SAPHana_PRD_HDB00" resource_agent="ocf::suse:SAPHana" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0" />
+        </clone>
+    </resources>
+    <node_attributes>
+        <node name="plain1">
+            <attribute name="hana_prd_roles" value="1:-::::" />
+        </node>
+        <node name="plain2">
+            <attribute name="hana_prd_roles" value="1:-::::" />
+        </node>
+    </node_attributes>
+    <node_history>
+        <node name="plain1">
+            <resource_history id="rsc_ip_PRD_HDB00" orphan="false" migration-threshold="3">
+                <operation_history call="61" task="start" last-rc-change="Mon Nov  6 15:26:26 2017" last-run="Mon Nov  6 15:26:26 2017" exec-time="60ms" queue-time="0ms" rc="0" rc_text="ok" />
+                <operation_history call="62" task="monitor" interval="10000ms" last-rc-change="Mon Nov  6 15:26:26 2017" exec-time="39ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="3" fail-count="1000000" last-failure="Mon Nov  6 15:26:42 2017">
+                <operation_history call="65" task="start" last-rc-change="Mon Nov  6 15:26:42 2017" last-run="Mon Nov  6 15:26:42 2017" exec-time="160ms" queue-time="0ms" rc="7" rc_text="not running" />
+                <operation_history call="66" task="stop" last-rc-change="Mon Nov  6 15:26:51 2017" last-run="Mon Nov  6 15:26:51 2017" exec-time="161ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+        </node>
+        <node name="plain2">
+            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="3" fail-count="1000000" last-failure="Mon Nov  6 15:26:42 2017">
+                <operation_history call="60" task="start" last-rc-change="Mon Nov  6 15:26:42 2017" last-run="Mon Nov  6 15:26:42 2017" exec-time="153ms" queue-time="0ms" rc="7" rc_text="not running" />
+                <operation_history call="61" task="stop" last-rc-change="Mon Nov  6 15:26:51 2017" last-run="Mon Nov  6 15:26:51 2017" exec-time="163ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+        </node>
+    </node_history>
+    <failures>
+        <failure op_key="rsc_SAPHana_PRD_HDB00_start_0" node="plain1" exitstatus="not running" exitreason="none" exitcode="7" call="65" status="complete" last-rc-change="Mon Nov  6 15:26:42 2017" queued="0" exec="160" interval="0" task="start" />
+        <failure op_key="rsc_SAPHana_PRD_HDB00_start_0" node="plain2" exitstatus="not running" exitreason="none" exitcode="7" call="60" status="complete" last-rc-change="Mon Nov  6 15:26:42 2017" queued="0" exec="153" interval="0" task="start" />
+    </failures>
+    <tickets>
+    </tickets>
+    <bans>
+    </bans>
+</crm_mon>

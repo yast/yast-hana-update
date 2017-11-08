@@ -20,8 +20,6 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-# require 'sap_ha/exceptions'
-# require 'sap_ha/semantic_checks'
 require 'hana_update/node_logger'
 require 'hana_update/helpers'
 require 'hana_update/cluster'
@@ -51,10 +49,12 @@ module HANAUpdater
 
     def validate(mode)
       errors = []
-      errors << 'NFS share path cannot be empty' if @source.empty? and @should_mount
-      errors << 'Copy path cannot be empty' if @copy_path.empty? and @copy_medium
+      errors << 'NFS share path cannot be empty' if @source.empty? && @should_mount
+      errors << 'Copy path cannot be empty' if @copy_path.empty? && @copy_medium
       if @source.start_with? 'nfs:'
         errors << 'NFS URLs are not supported. Please use the following format instead: "servername:/path/to/share".'
+      elsif !@source.include? ':'
+        errors << 'Please use the following path format: "servername:/path/to/share".'
       end
       if mode == :verbose
         errors
@@ -86,24 +86,25 @@ module HANAUpdater
     def validate(component, mode)
       log.debug "-- #{self.class}.#{__callee__}(#{component}, #{mode})"
       case component
-        when :nfs_share
-          log.debug "-- #{self.class}.#{__callee__}: #{@nfs.inspect}"
-          return @nfs.validate(mode)
-        else
-          log.error "Unknown component to validate: #{component.inspect}"
+      when :nfs_share
+        log.debug "-- #{self.class}.#{__callee__}: #{@nfs.inspect}"
+        return @nfs.validate(mode)
+      else
+        log.error "Unknown component to validate: #{component.inspect}"
       end
     end
 
     def hana_sids
-      l = HANAUpdater::Cluster.groups.map {|g| [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"]}
+      l = HANAUpdater::Cluster.groups.map { |g| [g.hana_sid, "System #{g.hana_sid}, Instance #{g.hana_inst}"] }
       HANAUpdater::Helpers.itemize_list(l, false)
     end
 
     def get_system_by_sid(sid)
-      HANAUpdater::Cluster.groups.find {|g| g.hana_sid == sid}
+      HANAUpdater::Cluster.groups.find { |g| g.hana_sid == sid }
     end
 
     def hana_sys_table_items(group)
+      return if group.nil?
       l = group.master.primitives.map do |prim|
         if prim.running_on.nil?
           host_name = '<not running>'
@@ -115,7 +116,7 @@ module HANAUpdater
           site_name = prim.running_on.instance_attributes['site']
           node = prim.running_on.localhost? ? :local : host_name
           version = prim.running_on.transient_attributes['version'] || HANAUpdater::Hana.version(group.hana_sid,
-                                                                                                 node: node)
+            node: node)
         end
         rsc_role = prim.role
         rsc_role += ' (unmanaged)' unless prim.managed?
@@ -154,15 +155,22 @@ module HANAUpdater
     end
 
     def validate_system
+      log.debug "--- #{self.class}.#{__callee__} : system is #{@system.inspect} ---"
       errors = []
-      if @system.master.local.nil?
+      if @system.nil?
+        errors << 'Please select at least one SAP HANA system'
+        return errors
+      end
+      if !@system.all_managed?
+        errors << 'Some resources belonging to the SAP HANA SR group are not managed'
+        errors << 'This wizard can only handle active (i.e., running and managed) SAP HANA instances'
+      elsif !@system.all_running?
+        errors << 'Some resources belonging to the SAP HANA SR group are not started'
         errors << 'This wizard can only handle active (i.e., running and managed) SAP HANA instances'
       elsif @system.master.local.role != 'Slave'
         errors << 'This wizard has to be run on the secondary SAP HANA node'
-      elsif !@system.all_managed?
-        errors << 'Some resources belonging to the SAP HANA SR group are not managed'
-        errors << 'This wizard can only handle active (i.e., running and managed) SAP HANA instances'
       end
+      return errors if !errors.empty?
       # check connection to the remote node
       remote_node = @system.master.remote.running_on.name
       begin
