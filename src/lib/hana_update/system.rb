@@ -101,6 +101,7 @@ module HANAUpdater
       log.debug "--- called #{self.class}.#{__callee__}(#{source}, #{opts}) ---"
       if opts[:node] == :local
         local = Dir.mktmpdir('hana')
+        log.debug "--- #{self.class}.#{__callee__}: created tmp directory #{local}"
       else
         tmp_cmd = 'mktemp', '-d'
         log.debug "--- #{self.class}.#{__callee__}: executing command"\
@@ -109,7 +110,9 @@ module HANAUpdater
         unless status.exitstatus == 0
           log.error 'Could not create a temporary directory for the NFS mount'
           log.error "returned status=#{status}, out=#{out}"
-          return
+          raise HANAUpdater::Exceptions::NFSMountException, "Could not create a temporary "\
+            "directory for the NFS mount. Subprocess exit status "\
+            "#{status.exitstatus}, output=#{out}"
         end
         local = out.strip
       end
@@ -118,15 +121,36 @@ module HANAUpdater
       if opts[:node] == :local
         out, status = exec_get_output(*cmd)
         log.debug "--- #{self.class}.#{__callee__}: mount retuned with #{out}, #{status} ---"
+        unless status.exitstatus == 0
+          log.error "--- #{self.class}.#{__callee__}: Could not mount the NFS share on the"\
+            " local node: returned status=#{status.exitstatus}, out=#{out}"
+          Dir.rmdir(local)
+          log.debug "--- #{self.class}.#{__callee__}: removed tmp directory #{local}"
+          raise HANAUpdater::Exceptions::NFSMountException, "Could not mount NFS share #{source}"\
+            " on the local node. Subprocess status #{status.exitstatus}, output: #{out}"
+        end
       else
         out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *cmd)
         unless status.exitstatus == 0
-          log.error "Could not mount the NFS share on node #{opts[:node]}"
-          log.error "returned status=#{status}, out=#{out}"
-          return
+          log.error "--- #{self.class}.#{__callee__}: Could not mount the NFS share on "\
+            "node #{opts[:node]}: returned status=#{status.exitstatus}, out=#{out}"
+          cmd = 'rmdir', local
+          out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *cmd)
+          log.debug "--- #{self.class}.#{__callee__}: remove remote tmp directory #{local}"\
+            " on node #{opts[:node]}: status #{status.exitstatus}"
+          raise HANAUpdater::Exceptions::NFSMountException, "Could not mount NFS share #{source}"\
+            " on node #{opts[:node]}. Subprocess exit status #{status.exitstatus}, output: #{out}"
         end
       end
       local
+    end
+
+    def unmount_nfs(path)
+      log.debug "--- called #{self.class}.#{__callee__}(#{path}) ---"
+      cmd = 'umount', path
+      out, status = exec_get_output(*cmd)
+      log.debug "--- #{self.class}.#{__callee__}: umount retuned with #{out}, #{status} ---"
+      status.exitstatus == 0
     end
 
     def recursive_copy(source, target, hana_sid, opts = { node: :local })

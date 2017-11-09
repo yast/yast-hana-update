@@ -1,6 +1,14 @@
 -------------------------------------------------------------------
+Thu Nov 09 10:16:38 UTC 2017 - imanyugin@suse.com
+
+- Version 1.1.0;
+- Fix bsc#1066975;
+- Fix bsc#1066946;
+- Fix bsc#1066935;
+
+-------------------------------------------------------------------
 Thu Oct 19 14:56:02 UTC 2017 - imanyugin@suse.com
 
-- Version 1.0.0
-- Initial release, fate#320368, bsc#1064732
+- Version 1.0.0;
+- Initial release, fate#320368, bsc#1064732;
 

@@ -24,6 +24,7 @@ require 'hana_update/node_logger'
 require 'hana_update/helpers'
 require 'hana_update/cluster'
 require 'hana_update/ssh'
+require 'hana_update/system'
 require 'hana_update/exceptions'
 
 module HANAUpdater
@@ -49,14 +50,24 @@ module HANAUpdater
     end
 
     def validate(mode)
+      return (mode == :verbose) ? [] : true unless @should_mount
       errors = []
-      errors << 'NFS share path cannot be empty' if @source.empty? && @should_mount
+      errors << 'NFS share path cannot be empty' if @source.empty?
       errors << 'Copy path cannot be empty' if @copy_path.empty? && @copy_medium
       if @source.start_with? 'nfs:'
         errors << 'NFS URLs are not supported. Please use the following format instead:'\
                   ' "servername:/path/to/share".'
-      elsif !@source.include? ':'
+      elsif !@source.include?(':')
         errors << 'Please use the following path format: "servername:/path/to/share".'
+      end
+      if errors.empty?
+        begin
+          mount_path = HANAUpdater::System.mount_nfs(@source, node: :local)
+        rescue HANAUpdater::Exceptions::NFSMountException => e
+          errors << e.message
+        else
+          HANAUpdater::System.unmount_nfs(mount_path)
+        end
       end
       if mode == :verbose
         errors

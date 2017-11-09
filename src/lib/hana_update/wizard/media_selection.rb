@@ -59,7 +59,7 @@ module HANAUpdater
       end
 
       def can_go_next?
-        model.validate(:nfs_share)
+        model.validate(:nfs_share, :silent)
       end
 
       def refresh_view

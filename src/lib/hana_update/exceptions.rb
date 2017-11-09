@@ -72,5 +72,8 @@ module HANAUpdater
 
     class ClusterConfigurationError < StandardError
     end
+
+    class NFSMountException < BaseException
+    end
   end
 end

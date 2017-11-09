@@ -74,14 +74,14 @@ module HANAUpdater
       Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
         HANAUpdater::Hana.start(sap_sys.hana_sid, node: :local)
       end
-      # mount update medium
-      if config.nfs.should_mount?
-        log.warn "--- Mounting update medium '#{config.nfs.source}' ---"
-        Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
-          local_path = HANAUpdater::System.mount_nfs(config.nfs.source, node: :local)
-          config.nfs.mount_path = local_path
-        end
-      end
+      # # mount update medium
+      # if config.nfs.should_mount?
+      #   log.warn "--- Mounting update medium '#{config.nfs.source}' ---"
+      #   Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
+      #     local_path = HANAUpdater::System.mount_nfs(config.nfs.source, node: :local)
+      #     config.nfs.mount_path = local_path
+      #   end
+      # end
       # copy update medium
       if config.nfs.copy_medium?
         log.warn "--- Copying contents of the update medium '#{config.nfs.source}'"\
