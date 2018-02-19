@@ -18,6 +18,7 @@ VIP='192.168.101.100'
 DB_USER='SYSTEM'
 DB_PASS='Qwerty1234'
 DB_PORT=30015
+UPD_LOCATION="/hana/upd/DATA_UNITS/HDB_LCM_LINUX_X86_64/"
 
 function print_help(){
     cat <<-EOF
@@ -34,6 +35,7 @@ Supported commands:
   ctemp       create table ZZZ_MYTEMP
   stemp       select from table ZZZ_MYTEMP
   wtemp       insert into table ZZZ_MYTEMP
+  upgrade     upgrade HANA
 
 * HANA system replication
   -----------------------
@@ -58,7 +60,11 @@ Supported commands:
   mig         force migrate vIP resource
   fip         find vIP resource
 
-# add anything after the command name to suppress exec
+* System
+  ------
+  blockt      block all TCP ports except 22
+
+# add anything after the command name to suppress execution
 EOF
 }
 
@@ -292,6 +298,10 @@ function sys_overview(){
     execute_and_echo "su -lc 'HDBSettings.sh systemOverview.py' '$ADMUSER'" "$1"
 }
 
+function upgrade_hana(){
+    execute_and_echo "${UPD_LOCATION}/hdblcmgui --action=update --hdbupd_server_ignore=check_min_mem" "$1"
+}
+
 VERB="$1"
 shift
 
@@ -322,6 +332,9 @@ case "$VERB" in
         ;;
     status-c | ssc)
         sr_status_control "$@"
+        ;;
+    upgrade)
+        upgrade_hana
         ;;
     mon)
         cluster_maintenance on "$@"
@@ -379,6 +392,17 @@ case "$VERB" in
         ;;
     fh)
         SAPHanaSR-showAttr
+        ;;
+    blockt)
+        iptables -P INPUT DROP
+        iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+        # NFS
+        iptables -A INPUT -p tcp -m tcp -m multiport --dports 111,1039,1047,1048,2049 -j ACCEPT
+        iptables -A INPUT -p udp -m udp -m multiport --dports 111,1039,1047,1048,2049 -j ACCEPT
+        ;;
+    unblockt)
+        iptables -F
+        iptables -P INPUT ACCEPT
         ;;
     '-h')
         print_help

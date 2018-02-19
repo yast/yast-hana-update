@@ -49,6 +49,54 @@ module HANAUpdater
       exec_get_output(*cmd)
     end
 
+    # Set node maintenance on or off
+    # @returns stdout and stderr in one string, process exit status
+    def node_maintenance(node_id, action = :on)
+      raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
+        unless [:on, :off].include?(action)
+      if action == :on
+        cmd = 'crm', 'node', 'maintenance', node_id
+      else
+        cmd = 'crm', 'node', 'ready', node_id
+      end
+      exec_get_output(*cmd)
+    end
+
+    def disable_stonith(action = :on)
+      raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
+        unless [:on, :off].include?(action)
+      if action == :on
+        cmd = 'crm', 'configure', 'property', 'stonith-enabled=false'
+      else
+        cmd = 'crm', 'configure', 'property', 'stonith-enabled=true'
+      end
+      exec_get_output(*cmd)      
+    end
+
+    def cluster_service(action = :stop, opts = { node: :local })
+      raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
+        unless [:stop, :start].include?(action)
+      # Stop corosync, it will stop pacemaker, too
+      # Start pacemaker, it will start corosync as a dep
+      if action == :stop
+        cmd = 'systemctl', 'stop', 'corosync'
+      else
+        cmd = 'systemctl', 'start', 'pacemaker'
+      end
+      if opts[:node] == :local
+        log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} ---"
+        out, status = exec_get_output(*cmd)
+        log.debug "--- #{self.class}.#{__callee__}: return:"\
+                  " status=#{status.exitstatus}, out=#{out} ---"
+      else
+        log.debug "--- #{self.class}.#{__callee__}: executing command"\
+                  " #{cmd} on node #{opts[:node]} ---"
+        out, status = HANAUpdater::SSH.rexec_wait_get_output(opts[:node], *cmd)
+        log.debug "--- #{self.class}.#{__callee__}: return: status=#{status} ---"
+      end
+      [out, status]
+    end
+
     # Cleanup resource errors
     # @returns stdout and stderr in one string, process exit status
     def resource_cleanup(resource_id)

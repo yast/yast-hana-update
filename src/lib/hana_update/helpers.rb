@@ -112,10 +112,6 @@ module HANAUpdater
       end
     end
 
-    # def program_file_path(basename)
-    #   File.join(@yast_path, basename)
-    # end
-
     # Write a file to /var/lib/YaST2/sap_ha
     # Use it for logs and intermediate configuration files
     def write_var_file(basename, data, options = {})

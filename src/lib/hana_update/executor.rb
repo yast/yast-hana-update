@@ -58,6 +58,15 @@ module HANAUpdater
         HANAUpdater::System.resource_maintenance(sap_sys.clone.id, :on)
         HANAUpdater::System.resource_maintenance(sap_sys.vip.id, :on)
       end
+      log.warn '--- Disable STONITH ---'
+      Yast::Popup.Feedback('Please wait', 'Disabling STONITH') do
+        HANAUpdater::System.disable_stonith(:on)
+      end
+      # log.warn '--- Putting nodes to maintenance mode ---'
+      # Yast::Popup.Feedback('Please wait', 'Enabling maintenance mode for cluster nodes') do
+      #   HANAUpdater::System.node_maintenance(sap_sys.master.master.running_on.name, :on)
+      #   HANAUpdater::System.node_maintenance(sap_sys.master.slave.running_on.name, :on)
+      # end
       # stop HANA on local node, so that the replication can be disabled
       log.warn '--- Stopping SAP HANA on local node ---'
       Yast::Popup.Feedback('Please wait', 'Stopping SAP HANA on local node') do
@@ -74,21 +83,29 @@ module HANAUpdater
       Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
         HANAUpdater::Hana.start(sap_sys.hana_sid, node: :local)
       end
-      # # mount update medium
-      # if config.nfs.should_mount?
-      #   log.warn "--- Mounting update medium '#{config.nfs.source}' ---"
-      #   Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
-      #     local_path = HANAUpdater::System.mount_nfs(config.nfs.source, node: :local)
-      #     config.nfs.mount_path = local_path
-      #   end
+      # log.warn '--- Stop Corosync and Pacemaker locally ---'
+      # Yast::Popup.Feedback('Please wait', 'Stopping Pacemaker and Corosync') do
+      #   HANAUpdater::System.cluster_service(:stop, node: :local)
       # end
+      # mount update medium
+      if config.nfs.should_mount?
+        log.warn "--- Mounting update medium '#{config.nfs.source}' ---"
+        Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
+          local_path = HANAUpdater::System.mount_nfs(config.nfs.source, node: :local)
+          config.nfs.mount_path = local_path
+        end
+      end
       # copy update medium
       if config.nfs.copy_medium?
         log.warn "--- Copying contents of the update medium '#{config.nfs.source}'"\
                  " to '#{config.nfs.copy_path}' ---"
-        Yast::Popup.Feedback('Please wait', 'Copying contents of the update medium') do
-          HANAUpdater::System.recursive_copy(config.nfs.mount_path, config.nfs.copy_path,
-            sap_sys.hana_sid, node: :local)
+        if config.nfs.mount_path.empty?
+          log.error "Mount path is empty, but medium copy was requested. Skipping."
+        else
+          Yast::Popup.Feedback('Please wait', 'Copying contents of the update medium') do
+            HANAUpdater::System.recursive_copy(config.nfs.mount_path, config.nfs.copy_path,
+              sap_sys.hana_sid, node: :local)
+          end
         end
       end
     end
@@ -117,6 +134,10 @@ module HANAUpdater
       Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
         HANAUpdater::Hana.start(sap_sys.hana_sid)
       end
+      # log.warn '--- Start Corosync and Pacemaker locally ---'
+      # Yast::Popup.Feedback('Please wait', 'Starting Pacemaker and Corosync') do
+      #   HANAUpdater::System.cluster_service(:start, node: :local)
+      # end
       log.warn '--- Waiting for data to be synchronized ---'
       Yast::Popup.Feedback('Please wait', 'Waiting for data to be synchronized') do
         begin
@@ -148,6 +169,11 @@ module HANAUpdater
       Yast::Popup.Feedback('Please wait', 'Taking over to the local site') do
         HANAUpdater::Hana.sr_takeover(sap_sys.hana_sid)
       end
+      # log.warn '--- Stop Corosync and Pacemaker on both nodes ---'
+      # Yast::Popup.Feedback('Please wait', 'Stopping Pacemaker and Corosync on both nodes') do
+      #   HANAUpdater::System.cluster_service(:stop, node: :local)
+      #   HANAUpdater::System.cluster_service(:stop, node: remote_node)
+      # end
       if config.nfs.should_mount?
         log.warn "--- Mounting update medium '#{config.nfs.source}' on node #{remote_node} ---"
         Yast::Popup.Feedback('Please wait', 'Mounting update medium') do
@@ -157,10 +183,14 @@ module HANAUpdater
       end
       if config.nfs.copy_medium?
         log.warn "--- Copying contents of the update medium '#{config.nfs.source}'"\
-                 " to '#{config.nfs.copy_path}' on node #{remote_node}---"
-        Yast::Popup.Feedback('Please wait', 'Copying contents of the update medium') do
-          HANAUpdater::System.recursive_copy(config.nfs.mount_path, config.nfs.copy_path,
-            sap_sys.hana_sid, node: remote_node)
+                 " to '#{config.nfs.copy_path}' on node #{remote_node} ---"
+        if config.nfs.mount_path.empty?
+          log.error "Mount path is empty, but medium copy was requested. Skipping."
+        else
+          Yast::Popup.Feedback('Please wait', 'Copying contents of the update medium') do
+            HANAUpdater::System.recursive_copy(config.nfs.mount_path, config.nfs.copy_path,
+              sap_sys.hana_sid, node: remote_node)
+          end
         end
       end
     end
@@ -171,6 +201,11 @@ module HANAUpdater
       sap_sys = config.system
       remote_node = sap_sys.master.remote.running_on.name
       local_node = sap_sys.master.local.running_on.name
+      # log.warn '--- Start Corosync and Pacemaker on both nodes ---'
+      # Yast::Popup.Feedback('Please wait', 'Starting Pacemaker and Corosync on both nodes') do
+      #   HANAUpdater::System.cluster_service(:start, node: :local)
+      #   HANAUpdater::System.cluster_service(:start, node: remote_node)
+      # end
       log.warn "--- Stopping HANA instance on remote node #{remote_node} ---"
       Yast::Popup.Feedback('Please wait',
         "Stopping remote SAP HANA instance on node #{remote_node}") do
@@ -251,6 +286,22 @@ module HANAUpdater
           HANAUpdater::Hana.start(sap_sys.hana_sid, node: :local)
         end
       end
+      log.warn '--- Putting resources out of maintenance mode ---'
+      Yast::Popup.Feedback('Please wait', 'Disabling maintenance mode for cluster resources') do
+        HANAUpdater::System.resource_maintenance(sap_sys.master.id, :off)
+        HANAUpdater::System.resource_maintenance(sap_sys.clone.id, :off)
+        HANAUpdater::System.resource_maintenance(sap_sys.vip.id, :off)
+        sleep 10
+      end
+      log.warn '--- Enable STONITH ---'
+      Yast::Popup.Feedback('Please wait', 'Enabling STONITH') do
+        HANAUpdater::System.disable_stonith(:off)
+      end
+      # log.warn '--- Start Corosync and Pacemaker ---'
+      # Yast::Popup.Feedback('Please wait', 'Starting Pacemaker') do
+      #   HANAUpdater::System.cluster_service(:start, node: :local)
+      #   HANAUpdater::System.cluster_service(:start, node: remote_node)
+      # end
       log.warn '--- Cleaning up cluster resources ---'
       Yast::Popup.Feedback('Please wait', 'Cleaning up cluster resources') do
         HANAUpdater::System.resource_cleanup(sap_sys.vip.id)
@@ -258,12 +309,10 @@ module HANAUpdater
         HANAUpdater::System.resource_cleanup(sap_sys.master.id)
         sleep 5
       end
-      log.warn '--- Setting resources to maintenance mode ---'
-      Yast::Popup.Feedback('Please wait', 'Disabling maintenance mode for cluster resources') do
-        HANAUpdater::System.resource_maintenance(sap_sys.master.id, :off)
-        HANAUpdater::System.resource_maintenance(sap_sys.clone.id, :off)
-        HANAUpdater::System.resource_maintenance(sap_sys.vip.id, :off)
-        sleep 10
+      log.warn '--- Putting nodes out of maintenance mode ---'
+      Yast::Popup.Feedback('Please wait', 'Disabling maintenance mode for cluster nodes') do
+        HANAUpdater::System.node_maintenance(sap_sys.master.master.running_on.name, :off)
+        HANAUpdater::System.node_maintenance(sap_sys.master.slave.running_on.name, :off)
       end
     end
 
