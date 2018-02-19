@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-hana-update
 #
-# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2018 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -17,9 +17,13 @@
 
 
 Name:           yast2-hana-update
-Version:        1.1.0
+Version:        1.1.1
 Release:        0
+%if 0%{?sle_version} >= 150000
+ExclusiveArch:  x86_64 ppc64le
+%else
 BuildArch:      noarch
+%endif
 
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        %{name}-rpmlintrc
@@ -33,6 +37,7 @@ Requires:       SAPHanaSR
 Requires:       crmsh
 Requires:       expect
 Requires:       openssh
+Requires:       resource-agents
 
 BuildRequires:  update-desktop-files
 BuildRequires:  yast2

@@ -1,10 +1,17 @@
 -------------------------------------------------------------------
+Mon Feb 19 12:25:20 UTC 2018 - imanyugin@suse.com
+
+- Version 1.1.1;
+- Fix bsc#1066946: any NFS path is accepted (reopened);
+- Adjust maintenance procedure to include STONITH disable action;
+
+-------------------------------------------------------------------
 Thu Nov 09 10:16:38 UTC 2017 - imanyugin@suse.com
 
 - Version 1.1.0;
-- Fix bsc#1066975;
-- Fix bsc#1066946;
-- Fix bsc#1066935;
+- Fix bsc#1066975: module leaves cluster resources in maintenance mode;
+- Fix bsc#1066946: any NFS path is accepted;
+- Fix bsc#1066935: module crashes when cluster has no vIP configured;
 
 -------------------------------------------------------------------
 Thu Oct 19 14:56:02 UTC 2017 - imanyugin@suse.com
