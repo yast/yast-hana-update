@@ -2,9 +2,18 @@
 <head></head>
 <body>
 <h3 color="#00843E">Welcome to the SUSE SAP HANA Cluster Update</h3>
-<p>This wizard allows for updating SAP &reg; HANA &reg; instances in a SUSE cluster setup.</p>
+<p>This wizard allows for updating SAP &reg; HANA &reg; System Replication (Scale-Up) instances in a SUSE cluster setup.</p>
 
-<p><i>Before you begin:</i> Make sure that you've created a full backup of all HANA instances and that all cluster nodes
-    have password-less SSH access to one another.</p>
+<p>The wizard handles the part of the procedure related to the SUSE cluster, while some of the steps have to be performed manually by the SAP HANA admin.</p>
+
+<p><i>Before you begin:</i></p>
+<ul>
+    <li>Make sure that you have created a full backup of all HANA instances and that all cluster nodes
+    have password-less SSH access to one another.</li>
+    <li>Make sure that you have created the user in the local HANA userstore under the key <code>SRTAKEOVER</code> and granted the required priviliges.
+        Please refer to the section <i>Use SAP HANA System Replication for 
+        Near Zero Downtime Upgrades</i> of the <i>SAP HANA Administration Guide</i> for more information.
+    </li>
+</ul>
 </body>
 </html>

@@ -190,10 +190,20 @@ module HANAUpdater
       return errors if !errors.empty?
       # check connection to the remote node
       remote_node = @system.master.remote.running_on.name
+      remote_accessible = false
       begin
         HANAUpdater::SSH.check_ssh(remote_node)
+        remote_accessible = true
       rescue HANAUpdater::Exceptions::SSHException => e
         errors << "Could not connect to the remote node: #{e}"
+      end
+      # validate the SRTAKEOVER userstore key
+      if !HANAUpdater::Hana.check_secure_store(@system.hana_sid)
+        errors << "User store key 'SRTAKEOVER' was not found on the local node."
+      end
+      if remote_accessible && !HANAUpdater::Hana.check_secure_store(@system.hana_sid,
+        node: remote_node)
+        errors << "User store key 'SRTAKEOVER' was not found on the remote node."
       end
       errors
     end

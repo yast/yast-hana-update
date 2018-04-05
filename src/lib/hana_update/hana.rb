@@ -188,6 +188,23 @@ module HANAUpdater
         "Could not take-over HANA (#{system_id}) to local site", out)
     end
 
+    # Check if the specified sercure store key exists for the defined system
+    # @param system_id [String] HANA System ID
+    def check_secure_store(system_id, opts = { node: :local, key: 'SRTAKEOVER' })
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{opts}) ---"
+      regex = /^KEY (\w+)$/
+      user_name = "#{system_id.downcase}adm"
+      command = %w(hdbuserstore list)
+      out, status = wrap_system_call(command, user_name: user_name, node: opts[:node])
+      unless status.exitstatus == 0
+        log.error "Could not get the list of keys in the HANA secure user store"\
+          " (status=#{status.exitstatus}): #{out}"
+        return false
+      end
+      keys = out.scan(regex).flatten
+      keys.include?(opts[:key])
+    end
+
     private
 
     def wrap_ssh_su_call(user_name, cmd)
