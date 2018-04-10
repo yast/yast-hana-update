@@ -28,6 +28,8 @@ require 'hana_update/ssh'
 # require 'hana_update/node_logger'
 require_relative 'shell_commands.rb'
 
+Yast.import 'OSRelease'
+
 module HANAUpdater
   # Remote SSH invocation
   class SystemClass
@@ -100,7 +102,11 @@ module HANAUpdater
     # Cleanup resource errors
     # @returns stdout and stderr in one string, process exit status
     def resource_cleanup(resource_id)
-      cmd = 'crm', 'resource', 'cleanup', resource_id
+      if Yast::OSRelease.ReleaseVersion.start_with?('15')
+        cmd = 'crm', 'resource', 'refresh', resource_id
+      else
+        cmd = 'crm', 'resource', 'cleanup', resource_id
+      end
       exec_get_output(*cmd)
     end
 
