@@ -36,9 +36,13 @@ module HANAUpdater
         super
         Yast::Wizard.SetContents(
           _('Step 2 of 7. Update medium'),
-          base_layout_with_label(
-            _('Mount and copy SAP HANA update medium?'),
+          base_layout(
             VBox(
+              VSpacing(1),
+              Left(CheckBox(Id(:hana1to2), Opt(:notify), 
+                _('This is a HANA 1.0 to HANA 2.0 &upgrade'))),
+              VSpacing(1),
+              Left(Label(_('Mount and copy SAP HANA update medium?'))),
               RadioButtonGroup(Id(:rbg),
                 VBox(
                   Left(RadioButton(Id(:rb_manual), Opt(:notify),
@@ -49,7 +53,8 @@ module HANAUpdater
                               ),
               TextEntry(Id(:hana_medium), 'NFS share:'),
               Left(CheckBox(Id(:copy_medium), Opt(:notify), 'Copy update medium locally')),
-              TextEntry(Id(:copy_path), 'Local path:')
+              TextEntry(Id(:copy_path), 'Local path:'),
+              VSpacing(Opt(:vstretch))
             )
           ),
           Helpers.load_help('media_selection'),
@@ -74,6 +79,7 @@ module HANAUpdater
         set_value(:copy_medium, model.nfs.copy_medium?)
         set_value(:copy_path, flag && model.nfs.copy_medium?, :Enabled)
         set_value(:copy_path, model.nfs.copy_path)
+        set_value(:hana1to2, model.hana1to2)
       end
 
       def update_model
@@ -82,6 +88,7 @@ module HANAUpdater
         model.nfs.source = value(:hana_medium)
         model.nfs.copy_medium = value(:copy_medium)
         model.nfs.copy_path = value(:copy_path)
+        model.hana1to2 = value(:hana1to2)
         log.debug "--- #{self.class}.#{__callee__} : nfs_share=#{model.nfs.inspect} ---"
       end
 

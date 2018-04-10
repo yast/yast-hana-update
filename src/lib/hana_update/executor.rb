@@ -211,6 +211,13 @@ module HANAUpdater
       #   HANAUpdater::System.cluster_service(:start, node: :local)
       #   HANAUpdater::System.cluster_service(:start, node: remote_node)
       # end
+      if config.hana1to2
+        # TODO: handle exception
+        log.warn "--- HANA 1.0 upgrade to 2.0: will copy the SSFS keys now ---"
+        Yast::Popup.Feedback('Please wait', "Copying the SSFS keys to remote node #{remote_node}") do
+          HANAUpdater::Hana.copy_ssfs_keys(sap_sys.hana_sid, remote_node)
+        end
+      end
       # TODO: check if remote HANA is running, it should not, if user followed the instructions
       log.warn "--- Stopping HANA instance on remote node #{remote_node} ---"
       Yast::Popup.Feedback('Please wait',

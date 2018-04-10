@@ -82,7 +82,7 @@ module HANAUpdater
     include Yast::Logger
     attr_reader :no_validators, :system
     attr_accessor :nfs_share, :hana_instance, :hana_system, :revert_sync_direction,
-                  :update_secondary
+                  :update_secondary, :hana1to2
     attr_reader :nfs
 
     def initialize
@@ -92,6 +92,7 @@ module HANAUpdater
       @system = nil
       @revert_sync_direction = false # revert synchronization direction to the initial state
       @update_secondary = false
+      @hana1to2 = false
     end
 
     def debug=(value)

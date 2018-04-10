@@ -14,18 +14,30 @@
 </head>
 <body>
 <h3>Selecting the Update Medium</h3>
-<p>This step allows you to mount an SAP HANA update medium via NFS and, optionally, copy it to the local filesystem.</p>
+<p>This step allows you to mount an SAP HANA update medium via NFS and, optionally, 
+    copy it to the local filesystem.</p>
 <!-- TODO: revise this doc wrt. the interface -->
 <dl>
+    <dt>This is a HANA 1.0 to HANA 2.0 upgrade</dt>
+    <dd>
+        Check this option if you perform a HANA 1.0 to HANA 2.0 migration. 
+        The module will copy the PKI SSFS keys from the former secondary node to the former 
+        primary upon upgrade. <b>Important:</b> upgrade procedure cannot finish successfuly 
+        if the SSFS keys are not in sync between the instances of HANA.
+        There is no need to check this option if you perform an upgrade within the same 
+        major HANA version.
+    </dd>
+
     <dt>Mount NFS share</dt>
     <dd>
-        With this option enabled, the Wizard will mount the NFS share specified in the next step to each of the nodes
-        running SAP HANA.
+        With this option enabled, the Wizard will mount the NFS share specified in the next step
+        to each of the nodes running SAP HANA.
     </dd>
 
     <dt>NFS share path</dt>
     <dd>
-        Specify the path to the NFS share here. Please use the same format, as with <code>mount.nfs</code> utility, i.e.
+        Specify the path to the NFS share here. Please use the same format, as with 
+        <code>mount.nfs</code> utility, i.e.
         <code>servername:/path/to/share</code>.
     </dd>
 
