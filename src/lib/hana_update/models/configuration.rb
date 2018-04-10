@@ -81,7 +81,8 @@ module HANAUpdater
   class Configuration
     include Yast::Logger
     attr_reader :no_validators, :system
-    attr_accessor :nfs_share, :hana_instance, :hana_system, :revert_sync_direction
+    attr_accessor :nfs_share, :hana_instance, :hana_system, :revert_sync_direction,
+                  :update_secondary
     attr_reader :nfs
 
     def initialize
@@ -90,6 +91,7 @@ module HANAUpdater
       @hana_system_list = []
       @system = nil
       @revert_sync_direction = false # revert synchronization direction to the initial state
+      @update_secondary = false
     end
 
     def debug=(value)
@@ -202,7 +204,7 @@ module HANAUpdater
         errors << "User store key 'SRTAKEOVER' was not found on the local node."
       end
       if remote_accessible && !HANAUpdater::Hana.check_secure_store(@system.hana_sid,
-        node: remote_node)
+        node: remote_node, key: 'SRTAKEOVER')
         errors << "User store key 'SRTAKEOVER' was not found on the remote node."
       end
       errors

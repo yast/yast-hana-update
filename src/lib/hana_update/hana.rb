@@ -224,6 +224,38 @@ module HANAUpdater
       end
       [out, status]
     end
+
+    # Copy PKI SSFS key files from current host to the target_hostname
+    # This is required during a HANA upgrade from 1.0 to 2.0
+    # @param system_id [String] HANA System ID
+    # @param target_hostname [String] Target host's name
+    def copy_ssfs_keys(system_id, target_hostname)
+        sap_admin_user = "#{system_id.downcase}adm"
+        out, status = su_exec_get_output(sap_admin_user, "echo $DIR_INSTANCE")
+        unless status.exitstatus == 0
+            log.error "Cannot get $DIR_INSTANCE from #{sap_admin_user}'s environment. rc=#{status.exitstatus}, out=#{out.strip}"
+            raise "Cannot get $DIR_INSTANCE from #{sap_admin_user}'s environment." 
+        end
+        dir_instance = out.strip
+        file_list = [
+            "#{dir_instance}/../global/security/rsecssfs/data/SSFS_#{system_id.upcase}.DAT",
+            "#{dir_instance}/../global/security/rsecssfs/key/SSFS_#{system_id.upcase}.KEY"
+        ]
+        unless file_list.all? {|fpath| File.exists?(fpath)}
+            log.error "Could not locate the SSFS files for HANA. Expected locations were: #{file_list}"
+            raise "Cannot locate the SSFS files for HANA."
+        end
+        file_list.each do |file_path|
+          begin
+            SapHA::System::SSH.instance.copy_file_to(file_path, secondary_host_name, password)
+          rescue SSHException => e
+            NodeLogger.error "Could not copy HANA PKI SSFS file #{file_path}"
+            NodeLogger.output e.message
+          else
+            NodeLogger.info "Copied HANA PKI SSFS file #{file_path} to node #{secondary_host_name}"
+          end          
+        end
+    end
   end # HanaClass
 
   Hana = HanaClass.instance

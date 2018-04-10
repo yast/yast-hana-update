@@ -68,21 +68,21 @@ module HANAUpdater
       #   HANAUpdater::System.node_maintenance(sap_sys.master.slave.running_on.name, :on)
       # end
       # stop HANA on local node, so that the replication can be disabled
-      log.warn '--- Stopping SAP HANA on local node ---'
-      Yast::Popup.Feedback('Please wait', 'Stopping SAP HANA on local node') do
-        HANAUpdater::Hana.stop(sap_sys.hana_sid, node: :local)
-      end
+      # log.warn '--- Stopping SAP HANA on local node ---'
+      # Yast::Popup.Feedback('Please wait', 'Stopping SAP HANA on local node') do
+      #   HANAUpdater::Hana.stop(sap_sys.hana_sid, node: :local)
+      # end
       # break replication
-      log.warn '--- Disabling system replication ---'
-      Yast::Popup.Feedback('Please wait', 'Disabling system replication') do
-        HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid,
-          sap_sys.master.remote.running_on.site, node: :local)
-      end
+      # log.warn '--- Disabling system replication ---'
+      # Yast::Popup.Feedback('Please wait', 'Disabling system replication') do
+      #   HANAUpdater::Hana.sr_unregister_secondary(sap_sys.hana_sid,
+      #     sap_sys.master.remote.running_on.site, node: :local)
+      # end
       # start HANA to apply SR settings
-      log.warn '--- Starting SAP HANA on local node ---'
-      Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
-        HANAUpdater::Hana.start(sap_sys.hana_sid, node: :local)
-      end
+      # log.warn '--- Starting SAP HANA on local node ---'
+      # Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
+      #   HANAUpdater::Hana.start(sap_sys.hana_sid, node: :local)
+      # end
       # log.warn '--- Stop Corosync and Pacemaker locally ---'
       # Yast::Popup.Feedback('Please wait', 'Stopping Pacemaker and Corosync') do
       #   HANAUpdater::System.cluster_service(:stop, node: :local)
@@ -114,26 +114,26 @@ module HANAUpdater
       sap_sys = config.system
       remote_node = sap_sys.master.remote.running_on.name
       local_node = sap_sys.master.local.running_on.name
-      log.warn '--- Stopping SAP HANA on local node ---'
-      Yast::Popup.Feedback('Please wait', 'Stopping SAP HANA on local node') do
-        HANAUpdater::Hana.stop(sap_sys.hana_sid)
-      end
-      log.warn '--- Registering local HANA instance for SR ---'
-      Yast::Popup.Feedback('Please wait', 'Registering local HANA instance as secondary') do
-        HANAUpdater::Hana.sr_register_secondary(
-          sap_sys.hana_sid,
-          sap_sys.hana_inst,
-          sap_sys.master.local.running_on.site,
-          sap_sys.master.remote.running_on.name,
-          sap_sys.master.local.running_on.instance_attributes['srmode'],
-          sap_sys.clone.local.running_on.instance_attributes['op_mode'],
-          node: :local
-        )
-      end
-      log.warn '--- Starting SAP HANA on local node ---'
-      Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
-        HANAUpdater::Hana.start(sap_sys.hana_sid)
-      end
+      # log.warn '--- Stopping SAP HANA on local node ---'
+      # Yast::Popup.Feedback('Please wait', 'Stopping SAP HANA on local node') do
+      #   HANAUpdater::Hana.stop(sap_sys.hana_sid)
+      # end
+      # log.warn '--- Registering local HANA instance as secondary for SR ---'
+      # Yast::Popup.Feedback('Please wait', 'Registering local HANA instance as secondary') do
+      #   HANAUpdater::Hana.sr_register_secondary(
+      #     sap_sys.hana_sid,
+      #     sap_sys.hana_inst,
+      #     sap_sys.master.local.running_on.site,
+      #     sap_sys.master.remote.running_on.name,
+      #     sap_sys.master.local.running_on.instance_attributes['srmode'],
+      #     sap_sys.clone.local.running_on.instance_attributes['op_mode'],
+      #     node: :local
+      #   )
+      # end
+      # log.warn '--- Starting SAP HANA on local node ---'
+      # Yast::Popup.Feedback('Please wait', 'Starting SAP HANA on local node') do
+      #   HANAUpdater::Hana.start(sap_sys.hana_sid)
+      # end
       # log.warn '--- Start Corosync and Pacemaker locally ---'
       # Yast::Popup.Feedback('Please wait', 'Starting Pacemaker and Corosync') do
       #   HANAUpdater::System.cluster_service(:start, node: :local)
@@ -148,6 +148,11 @@ module HANAUpdater
             e.message, 'Retry', 'Cancel', :focus_yes)
           retry if answer
         end
+      end
+      log.warn "--- Stopping HANA instance on remote node #{remote_node} ---"
+      Yast::Popup.Feedback('Please wait',
+        "Stopping remote SAP HANA instance on node #{remote_node}") do
+        HANAUpdater::Hana.stop(sap_sys.hana_sid, node: remote_node)
       end
       log.warn '--- Migrating the virtual IP ---'
       Yast::Popup.Feedback('Please wait', 'Migrating virtual IP address') do
@@ -206,11 +211,13 @@ module HANAUpdater
       #   HANAUpdater::System.cluster_service(:start, node: :local)
       #   HANAUpdater::System.cluster_service(:start, node: remote_node)
       # end
+      # TODO: check if remote HANA is running, it should not, if user followed the instructions
       log.warn "--- Stopping HANA instance on remote node #{remote_node} ---"
       Yast::Popup.Feedback('Please wait',
         "Stopping remote SAP HANA instance on node #{remote_node}") do
         HANAUpdater::Hana.stop(sap_sys.hana_sid, node: remote_node)
       end
+      # TODO: copy the SSFS keys!
       log.warn "--- Registering remote SAP HANA instance on remote node #{remote_node} ---"
       Yast::Popup.Feedback('Please wait',
         "Registering remote SAP HANA instance on remote node #{remote_node}") do
@@ -288,10 +295,12 @@ module HANAUpdater
       end
       log.warn '--- Putting resources out of maintenance mode ---'
       Yast::Popup.Feedback('Please wait', 'Disabling maintenance mode for cluster resources') do
-        HANAUpdater::System.resource_maintenance(sap_sys.master.id, :off)
         HANAUpdater::System.resource_maintenance(sap_sys.clone.id, :off)
+        sleep 5
         HANAUpdater::System.resource_maintenance(sap_sys.vip.id, :off)
-        sleep 10
+        sleep 5
+        HANAUpdater::System.resource_maintenance(sap_sys.master.id, :off)
+        sleep 5
       end
       log.warn '--- Enable STONITH ---'
       Yast::Popup.Feedback('Please wait', 'Enabling STONITH') do

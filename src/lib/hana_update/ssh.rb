@@ -82,6 +82,13 @@ module HANAUpdater
       [out, ret]
     end
 
+    # Copy file from this host to the same path at the target host
+    def copy_file_to(file_path, host, password = '')
+      stat = exec_get_status("/usr/bin/expect", "-f", @script_path,
+        "copy-file", host, password, file_path)
+      check_status(stat, host)
+    end
+
     private
 
     # Check the status and react accordingly

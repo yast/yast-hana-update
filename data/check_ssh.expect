@@ -22,7 +22,7 @@
 
 # >>> Arguments:
 # 0: action
-#    either "check", "copy", "authorize"
+#    either "check", "copy", "authorize", "copy-file"
 # 1: host name
 # 2: [password] (only if action==copy)
 # 3: [path] (only if action==copy)
@@ -54,7 +54,7 @@ proc usage {{msg ""}} {
         puts "Error: $msg"
     }
     puts "Usage: $argv0 action host \[password\] \[path\]"
-    puts "\taction: check, copy, authorize"
+    puts "\taction: check, copy, authorize, copy-file"
     exit 1
 }
 
@@ -86,11 +86,6 @@ switch -exact -- $action {
         # authorize hostname password
         # make sure that host's own keys are authorized
         set password [lindex $argv 2]
-        # spawn ssh root@$host ha-cluster-init -y ssh_remote
-        # spawn ssh root@$host sh -c {b=/root/.ssh; a=$b/authorized_keys; for i in $b/id_*[^.pub]; do grep $(cat $i) $a || cat $i >> $a; done}
-        # spawn ssh root@$host bash -c {'for i in /root/.ssh/id_*[^.pub] ; do
-        #         grep -- $(cat $i.pub) /root/.ssh/authorized_keys || cat $i >> /root/.ssh/authorized_keys; 
-        #     done'}
         spawn ssh root@$host bash -c {'
             for key in id_rsa id_dsa id_ecdsa id_ed25519 ; do
                 [ -f /root/.ssh/$key ] || continue
@@ -98,14 +93,17 @@ switch -exact -- $action {
                     || cat /root/.ssh/$key.pub >> /root/.ssh/authorized_keys
             done
         '}
-        # spawn ssh root@$host bash -c {'for i in /root/.ssh/id_*.pub ; do
-        #         echo $i
-        #     done'}
-
     }
     copy-id {
         set password [lindex $argv 2]
         spawn ssh-copy-id root@$host
+    }
+    copy-file {
+        # copy hostname password path
+        # copy file from localhost to the same path on hostname
+        set password [lindex $argv 2]
+        set path [lindex $argv 3]
+        spawn sh -c "scp $path root@$host:'$path'"
     }
     default { 
         usage "Unknown action $action"
@@ -153,7 +151,7 @@ while {1} {
             exit 54
         }
         eof {
-            if {$action eq "copy" || $action eq "check" || $action eq "copy-id"} {
+            if {$action eq "copy" || $action eq "check" || $action eq "copy-id" || $action eq "copy-file"} {
                 exit 0
             } else {
                 exit 55

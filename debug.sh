@@ -17,8 +17,20 @@ VIP_RSC="rsc_ip_${SID}_HDB${INO}"
 VIP='192.168.101.100'
 DB_USER='SYSTEM'
 DB_PASS='Qwerty1234'
+REPO_USER="MY_REPO_IMPORT_USER"
 DB_PORT=30015
 UPD_LOCATION="/hana/upd/DATA_UNITS/HDB_LCM_LINUX_X86_64/"
+
+
+# (see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/ee3fd9a0c2e74733a74e4ad140fde60b.html)
+REPO_USER_SQL=(
+"CREATE USER ${REPO_USER} PASSWORD ${DB_PASS};"
+"GRANT EXECUTE ON SYS.REPOSITORY_REST TO ${REPO_USER};"
+"GRANT REPO.READ ON \\\".REPO_PACKAGE_ROOT\\\" TO ${REPO_USER};"
+"GRANT REPO.IMPORT TO ${REPO_USER};"
+"GRANT SELECT ON _SYS_REPO.DELIVERY_UNITS  TO ${REPO_USER};"
+"GRANT REPO.ACTIVATE_IMPORTED_OBJECTS  ON \\\".REPO_PACKAGE_ROOT\\\" TO ${REPO_USER};"
+)
 
 function print_help(){
     cat <<-EOF
@@ -36,9 +48,13 @@ Supported commands:
   stemp       select from table ZZZ_MYTEMP
   wtemp       insert into table ZZZ_MYTEMP
   upgrade     upgrade HANA
+  srtakeover  create the SRTAKEOVER user store key
+  copy-keys   copy the PKI SSFS data and key files (from this node to the other)
 
 * HANA system replication
   -----------------------
+  backup-sdc  create initial HANA backup (single container)
+  backup-sdc  create initial HANA backup (multiple containers)
   enable      enable SR on this host
   register    register this site as secondary
   disable     disable system replication
@@ -49,6 +65,7 @@ Supported commands:
   status      show SR status (sync state)
   status-c    show SR status (sync state) (sapcontrol)
   takeover    take over to the current node
+  overview    print HANA system overview
 
 * Cluster
   -------
@@ -69,23 +86,44 @@ EOF
 }
 
 function echo_cmd(){
-    echo -e "\e[33m\e[1m> $1\e[0m"
+    if [[ -t 1 ]]; then
+        echo -e "\e[33m\e[1m> $1\e[0m"
+    else
+        echo "> $1"
+    fi
+    
 }
 
 function echo_retcode(){
-    echo -e "\e[33m\e[1m>> Return code: $1\e[0m"
+    if [[ -t 1 ]]; then
+        echo -e "\e[33m\e[1m>> Return code: $1\e[0m"
+    else
+        echo ">> Return code: $1"
+    fi
 }
 
 function echo_green(){
-    echo -e "\e[1m\e[32m$1\e[0m"
+    if [[ -t 1 ]]; then
+        echo -e "\e[1m\e[32m$1\e[0m"
+    else
+        echo "$1"
+    fi
 }
 
 function echo_red(){
-    echo -e "\e[1m\e[31m$1\e[0m"
+    if [[ -t 1 ]]; then
+        echo -e "\e[1m\e[31m$1\e[0m"
+    else
+        echo "$1"
+    fi
 }
 
 function echo_yellow(){
-    echo -e "\e[1m\e[33m$1\e[0m"
+    if [[ -t 1 ]]; then
+        echo -e "\e[1m\e[33m$1\e[0m"
+    else
+        echo "$1"
+    fi
 }
 
 function execute_and_echo(){
@@ -103,6 +141,14 @@ function execute_and_echo(){
 
 function prep_sql(){
     echo "su -lc 'hdbsql -j -u $DB_USER -n ${VIP}:${DB_PORT} -p $DB_PASS \"$1\"' $ADMUSER"
+}
+
+function prep_sql2(){
+    echo "su -lc \"hdbsql -j -u $DB_USER -n ${VIP}:${DB_PORT} -p $DB_PASS \\\"$1\\\"\" $ADMUSER"
+}
+
+function prep_sql_multiline(){
+    echo "su -lc 'hdbsql -m -j -u $DB_USER -n ${VIP}:${DB_PORT} -p $DB_PASS \"$1\"' $ADMUSER"
 }
 
 function enable_primary(){
@@ -285,6 +331,15 @@ function hana_take_over(){
     execute_and_echo "su -lc 'hdbnsutil -sr_takeover' $ADMUSER" "$1"
 }
 
+function srtakeover_user(){
+    # provide $1 to supress execution
+    execute_and_echo "su -lc 'hdbuserstore set SRTAKEOVER $(hostname -s):30015 ${REPO_USER} ${DB_PASS}' $ADMUSER" "$1"
+    for line in "${REPO_USER_SQL[@]}"; do
+        cmd=$(prep_sql "${line}")
+        execute_and_echo "$cmd" "$1"
+    done
+}
+
 function cluster_monitor_once(){
     execute_and_echo "crm_mon -r1" "$1"
 }
@@ -301,6 +356,51 @@ function sys_overview(){
 function upgrade_hana(){
     execute_and_echo "${UPD_LOCATION}/hdblcmgui --action=update --hdbupd_server_ignore=check_min_mem" "$1"
 }
+
+function hana_backup_sdc(){
+    local loc_node sql_stmt
+    loc_node=$(hostname -s)
+    if [[ $loc_node == "$PRIM_HNAME" ]]; then
+        sql_stmt="BACKUP DATA USING FILE ('initialbackup')"
+        cmd=$(prep_sql2 "$sql_stmt")
+        execute_and_echo "$cmd" "$1"
+    else
+        echo_red "This is not the primary node!"
+        exit 1
+    fi
+}
+
+function hana_backup_mdc(){
+    local loc_node sql_stmt
+    loc_node=$(hostname -s)
+    if [[ $loc_node == "$PRIM_HNAME" ]]; then
+        sql_stmt="BACKUP DATA FOR FULL SYSTEM USING FILE ('initialbackup')"
+        cmd=$(prep_sql2 "$sql_stmt")
+        execute_and_echo "$cmd" "$1"
+    else
+        echo_red "This is not the primary node!"
+        exit 1
+    fi
+}
+
+function hana_copy_keys(){
+    # provide $1 to supress execution
+    local key_path dat_path
+    key_path="/hana/shared/${SID}/global/security/rsecssfs/key/SSFS_${SID}.KEY"
+    dat_path="/hana/shared/${SID}/global/security/rsecssfs/data/SSFS_${SID}.DAT"
+
+    local loc_node rem_node
+    loc_node=$(hostname -s)
+    local loc_rc rem_rc
+    if [[ $loc_node == "$PRIM_HNAME" ]]; then
+        rem_node="$SEC_HNAME"
+    else
+        rem_node="$PRIM_HNAME"
+    fi
+    execute_and_echo "scp ${key_path} ${rem_node}:${key_path}" "$1"
+    execute_and_echo "scp ${dat_path} ${rem_node}:${dat_path}" "$1"
+}
+
 
 VERB="$1"
 shift
@@ -387,6 +487,15 @@ case "$VERB" in
     takeover)
         hana_take_over "$@"
         ;;
+    backup-sdc)
+        hana_backup_sdc "$@"
+        ;;
+    backup-mdc)
+        hana_backup_mdc "$@"
+        ;;
+    copy-keys)
+        hana_copy_keys "$@"
+        ;;
     su)
         su - "$ADMUSER"
         ;;
@@ -403,6 +512,9 @@ case "$VERB" in
     unblockt)
         iptables -F
         iptables -P INPUT ACCEPT
+        ;;
+    srtakeover)
+        srtakeover_user "$@"
         ;;
     '-h')
         print_help

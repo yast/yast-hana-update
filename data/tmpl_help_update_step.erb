@@ -55,14 +55,27 @@
       Mount or copy an update medium to node <%= node.name %>, then navigate to the HDB LCM directory.
     </li>
   <% end %>
+  <% if model.update_secondary %>
+  <li>
+    Execute <code>hdblcm</code>:
+    <br/>
+    <code>./hdblcm --action=update --hdbupd_server_nostart</code> or
+    <code>./hdblcmgui --action=update --hdbupd_server_nostart</code> for GUI mode
+  </li>
+  <% else %>
   <li>
     Execute <code>hdblcm</code>:
     <br/>
     <code>./hdblcm --action=update</code> or
     <code>./hdblcmgui --action=update</code> for GUI mode
   </li>
+  <% end %>
   <li>
     Follow the on-screen update instructions.
+  </li>
+  <li>
+    After the upgrade of the server components, use the Lifecycle Management Tools 
+    to upgrade all other SAP HANA components to the same target version.
   </li>
 </ul>
 <h4>Using the SAP HANA HDB LCM Web User Interface</h4>
@@ -77,6 +90,10 @@
   </li>
   <li>
     Follow the on-screen update instructions.
+  </li>
+  <li>
+    After the upgrade of the server components, use the Lifecycle Management Tools 
+    to upgrade all other SAP HANA components to the same target version.
   </li>
 </ul>
 <br/>

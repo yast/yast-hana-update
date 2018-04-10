@@ -39,6 +39,7 @@ module HANAUpdater
                   else
                     'X'
                   end
+        model.update_secondary = true if part == :remote
         resource = model.system.master.send(part)
         node = resource.running_on
         hdblcm_link = "https://#{node.name}:1129/lmsl/HDBLCM/#{model.system.hana_sid}/index.html"
