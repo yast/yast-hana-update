@@ -57,7 +57,7 @@ module HANAUpdater
           rescue RuntimeError => e
             raise AbortGUILoop.new(e.message, :abort)
           rescue Exceptions::ClusterConfigurationError => e
-            raise AbortGUILoop.new(e.message, :abort)
+            raise AbortGUILoop.new(e.message, :noclu)
           end
           if !HANAUpdater::Cluster.warnings.empty?
             html_message = "<ul>" +

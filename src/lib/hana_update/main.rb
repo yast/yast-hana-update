@@ -41,7 +41,13 @@ module HANAUpdater
         'cluster_overview'      => {
           abort: :abort,
           next:  'update_medium',
-          back:  :back
+          back:  :back,
+          noclu: 'no_cluster'
+        },
+        'no_cluster'            => {
+          abort: :abort,
+          next:  :abort,
+          back:  :abort
         },
         'update_medium'         => {
           abort: :abort,
@@ -83,6 +89,7 @@ module HANAUpdater
       @yast_aliases = {
         'welcome_screen'        => -> { welcome_screen },
         'cluster_overview'      => -> { cluster_overview_page },
+        'no_cluster'            => -> { no_cluster_notice },
         'update_medium'         => -> { update_medium_page },
         'update_plan_local'     => -> { update_plan_page(:local) },
         'update_plan_remote'    => -> { update_plan_page(:remote) },
@@ -121,6 +128,16 @@ module HANAUpdater
         'Welcome',
         HANAUpdater::Helpers.load_help('welcome_note'),
         '',
+        false,
+        true
+      )
+    end
+
+    def no_cluster_notice
+      Wizard::RichText.new.run(
+        'No cluster detected',
+        HANAUpdater::Helpers.load_help('no_cluster'),
+        HANAUpdater::Helpers.load_help('no_cluster'),
         false,
         true
       )
