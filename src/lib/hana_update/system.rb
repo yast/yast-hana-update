@@ -56,23 +56,16 @@ module HANAUpdater
     def node_maintenance(node_id, action = :on)
       raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:on, :off].include?(action)
-      if action == :on
-        cmd = 'crm', 'node', 'maintenance', node_id
-      else
-        cmd = 'crm', 'node', 'ready', node_id
-      end
+      cmd = 'crm', 'node', action == :on ? 'maintenance' : 'ready', node_id
       exec_get_output(*cmd)
     end
 
-    def disable_stonith(action = :on)
+    def stonith_enabled(action = :on)
       raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:on, :off].include?(action)
-      if action == :on
-        cmd = 'crm', 'configure', 'property', 'stonith-enabled=false'
-      else
-        cmd = 'crm', 'configure', 'property', 'stonith-enabled=true'
-      end
-      exec_get_output(*cmd)      
+      cmd = 'crm', 'configure', 'property',
+            action == :on ? 'stonith-enabled=true' : 'stonith-enabled=false'
+      exec_get_output(*cmd)
     end
 
     def cluster_service(action = :stop, opts = { node: :local })
@@ -80,11 +73,11 @@ module HANAUpdater
         unless [:stop, :start].include?(action)
       # Stop corosync, it will stop pacemaker, too
       # Start pacemaker, it will start corosync as a dep
-      if action == :stop
-        cmd = 'systemctl', 'stop', 'corosync'
-      else
-        cmd = 'systemctl', 'start', 'pacemaker'
-      end
+      cmd = if action == :stop
+              %w(systemctl stop corosync)
+            else
+              %w(systemctl start pacemaker)
+            end
       if opts[:node] == :local
         log.debug "--- #{self.class}.#{__callee__}: executing command #{cmd} ---"
         out, status = exec_get_output(*cmd)
@@ -102,11 +95,8 @@ module HANAUpdater
     # Cleanup resource errors
     # @returns stdout and stderr in one string, process exit status
     def resource_cleanup(resource_id)
-      if Yast::OSRelease.ReleaseVersion.start_with?('15')
-        cmd = 'crm', 'resource', 'refresh', resource_id
-      else
-        cmd = 'crm', 'resource', 'cleanup', resource_id
-      end
+      verb = Yast::OSRelease.ReleaseVersion.start_with?('15') ? 'refresh' : 'cleanup'
+      cmd = 'crm', 'resource', verb, resource_id
       exec_get_output(*cmd)
     end
 

@@ -31,6 +31,23 @@ module HANAUpdater
     include Singleton
     include ShellCommands
 
+    # Check if HBD daemon is running
+    # @param system_id [String] SAP SID of the HANA instance
+    # @param instance_number [String] HANA instance number
+    def check_hdb_daemon_running(system_id, instance_number, opts = { node: :local })
+      log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{instance_number}) ---"
+      user_name = "#{system_id.downcase}adm"
+      procname = "hdb.sap#{system_id.upcase}_HDB#{instance_number}"
+      command = "pidof", procname
+      out, status = wrap_system_call(command, user_name: user_name, node: opts[:node])
+      if status.exitstatus == 0
+        log.info "PID of process #{procname} is #{out.strip} on node #{opts[:node]}"
+      else
+        log.warn "Could not find process #{procname} on node #{opts[:node]}"
+      end
+      status.exitstatus == 0
+    end
+
     # Start HANA
     # @param [String] system_id  SAP SID of the HANA instance
     # @param [Hash] opts
@@ -168,7 +185,6 @@ module HANAUpdater
                         13 => 'Initializing', 14 => 'Syncing', 15 => 'Active' }
       command = 'HDBSettings.sh', 'systemReplicationStatus.py', "--site=#{remote_site}"
       out, status = wrap_system_call(command, user_name: user_name, node: opts[:node])
-      # # TODO: shall we return simply TRUE here or the actual exit status?
       NodeLogger.log_status(status.exitstatus == 15,
         'SAP HANA System Replication status: instances are in sync (rc=15)',
         "SAP HANA System Replication status: #{rc_text[status]} (rc=#{status.exitstatus})",

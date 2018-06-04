@@ -69,10 +69,7 @@ class Constants
     @local = OpenStruct.new(host_name: 'hana01', site_name: 'NUREMBERG')
     @remote = OpenStruct.new(host_name: 'hana02', site_name: 'PRAGUE')
     @operation_modes = %w(delta_datashipping logreplay logreplay_readaccess)
-    # @operation_modes = {delta: 'delta_datashipping', log: 'logreplay',
-    #  logr: 'logreplay_readaccess'}
     @replication_modes = %w(syncmem sync async)
-    # @replication_modes = {sm: 'syncmem', s: 'sync', a: 'async'}
     @resources = { msl: 'msl_SAPHana_PRD_HDB00', cln: 'cln_SAPHanaTopology_PRD_HDB00',
       vip: 'rsc_ip_PRD_HDB00' }
   end

@@ -250,7 +250,6 @@ describe HANAUpdater::HanaClass do
   describe '#sr_register_secondary' do
     context 'registering a local instance' do
       it 'registers an instance for replication' do
-        # TODO: check that it will work for HANA 1.0 SPS10, too
         expect_syscall(type:   :output,
                        cmd:    ['su', '-lc', 'HDB version', const.system.user],
                        output: hdb_version_1_sps12,

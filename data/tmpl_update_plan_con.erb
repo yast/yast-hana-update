@@ -14,17 +14,12 @@
      -->
     <ol>
       <li>
-        Disable STONITH and put the following resources into <i>maintenance mode</i>:
+        Put the following resources into <i>maintenance mode</i>:
         <ul>
           <li><code><%= group.master.id %></code>,</li>
           <li><code><%= group.clone.id %></code>,</li>
           <li><code><%= group.vip.id %></code>.</li>
         </ul>
-      </li>
-      <li>
-        Disable system replication between sites
-        <code><%= remote.running_on.site %></code> and
-        <code><%= local.running_on.site %></code>.
       </li>
       <% if model.nfs.should_mount? %>
           <li>
@@ -52,19 +47,14 @@
      -->
     <ol>
       <li>
-        Stop SAP HANA, site <code><%= local.running_on.site %></code> on node <code><%= local.running_on.name %></code>.
-      </li>
-      <li>
-        Register site <code><%= local.running_on.site %></code>
-        as secondary to <code><%= remote.running_on.site %></code>.
-      </li>
-      <li>
-        Start SAP HANA on local site <code><%= local.running_on.site %></code> and wait until both instances are
-        in sync.
+        Wait until both SAP HANA instances are in sync.
       </li>
       <li>
         Migrate virtual IP resource <code>ip_rsc</code> to node
         <code><%= local.running_on.name %></code>.
+      </li>
+      <li>
+        Stop the former primary instance on site <code><%= remote.running_on.site %></code>.
       </li>
       <li>
         Take over from site <code><%= remote.running_on.site %></code> to

@@ -38,9 +38,8 @@
   <% if model.nfs.should_mount? %>
      <% if model.nfs.copy_medium? %>
         <li>
-          Navigate to the HDB LCM directory:
+          Navigate to the HDB LCM directory (architecture-dependent):
           <br/>
-          <!-- TODO: check architecture -->
           <code>cd <%= model.nfs.copy_path %>/DATA_UNITS/HDB_LCM_LINUX_X86_64</code>
         </li>
      <% else %>

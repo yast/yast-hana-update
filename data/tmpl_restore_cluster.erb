@@ -14,11 +14,7 @@
 <p>The following plan was generated in order to restore the original state of the cluster:</p>
 <ol>
   <li>
-    Disable System Replication on remote node <code><%= remote.running_on.name %></code> (site
-    <code><%= remote.running_on.site %></code>).
-  </li>
-  <li>
-    Stop SAP HANA instance on remote node.
+    Stop SAP HANA instance on remote node if it is running.
   </li>
   <li>
     Register site <code><%= remote.running_on.site %></code>

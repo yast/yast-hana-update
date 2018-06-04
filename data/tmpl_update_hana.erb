@@ -29,6 +29,11 @@
       <code><%= model.nfs.copy_path %></code>.
     </p>
 <% end %>
+<% if part == :remote %>
+<p></p>
+<p>Please use the <code>--hdbupd_server_nostart</code> option for the HDB LCM.
+Refer to the "How To Perform System Replication for SAP HANA" guide for further instructions.</p>
+<% end %>
 <p></p>
 <p>Click "Next" once the site <code><%= node.site %></code> is updated.</p>
 </body>

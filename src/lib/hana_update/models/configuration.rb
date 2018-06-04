@@ -72,7 +72,7 @@ module HANAUpdater
       if mode == :verbose
         errors
       else
-        !errors.empty?
+        errors.empty?
       end
     end
   end
@@ -209,16 +209,6 @@ module HANAUpdater
         errors << "User store key 'SRTAKEOVER' was not found on the remote node."
       end
       errors
-    end
-
-    def execute_update_plan(part, ui_callback)
-      if part == :local
-        execute_local_update_plan(ui_callback)
-      elsif part == :remote
-        execute_remote_update_plan(ui_callback)
-      else
-        raise ArgumentError, "Unknown part #{part.inspect}"
-      end
     end
   end
 end

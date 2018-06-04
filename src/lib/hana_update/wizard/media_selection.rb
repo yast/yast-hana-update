@@ -39,7 +39,7 @@ module HANAUpdater
           base_layout(
             VBox(
               VSpacing(1),
-              Left(CheckBox(Id(:hana1to2), Opt(:notify), 
+              Left(CheckBox(Id(:hana1to2), Opt(:notify),
                 _('This is a HANA 1.0 to HANA 2.0 &upgrade'))),
               VSpacing(1),
               Left(Label(_('Mount and copy SAP HANA update medium?'))),
