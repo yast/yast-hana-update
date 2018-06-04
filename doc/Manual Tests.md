@@ -10,7 +10,10 @@
 - Sync direction restore:
     + (in the one of the last screens, select to) not restore the cluster state, then the primary and the secondary will exchange their roles;
     + Restore the cluster state, then after one more takeover action the former primary will become the current primary.
-
+- Corner cases:
+    + Run in a non-clustered environment
+    + Run on an empty cluster
+    + Run on a cluster with 2+ HANA resources
 After the full cycle of execution, the cluster has to come to a normal state and *show no warnings*.
 
 
@@ -26,7 +29,7 @@ After the full cycle of execution, the cluster has to come to a normal state and
 8. Click *Next*.
 9. The update plan for the secondary instance is proposed. As soon as you click *Next*, the listed actions will be executed in the cluster.
 10. Now the module waits until you update the secondary HANA instance. The *Help* section tells you how to do it. Click *Next* when done.
-11. The update plan for the primary instance is proposed. As soon as you click *Next*, the listed actions, (including the takeover)[#takeover], will be executed in the cluster.
+11. The update plan for the primary instance is proposed. As soon as you click *Next*, the listed actions, [including the takeover](#takeover), will be executed in the cluster.
 12.  Now the module waits until you update the former HANA instance. The *Help* section tells you how to do it. Click *Next* when done. The SAP recommendation here is to use the `--hdbupd_server_nostart` parameter.
 13. The last update plan is genrated and displayed to the user. Here we can choose to revert the synchronization direction, but it's not the default option.
 14. Click *Next*. The cluster will come back out of the maintenance mode. During the sync stage, it's useful to look at the `./debug.sh status`. If something went wrong, e.g., secondary cannot sync properly, look at HANA trace files located at `/hana/shared/$(SID)/HDB${INO}/${hostname}/trace`.
