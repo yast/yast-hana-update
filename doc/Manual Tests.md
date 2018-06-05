@@ -14,6 +14,7 @@
     + Run in a non-clustered environment
     + Run on an empty cluster
     + Run on a cluster with 2+ HANA resources
+- Yast-specific: test both Qt and ncurses modes.
 After the full cycle of execution, the cluster has to come to a normal state and *show no warnings*.
 
 

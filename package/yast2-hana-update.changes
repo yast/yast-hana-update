@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jun 05 09:44:55 UTC 2018 - imanyugin@suse.com
+
+- Version 1.2.0;
+- Adjust the module's workflow to the SAP HANA's Near-Zero Downtime
+    Upgrade guide;
+
+-------------------------------------------------------------------
 Mon Feb 19 12:25:20 UTC 2018 - imanyugin@suse.com
 
 - Version 1.1.1;
