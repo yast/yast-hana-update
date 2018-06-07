@@ -26,6 +26,7 @@ require 'hana_update/helpers'
 require 'hana_update/cluster'
 require 'hana_update/system'
 require 'hana_update/ssh'
+require 'hana_update/exceptions'
 
 module HANAUpdater
   class SystemReplicationException < StandardError
@@ -199,8 +200,9 @@ module HANAUpdater
             node: :local)
         rescue SystemReplicationException => e
           answer = Yast::Popup.AnyQuestion('Error while checking System Replication Status',
-            e.message, 'Retry', 'Cancel', :focus_yes)
-          retry if answer
+            e.message, 'Retry', 'Abort', :focus_yes)
+          raise AbortGUILoop.new("The wizard will abort now", :abort) if !answer
+          retry
         end
       end
       if config.revert_sync_direction
