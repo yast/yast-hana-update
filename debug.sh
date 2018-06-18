@@ -570,6 +570,10 @@ function kill_hana(){
     execute_and_echo "su -lc 'HDB kill-9' $ADMUSER" "$1"
 }
 
+function hdbsql(){
+    execute_and_echo "su -lc \"hdbsql -j -u $DB_USER -n localhost:${DB_PORT} -p $DB_PASS \" $ADMUSER" "$1"
+}
+
 function hdbsql_sys(){
     execute_and_echo "su -lc \"hdbsql -j -d SYSTEMDB -u $DB_USER -n localhost:${DB_PORT_SYSTEM} -p $DB_PASS \" $ADMUSER" "$1"
 }
@@ -712,6 +716,9 @@ case "$VERB" in
         ;;
     kill)
         kill_hana "$@"
+        ;;
+    hdbsql)
+        hdbsql "$@"
         ;;
     hdbsql-sys)
         hdbsql_sys "$@"
