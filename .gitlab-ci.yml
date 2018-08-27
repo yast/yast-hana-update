@@ -1,0 +1,42 @@
+stages:
+  - validate
+  - test
+
+# To enable SLE 15 testing the test cases have first to be edited to work on
+# SLE 15 (different NTP setup). Until then this stage is commented out.
+#
+#sle15GA:
+#    image: suntorytimed/yast-ci:sle15-ga
+#    stage: validate
+#    script: rake test:unit
+#    tags:
+#        - docker
+#        - sle
+#        - sles15
+
+sle12SP4:
+    image: suntorytimed/yast-ci:sle12-sp4
+    stage: validate
+    script: rake test:unit
+    tags:
+        - docker
+        - sle
+        - sles15
+        
+sle12SP3:
+    image: suntorytimed/yast-ci:sle12-sp3
+    stage: validate
+    script: rake test:unit
+    tags:
+        - docker
+        - sle
+        - sles15
+        
+sle12SP2:
+    image: suntorytimed/yast-ci:sle12-sp2
+    stage: validate
+    script: rake test:unit
+    tags:
+        - docker
+        - sle
+        - sles15
