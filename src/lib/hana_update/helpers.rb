@@ -18,7 +18,9 @@
 #
 # Summary: SAP HANA updater in a SUSE cluster: common routines
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>
 
+require "yast/i18n"
 require 'erb'
 require 'tmpdir'
 require 'hana_update/exceptions'
@@ -37,6 +39,7 @@ module HANAUpdater
     FILE_DATE_TIME_FORMAT = '%Y%m%d_%H%M%S'.freeze
 
     def initialize
+      textdomain "hana-update"
       @storage = {}
       if ENV['Y2DIR'] # tests/local run
         @data_path = 'data/'
