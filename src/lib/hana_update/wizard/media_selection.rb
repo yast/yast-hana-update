@@ -18,8 +18,10 @@
 #
 # Summary: SAP HANA updater in a SUSE cluster: Update Media Selection Page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>
 
 require 'yast'
+require "yast/i18n"
 require 'hana_update/wizard/base_wizard_page'
 require 'hana_update/cluster'
 
@@ -29,6 +31,7 @@ module HANAUpdater
     class MediaSelectionPage < BaseWizardPage
       def initialize(model)
         super(model)
+        textdomain "hana-update"
         @page_validator = -> { model.validate(:nfs_share, :verbose) }
       end
 

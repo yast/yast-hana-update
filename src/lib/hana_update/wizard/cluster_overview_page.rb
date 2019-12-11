@@ -18,8 +18,10 @@
 #
 # Summary: SAP HANA updater in a SUSE cluster: Cluster Nodes Configuration Page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>
 
 require 'yast'
+require "yast/i18n"
 require 'hana_update/wizard/base_wizard_page'
 require 'hana_update/cluster'
 
@@ -29,6 +31,7 @@ module HANAUpdater
     class ClusterOverviewPage < BaseWizardPage
       def initialize(model)
         super(model)
+        textdomain "hana-update"
         @show_errors = true
         @can_continue = true
         @page_validator = model.method(:validate_system)
