@@ -4,12 +4,12 @@ services:
   - docker
 
 before_install:
-  - docker build -t yast-hana-firewall-image .
+  - docker build -t yast-hana-update-image .
   # list the installed packages (just for easier debugging)
-  - docker run --rm -it yast-hana-firewall-image rpm -qa | sort
+  - docker run --rm -it yast-hana-update-image rpm -qa | sort
 
 script:
   # the "yast-travis-ruby" script is included in the base yastdevel/ruby image
   # see https://github.com/yast/docker-yast-ruby/blob/master/yast-travis-ruby
-  - docker run -it -e TRAVIS=1 -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" yast-hana-firewall-image yast-travis-ruby
-  - docker run -it -e TRAVIS=1 -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" yast-hana-firewall-image rake check:doc
+  - docker run -it -e TRAVIS=1 -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" yast-hana-update-image yast-travis-ruby
+  - docker run -it -e TRAVIS=1 -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" yast-hana-update-image rake check:doc
