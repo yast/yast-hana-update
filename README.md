@@ -6,6 +6,11 @@ A YaST module that updates HANA within a SUSE cluster
 
 **FATE request #320368:** *Allow easy update of SAP HANA software when operated within a SUSE HA cluster*
 
+[![Travis Build](https://travis-ci.org/yast/yast-hana-update.svg?branch=master)](https://travis-ci.org/yast/yast-hana-update)
+[![Jenkins Build](http://img.shields.io/jenkins/s/https/ci.opensuse.org/yast-hana-update-master.svg)](https://ci.opensuse.org/view/Yast/job/yast-hana-update-master/)
+[![Code Climate](https://codeclimate.com/github/yast/yast-hana-update/badges/gpa.svg)](https://codeclimate.com/github/yast/yast-hana-update)
+[![Coverage Status](https://coveralls.io/repos/yast/yast-hana-update/badge.png)](https://coveralls.io/r/yast/yast-hana-update)
+
 ## Execution
 
 Run on a cluster node running *secondary* SAP HANA instance and follow the on-screen instructions.
