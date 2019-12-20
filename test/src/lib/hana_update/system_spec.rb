@@ -105,8 +105,10 @@ describe HANAUpdater::SystemClass do
       end
 
       it 'does not accept other verbs' do
-        expect { HANAUpdater::System.resource_force(const.resources[:vip], :move,
-          node: const.remote.host_name) }.to raise_error(ArgumentError)
+        expect {
+          HANAUpdater::System.resource_force(const.resources[:vip], :move,
+            node: const.remote.host_name)
+        }.to raise_error(ArgumentError)
       end
     end
 
@@ -182,7 +184,8 @@ describe HANAUpdater::SystemClass do
           output: "/tmp/hana1\n",
           rc:     0
         )
-        local_path = HANAUpdater::System.mount_nfs('host_name:/path/to/share', node: const.remote.host_name)
+        local_path = HANAUpdater::System.mount_nfs('host_name:/path/to/share',
+          node: const.remote.host_name)
         expect(local_path).to eq '/tmp/hana1'
       end
     end
@@ -217,13 +220,15 @@ describe HANAUpdater::SystemClass do
         destination_path = '/hana/upd'
         expect_syscall(
           type:   :status,
-          cmd:    %W(ssh -o StrictHostKeyChecking=no root@#{const.remote.host_name} test -d /hana/upd),
+          cmd:    %W(ssh -o StrictHostKeyChecking=no root@#{const.remote.host_name}
+                     test -d /hana/upd),
           output: '',
           rc:     0
         )
         expect_syscall(
           type:   :output,
-          cmd:    %W(ssh -o StrictHostKeyChecking=no root@#{const.remote.host_name} cp -far /tmp/hana1/. /hana/upd),
+          cmd:    %W(ssh -o StrictHostKeyChecking=no root@#{const.remote.host_name}
+                     cp -far /tmp/hana1/. /hana/upd),
           output: '',
           rc:     0
         )

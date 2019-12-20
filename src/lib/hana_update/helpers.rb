@@ -170,10 +170,16 @@ module HANAUpdater
       File.read(path)
     rescue Errno::ENOENT => e
       log.error("Could not find file '#{path}': #{e.message}.")
-      raise format(_("Program data could not be found (%s). Please reinstall the package.") % path)
+      raise format(
+        _("Program data could not be found (%s). Please reinstall the package."),
+        path
+      )
     rescue Errno::EACCES => e
       log.error("Could not access file '#{path}': #{e.message}.")
-      raise format(_("Program data could not be accessed (%s). Please reinstall the package.") % path)
+      raise format(
+        _("Program data could not be accessed (%s). Please reinstall the package."),
+        path
+      )
     end
   end
 

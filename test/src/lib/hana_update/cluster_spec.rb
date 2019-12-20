@@ -28,7 +28,7 @@ require 'socket'
 RSpec::Matchers.define :match_message do |expected|
   matches = 0
   match do |actual|
-    matches = actual.map{|z| z.match(expected)}.map(&:nil?).count(false)
+    matches = actual.map { |z| z.match(expected) }.map(&:nil?).count(false)
     matches == 1
   end
   failure_message do |actual|
@@ -36,9 +36,8 @@ RSpec::Matchers.define :match_message do |expected|
   end
 end
 
-
 describe HANAUpdater::ClusterClass do
-  let (:const) {Constants.new}
+  let(:const) { Constants.new }
 
   describe '#update_state' do
     it 'updates the state of the cluster' do
@@ -157,7 +156,12 @@ describe HANAUpdater::ClusterClass do
         expect(HANAUpdater::Cluster).to receive(:get_crm_mon)
           .and_return(REXML::Document.new(test_file('xmls/test00.mon.xml')))
         expect(HANAUpdater::Cluster.groups).to be_empty
-        expect {HANAUpdater::Cluster.update_state}.to raise_error(HANAUpdater::Exceptions::ClusterConfigurationError, /Could not find any SAP HANA/)
+        expect { HANAUpdater::Cluster.update_state }.to(
+          raise_error(
+            HANAUpdater::Exceptions::ClusterConfigurationError,
+            /Could not find any SAP HANA/
+          )
+        )
         expect(HANAUpdater::Cluster.groups).to be_empty
       end
     end
@@ -208,7 +212,9 @@ describe HANAUpdater::ClusterClass do
           .and_return(REXML::Document.new(test_file('xmls/test04.cib.xml')))
         expect(HANAUpdater::Cluster).to receive(:get_crm_mon)
           .and_return(REXML::Document.new(test_file('xmls/test04.mon.xml')))
-        expect {HANAUpdater::Cluster.update_state}.to raise_error(HANAUpdater::Exceptions::ClusterConfigurationError, /SAP HANA/)
+        expect { HANAUpdater::Cluster.update_state }.to(
+          raise_error(HANAUpdater::Exceptions::ClusterConfigurationError, /SAP HANA/)
+        )
         expect(HANAUpdater::Cluster.groups).to be_empty
       end
     end
