@@ -37,28 +37,3 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /debug.sh/
   conf.exclude_files << /run/
 end
-
-desc 'Run unit tests with coverage.'
-task 'coverage' do
-  files = Dir['**/test/**/*_{spec,test}.rb']
-  sh "export COVERAGE=1; rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-  sh 'xdg-open coverage/index.html'
-end
-
-Packaging.configuration do |conf|
-  conf.obs_project = 'home:imanyugin:hana_update'
-  conf.package_name = 'yast2-hana-update'
-  conf.obs_api = 'https://api.suse.de/'
-  conf.obs_target = 'SLE_12_SP3'
-end
-
-Rake::Task['check:committed'].clear
-Rake::Task['check:license'].clear
-
-# namespace :test do
-#   desc "Runs unit tests."
-#   task "unit" do
-#     files = Dir["**/test/**/*_{spec,test}.rb"]
-#     sh "rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-#   end
-# end
