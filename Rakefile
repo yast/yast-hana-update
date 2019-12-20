@@ -22,6 +22,7 @@ Yast::Tasks.configuration do |conf|
   conf.skip_license_check << /.*desktop$/
   conf.skip_license_check << /.*erb$/
   conf.skip_license_check << /.*yaml$/
+  conf.skip_license_check << /.*md$/
   conf.skip_license_check << /.*yml$/
   conf.skip_license_check << /.*html$/
   conf.skip_license_check << /.*rpmlintrc$/
