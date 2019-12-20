@@ -345,8 +345,7 @@ module HANAUpdater
           [
             Item(Id(:true), 'true', true_),
             Item(Id(:false), 'false', !true_)
-          ]
-                )
+          ])
       end
 
       # Prompt the user for the password

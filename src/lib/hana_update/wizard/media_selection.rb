@@ -52,8 +52,7 @@ module HANAUpdater
                     'Do not mount an update medium', true)),
                   Left(RadioButton(Id(:rb_auto), Opt(:notify),
                     'Mount an update medium on all hosts', false))
-                )
-                              ),
+                )),
               TextEntry(Id(:hana_medium), 'NFS share:'),
               Left(CheckBox(Id(:copy_medium), Opt(:notify), 'Copy update medium locally')),
               TextEntry(Id(:copy_path), 'Local path:'),

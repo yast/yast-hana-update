@@ -57,10 +57,10 @@ module HANAUpdater
         Yast::Popup.Feedback('Please wait', 'Querying cluster state') do
           begin
             HANAUpdater::Cluster.update_state
-          rescue RuntimeError => e
-            raise AbortGUILoop.new(e.message, :abort)
           rescue Exceptions::ClusterConfigurationError => e
             raise AbortGUILoop.new(e.message, :noclu)
+          rescue RuntimeError => e
+            raise AbortGUILoop.new(e.message, :abort)
           end
           if !HANAUpdater::Cluster.warnings.empty?
             html_message = "<ul>" +
@@ -90,8 +90,7 @@ module HANAUpdater
               Opt(:keepSorting, :notify, :immediate),
               'Available SAP HANA Systems:',
               []
-            )
-                   ),
+            )),
           Left(Label('Selected System:')),
           MinHeight(10,
             Table(
@@ -99,8 +98,7 @@ module HANAUpdater
               Opt(:keepSorting, :notify, :immediate),
               Header('Host Name', 'Site Name', 'SAP HANA Version', 'Resource Role'),
               []
-            )
-                   )
+            ))
         )
       end
 
