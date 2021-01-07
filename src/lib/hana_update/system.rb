@@ -43,7 +43,7 @@ module HANAUpdater
     end
 
     # Set resource maintenance on or off
-    # @returns stdout and stderr in one string, process exit status
+    # @return stdout and stderr in one string, process exit status
     def resource_maintenance(resource_id, action = :on)
       raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:on, :off].include?(action)
@@ -52,7 +52,7 @@ module HANAUpdater
     end
 
     # Set node maintenance on or off
-    # @returns stdout and stderr in one string, process exit status
+    # @return stdout and stderr in one string, process exit status
     def node_maintenance(node_id, action = :on)
       raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:on, :off].include?(action)
@@ -93,8 +93,9 @@ module HANAUpdater
     end
 
     # Cleanup resource errors
-    # @returns stdout and stderr in one string, process exit status
+    # @return stdout and stderr in one string, process exit status
     def resource_cleanup(resource_id)
+      # TODO: what about the future version? (16.x)
       verb = Yast::OSRelease.ReleaseVersion.start_with?('15') ? 'refresh' : 'cleanup'
       cmd = 'crm', 'resource', verb, resource_id
       exec_get_output(*cmd)
@@ -122,7 +123,7 @@ module HANAUpdater
     # Force resource action
     # @param resource_id [String] resource ID
     # @param action [Symbol] action to force (:start, :stop, :check)
-    # @param opts [Hash] {node: :local} or {node: 'uname01'}
+    # @param opts [Hash] `{node: :local}` or `{node: 'uname01'}`
     def resource_force(resource_id, action, opts = { node: :local })
       raise ArgumentError, "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:start, :stop, :check].include?(action)
