@@ -17,7 +17,7 @@
 
 
 Name:           yast2-hana-update
-Version:        1.2.1
+Version:        1.2.2
 Release:        0
 %if 0%{?sle_version} >= 150000
 ExclusiveArch:  x86_64 ppc64le
