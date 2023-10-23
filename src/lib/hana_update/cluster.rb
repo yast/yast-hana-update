@@ -20,7 +20,7 @@
 # Authors: Peter Varkoly <varkoly@suse.com>, Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-require "net/http'
+require 'net/http'
 require 'rexml/document'
 require 'rexml/xpath'
 require 'hana_update/shell_commands'
