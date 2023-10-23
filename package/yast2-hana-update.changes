@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Mon Oct 23 13:18:18 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- Azure - SAP HANA upgrade failure using YaST - Exception was:
+  Could not find virtual IP resource - SFSC 00708512 - ref:_00D1igLOd._5005qX8h2m:ref
+  (bsc#1216079)
+- 1.2.3
+
+-------------------------------------------------------------------
 Mon Nov 14 14:44:42 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - Wrong information in YaST2 module yast2-hana-update Step 4 of 7
