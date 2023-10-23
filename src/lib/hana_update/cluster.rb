@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
+# Copyright (c) 2023 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -17,9 +17,10 @@
 # ------------------------------------------------------------------------------
 #
 # Summary: SAP HANA updater in a SUSE cluster
-# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>, Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
+require "net/http'
 require 'rexml/document'
 require 'rexml/xpath'
 require 'hana_update/shell_commands'
@@ -223,7 +224,6 @@ module HANAUpdater
 
     # check if the cluster is running on azure
     def is_azure?
-      return true
       result = %x(dmidecode -t system | grep Manufacturer)
       if result.strip.to_s == "Manufacturer: Microsoft Corporation"
         url_metadata = URI.parse("http://168.63.129.16/?comp=versions")
