@@ -1,6 +1,7 @@
 -------------------------------------------------------------------
-Mon Oct 23 13:18:18 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+Thu Nov  9 10:07:21 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
+- Fix reformatting output of SAPHanaSR-showAttr 
 - Azure - SAP HANA upgrade failure using YaST - Exception was:
   Could not find virtual IP resource - SFSC 00708512 - ref:_00D1igLOd._5005qX8h2m:ref
   (bsc#1216079)
