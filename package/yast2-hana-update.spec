@@ -17,7 +17,6 @@
 
 
 Name:           yast2-hana-update
-=======
 Version:        1.2.3
 Release:        0
 %if 0%{?sle_version} >= 150000
