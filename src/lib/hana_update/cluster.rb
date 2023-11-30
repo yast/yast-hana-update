@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2017 SUSE Linux GmbH, Nuremberg, Germany.
+# Copyright (c) 2023 SUSE Linux GmbH, Nuremberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -17,9 +17,10 @@
 # ------------------------------------------------------------------------------
 #
 # Summary: SAP HANA updater in a SUSE cluster
-# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>, Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
+require 'net/http'
 require 'rexml/document'
 require 'rexml/xpath'
 require 'hana_update/shell_commands'
@@ -184,12 +185,27 @@ module HANAUpdater
       raise Exceptions::ClusterConfigurationError,
         "Could not find colocation rule for virtual IP" if vip_colocation.nil?
       vip_id = vip_colocation.attributes['rsc']
-      vip_mon = REXML::XPath.first(mon_xml,
-        '//crm_mon/resources/resource[@id=$vip_id]',
-        nil, 'vip_id' => vip_id)
-      vip_cib = REXML::XPath.first(cib_xml,
-        '//cib/configuration/resources/primitive[@id=$vip_id]',
-        nil, 'vip_id' => vip_id)
+      if is_azure?
+        vip_mon = REXML::XPath.first(
+	  mon_xml,
+	  '//crm_mon/resources/group[@id=$vip_id]/resource[@resource_agent="ocf::heartbeat:IPaddr2"]',
+	  nil,
+	  'vip_id' => vip_id
+	)
+        vip_cib = REXML::XPath.first(
+	  cib_xml,
+	  '//cib/configuration/resources/group[@id=$vip_id]/primitive[@type="IPaddr2"]',
+	  nil,
+	  'vip_id' => vip_id
+	)
+      else
+        vip_mon = REXML::XPath.first(mon_xml,
+          '//crm_mon/resources/resource[@id=$vip_id]',
+          nil, 'vip_id' => vip_id)
+        vip_cib = REXML::XPath.first(cib_xml,
+          '//cib/configuration/resources/primitive[@id=$vip_id]',
+          nil, 'vip_id' => vip_id)
+      end
       raise Exceptions::ClusterConfigurationError,
         "Could not find virtual IP resource" if vip_cib.nil? || vip_mon.nil?
       @vip = PrmResource.new(sid, vip_mon, vip_cib)
@@ -205,6 +221,33 @@ module HANAUpdater
       [!@vip.running_on.nil?, *@master.primitives.map { |p| !p.running_on.nil? },
        *@clone.primitives.map { |p| !p.running_on.nil? }].all?
     end
+
+    # check if the cluster is running on azure
+    def is_azure?
+      result = %x(dmidecode -t system | grep Manufacturer)
+      if result.strip.to_s == "Manufacturer: Microsoft Corporation"
+        url_metadata = URI.parse("http://168.63.129.16/?comp=versions")
+        meta_service = Net::HTTP.new(url_metadata.host)
+        meta_service.read_timeout = 2
+        meta_service.open_timeout = 2
+        request = Net::HTTP::Get.new(url_metadata.request_uri)
+        begin
+          response = meta_service.request(request)
+          case response
+          when Net::HTTPSuccess then
+            return true
+          else
+            return false
+          end
+        rescue Net::OpenTimeout => e
+          print("Network timeout checking Azure metadata service: #{e.message}.")
+          return false
+        end
+      else
+        return false
+      end
+    end
+
   end
 
   # Cluster abstraction class
