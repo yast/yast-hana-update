@@ -43,7 +43,7 @@ module HANAUpdater
     end
 
     # Set resource maintenance on or off
-    # @returns stdout and stderr in one string, process exit status
+    # @return stdout and stderr in one string, process exit status
     def resource_maintenance(resource_id, action = :on)
       raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:on, :off].include?(action)
@@ -52,7 +52,7 @@ module HANAUpdater
     end
 
     # Set node maintenance on or off
-    # @returns stdout and stderr in one string, process exit status
+    # @return stdout and stderr in one string, process exit status
     def node_maintenance(node_id, action = :on)
       raise "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:on, :off].include?(action)
@@ -93,8 +93,9 @@ module HANAUpdater
     end
 
     # Cleanup resource errors
-    # @returns stdout and stderr in one string, process exit status
+    # @return stdout and stderr in one string, process exit status
     def resource_cleanup(resource_id)
+      # TODO: what about the future version? (16.x)
       verb = Yast::OSRelease.ReleaseVersion.start_with?('15') ? 'refresh' : 'cleanup'
       cmd = 'crm', 'resource', verb, resource_id
       exec_get_output(*cmd)
@@ -102,19 +103,24 @@ module HANAUpdater
 
     # Execute SAPHanaSR-showAttr and parse its output
     def saphanasr_attributes(sid)
-      cmd = 'SAPHanaSR-showAttr', "--sid=#{sid}"
+      cmd = 'SAPHanaSR-showAttr', "--sid=#{sid}", "--format=script"
       out, status = exec_get_output(*cmd)
       return nil if status.exitstatus != 0
-      lines = []
-      start = false
-      out.split("\n").each_with_index do |line, _ix|
-        next unless start || line.start_with?('Hosts')
-        start = true
-        unless /\A-+\Z/ =~ line # rubocop:disable Style/Next
-          spl = line.split
-          spl.insert(4, '') if spl.length < 13
-          lines << spl
-        end
+      head    = []
+      values  = {}
+      lines   = []
+      out.each_line do |line|
+        next unless line.start_with?('Hosts')
+        tmp = /Hosts\/(.*)\/(.*)="(.*)"/.match(line)
+        head << tmp[2] unless head.include?(tmp[2])
+        values[tmp[1]] = {} if values[tmp[1]].nil?
+        values[tmp[1]][tmp[2]] = tmp[3]
+      end
+      lines << head
+      values.each_key do |host|
+        line = []
+        head.each { |key| line << values[host][key] }
+        lines << line
       end
       lines
     end
@@ -122,7 +128,7 @@ module HANAUpdater
     # Force resource action
     # @param resource_id [String] resource ID
     # @param action [Symbol] action to force (:start, :stop, :check)
-    # @param opts [Hash] {node: :local} or {node: 'uname01'}
+    # @param opts [Hash] `{node: :local}` or `{node: 'uname01'}`
     def resource_force(resource_id, action, opts = { node: :local })
       raise ArgumentError, "#{self.class}.#{__callee__}: Action #{action} is not supported" \
         unless [:start, :stop, :check].include?(action)

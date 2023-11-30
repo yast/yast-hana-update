@@ -52,9 +52,11 @@ describe HANAUpdater::SystemClass do
 
   describe '#resource_cleanup' do
     it 'cleans up resource status' do
+      # it runs a different command in 15.x than in other systems
+      allow(Yast::OSRelease).to receive(:ReleaseVersion).and_return('15.2')
       expect_syscall(
         type:   :output,
-        cmd:    ['crm', 'resource', 'cleanup', const.resources[:vip]],
+        cmd:    ['crm', 'resource', 'refresh', const.resources[:vip]],
         output: '',
         rc:     0
       )
