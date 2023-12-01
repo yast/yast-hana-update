@@ -87,11 +87,9 @@ module HANAUpdater
       @id = @mon_attr['id']
       # only primitives can be running
       if instance_of?(PrmResource)
-        if !mon_xml_node.elements['node'].nil?
-          @running_on = Node.new(mon_xml_node.elements['node'], cib_xml_node.root, sid)
-        else
-          @running_on = nil
-        end
+        @running_on = if !mon_xml_node.elements['node'].nil?
+                        Node.new(mon_xml_node.elements['node'], cib_xml_node.root, sid)
+                      end
       end
       unless cib_xml_node.nil?
         ia = cib_xml_node.elements['instance_attributes']
@@ -185,19 +183,19 @@ module HANAUpdater
       raise Exceptions::ClusterConfigurationError,
         "Could not find colocation rule for virtual IP" if vip_colocation.nil?
       vip_id = vip_colocation.attributes['rsc']
-      if is_azure?
+      if azure?
         vip_mon = REXML::XPath.first(
-	  mon_xml,
-	  '//crm_mon/resources/group[@id=$vip_id]/resource[@resource_agent="ocf::heartbeat:IPaddr2"]',
-	  nil,
-	  'vip_id' => vip_id
-	)
+          mon_xml,
+          '//crm_mon/resources/group[@id=$vip_id]/resource[@resource_agent="ocf::heartbeat:IPaddr2"]',
+          nil,
+          'vip_id' => vip_id
+        )
         vip_cib = REXML::XPath.first(
-	  cib_xml,
-	  '//cib/configuration/resources/group[@id=$vip_id]/primitive[@type="IPaddr2"]',
-	  nil,
-	  'vip_id' => vip_id
-	)
+          cib_xml,
+          '//cib/configuration/resources/group[@id=$vip_id]/primitive[@type="IPaddr2"]',
+          nil,
+          'vip_id' => vip_id
+        )
       else
         vip_mon = REXML::XPath.first(mon_xml,
           '//crm_mon/resources/resource[@id=$vip_id]',
@@ -223,31 +221,27 @@ module HANAUpdater
     end
 
     # check if the cluster is running on azure
-    def is_azure?
-      result = %x(dmidecode -t system | grep Manufacturer)
-      if result.strip.to_s == "Manufacturer: Microsoft Corporation"
-        url_metadata = URI.parse("http://168.63.129.16/?comp=versions")
-        meta_service = Net::HTTP.new(url_metadata.host)
-        meta_service.read_timeout = 2
-        meta_service.open_timeout = 2
-        request = Net::HTTP::Get.new(url_metadata.request_uri)
-        begin
-          response = meta_service.request(request)
-          case response
-          when Net::HTTPSuccess then
-            return true
-          else
-            return false
-          end
-        rescue Net::OpenTimeout => e
-          print("Network timeout checking Azure metadata service: #{e.message}.")
+    def azure?
+      result = `dmidecode -t system | grep Manufacturer`
+      return false unless result.strip.to_s == "Manufacturer: Microsoft Corporation"
+      url_metadata = URI.parse("http://168.63.129.16/?comp=versions")
+      meta_service = Net::HTTP.new(url_metadata.host)
+      meta_service.read_timeout = 2
+      meta_service.open_timeout = 2
+      request = Net::HTTP::Get.new(url_metadata.request_uri)
+      begin
+        response = meta_service.request(request)
+        case response
+        when Net::HTTPSuccess then
+          return true
+        else
           return false
         end
-      else
+      rescue Net::OpenTimeout => e
+        print("Network timeout checking Azure metadata service: #{e.message}.")
         return false
       end
     end
-
   end
 
   # Cluster abstraction class
