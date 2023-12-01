@@ -87,7 +87,7 @@ module HANAUpdater
 
     # Bring the cluster to a state where the admin can update the (former) primary instance
     # @param config [HANAUpdater::Config]
-    def execute_remote_update_plan(config) # rubocop:disable Metrics/MethodLength
+    def execute_remote_update_plan(config)
       log.info "--- called #{self.class}.#{__callee__} ---"
       sap_sys = config.system
       remote_node = sap_sys.master.remote.running_on.name
