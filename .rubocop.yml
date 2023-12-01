@@ -15,7 +15,7 @@
 
 Metrics/LineLength:
   StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#metricslinelength
-  Max: 100
+  Max: 110
   # To make it possible to copy or click on URIs in the code, we allow lines
   # contaning a URI to be longer than Max.
   AllowURI: true
@@ -94,7 +94,7 @@ Style/NegatedIf:
 
 # Edited for yast-hana-update
 Metrics/MethodLength:
-  Max: 50
+  Max: 60
 
 # Edited for yast-hana-update
 Metrics/ClassLength:
