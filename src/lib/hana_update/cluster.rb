@@ -87,11 +87,9 @@ module HANAUpdater
       @id = @mon_attr['id']
       # only primitives can be running
       if instance_of?(PrmResource)
-        if !mon_xml_node.elements['node'].nil?
-          @running_on = Node.new(mon_xml_node.elements['node'], cib_xml_node.root, sid)
-        else
-          @running_on = nil
-        end
+        @running_on = if !mon_xml_node.elements['node'].nil?
+                        Node.new(mon_xml_node.elements['node'], cib_xml_node.root, sid)
+                      end
       end
       unless cib_xml_node.nil?
         ia = cib_xml_node.elements['instance_attributes']
@@ -225,25 +223,22 @@ module HANAUpdater
     # check if the cluster is running on azure
     def azure?
       result = `dmidecode -t system | grep Manufacturer`
-      if result.strip.to_s == "Manufacturer: Microsoft Corporation"
-        url_metadata = URI.parse("http://168.63.129.16/?comp=versions")
-        meta_service = Net::HTTP.new(url_metadata.host)
-        meta_service.read_timeout = 2
-        meta_service.open_timeout = 2
-        request = Net::HTTP::Get.new(url_metadata.request_uri)
-        begin
-          response = meta_service.request(request)
-          case response
-          when Net::HTTPSuccess then
-            return true
-          else
-            return false
-          end
-        rescue Net::OpenTimeout => e
-          print("Network timeout checking Azure metadata service: #{e.message}.")
+      return false unless result.strip.to_s == "Manufacturer: Microsoft Corporation"
+      url_metadata = URI.parse("http://168.63.129.16/?comp=versions")
+      meta_service = Net::HTTP.new(url_metadata.host)
+      meta_service.read_timeout = 2
+      meta_service.open_timeout = 2
+      request = Net::HTTP::Get.new(url_metadata.request_uri)
+      begin
+        response = meta_service.request(request)
+        case response
+        when Net::HTTPSuccess then
+          return true
+        else
           return false
         end
-      else
+      rescue Net::OpenTimeout => e
+        print("Network timeout checking Azure metadata service: #{e.message}.")
         return false
       end
     end
