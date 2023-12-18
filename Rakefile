@@ -16,6 +16,7 @@
 #
 
 require 'yast/rake'
+
 require 'packaging'
 
 Yast::Tasks.configuration do |conf|
