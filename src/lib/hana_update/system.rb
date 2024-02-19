@@ -103,19 +103,24 @@ module HANAUpdater
 
     # Execute SAPHanaSR-showAttr and parse its output
     def saphanasr_attributes(sid)
-      cmd = 'SAPHanaSR-showAttr', "--sid=#{sid}"
+      cmd = 'SAPHanaSR-showAttr', "--sid=#{sid}", "--format=script"
       out, status = exec_get_output(*cmd)
       return nil if status.exitstatus != 0
-      lines = []
-      start = false
-      out.split("\n").each_with_index do |line, _ix|
-        next unless start || line.start_with?('Hosts')
-        start = true
-        unless /\A-+\Z/ =~ line # rubocop:disable Style/Next
-          spl = line.split
-          spl.insert(4, '') if spl.length < 13
-          lines << spl
-        end
+      head    = []
+      values  = {}
+      lines   = []
+      out.each_line do |line|
+        next unless line.start_with?('Hosts')
+        tmp = /Hosts\/(.*)\/(.*)="(.*)"/.match(line)
+        head << tmp[2] unless head.include?(tmp[2])
+        values[tmp[1]] = {} if values[tmp[1]].nil?
+        values[tmp[1]][tmp[2]] = tmp[3]
+      end
+      lines << head
+      values.each_key do |host|
+        line = []
+        head.each { |key| line << values[host][key] }
+        lines << line
       end
       lines
     end
