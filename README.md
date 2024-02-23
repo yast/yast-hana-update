@@ -1,15 +1,16 @@
 # SAP HANA updater
 
+[![Workflow Status](https://github.com/yast/yast-hana-update/workflows/CI/badge.svg?branch=master)](
+https://github.com/yast/yast-hana-update/actions?query=branch%3Amaster)
+[![Jenkins Status](https://ci.opensuse.org/buildStatus/icon?job=yast-yast-hana-update-master)](
+https://ci.opensuse.org/view/Yast/job/yast-yast-hana-update-master/)
+[![Coverage Status](https://img.shields.io/coveralls/yast/yast-hana-update.svg)](https://coveralls.io/r/yast/yast-hana-update?branch=master)
+
 A YaST module that updates HANA within a SUSE cluster
 
 ## Organizational
 
 **FATE request #320368:** *Allow easy update of SAP HANA software when operated within a SUSE HA cluster*
-
-[![Travis Build](https://travis-ci.org/yast/yast-hana-update.svg?branch=master)](https://travis-ci.org/yast/yast-hana-update)
-[![Jenkins Build](http://img.shields.io/jenkins/s/https/ci.opensuse.org/yast-hana-update-master.svg)](https://ci.opensuse.org/view/Yast/job/yast-hana-update-master/)
-[![Code Climate](https://codeclimate.com/github/yast/yast-hana-update/badges/gpa.svg)](https://codeclimate.com/github/yast/yast-hana-update)
-[![Coverage Status](https://coveralls.io/repos/yast/yast-hana-update/badge.png)](https://coveralls.io/r/yast/yast-hana-update)
 
 ## Execution
 
