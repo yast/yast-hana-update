@@ -17,7 +17,8 @@
 
 require 'yast/rake'
 
-Yast::Tasks.submit_to :sle15sp4
+#Update comes from codestream SUSE:SLE-15-SP2:Update
+#Yast::Tasks.submit_to :sle15sp4
 require 'packaging'
 
 Yast::Tasks.configuration do |conf|
