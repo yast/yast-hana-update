@@ -17,7 +17,7 @@
 
 require 'yast/rake'
 
-Yast::Tasks.submit_to :sle15sp6
+Yast::Tasks.submit_to :sle15sp7
 require 'packaging'
 
 Yast::Tasks.configuration do |conf|
