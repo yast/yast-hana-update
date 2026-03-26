@@ -17,7 +17,7 @@
 
 
 Name:           yast2-hana-update
-Version:        1.2.3
+Version:        1.2.4
 Release:        0
 %if 0%{?sle_version} >= 150000
 ExclusiveArch:  x86_64 ppc64le
@@ -39,7 +39,6 @@ Requires:       expect
 Requires:       openssh
 Requires:       resource-agents
 
-BuildRequires:  update-desktop-files
 BuildRequires:  yast2
 BuildRequires:  yast2-devtools
 BuildRequires:  yast2-packager
